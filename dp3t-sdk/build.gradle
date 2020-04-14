@@ -2,25 +2,26 @@
 
 buildscript {
 
-    repositories {
-        google()
-        maven {
-            url 'https://maven.fabric.io/public'
-        }
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:3.6.1'
-    }
+	repositories {
+		google()
+		maven {
+			url 'https://maven.fabric.io/public'
+		}
+		jcenter()
+	}
+	dependencies {
+		classpath 'com.android.tools.build:gradle:3.6.1'
+		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.5'
+	}
 }
 
 allprojects {
-    repositories {
-        google()
-        jcenter()
-    }
+	repositories {
+		google()
+		jcenter()
+	}
 }
 
 task clean(type: Delete) {
-    delete rootProject.buildDir
+	delete rootProject.buildDir
 }
