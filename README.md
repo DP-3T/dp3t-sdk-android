@@ -71,14 +71,11 @@ $ ./gradlew assemble
 The library is generated under sdk/build/outputs/aar
 
 ## Integrating into a Project
-Include the built aar file by adding it to your project. Make sure that you also include the following dependencies:
+The SDK is available on JCenter and can be included directly as Gradle dependency:
 ```groovy
-implementation 'androidx.core:core:1.2.0'
-implementation "androidx.security:security-crypto:1.0.0-beta01"
-implementation 'androidx.work:work-runtime:2.3.4'
-
-implementation 'com.squareup.retrofit2:retrofit:2.6.2'
-implementation 'com.squareup.retrofit2:converter-gson:2.6.2'
+dependencies {
+implementation 'org.dpppt:dp3t-sdk-android:0.1.0'
+}
 ```
 
 ## Using the SDK
