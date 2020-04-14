@@ -1,0 +1,28 @@
+<!--
+  ~ Created by Ubique Innovation AG
+  ~ https://www.ubique.ch
+  ~ Copyright (c) 2020. All rights reserved.
+  -->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	package="org.dpppt.android.sdk.internal">
+
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+	<uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.BLUETOOTH" />
+	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+	<application
+		android:debuggable="false"
+		tools:ignore="HardcodedDebugMode"
+		tools:replace="android:debuggable">
+
+		<service
+			android:name="org.dpppt.android.sdk.internal.TracingService"
+			android:foregroundServiceType="location" />
+
+	</application>
+
+</manifest>

@@ -1,0 +1,37 @@
+<!--
+  ~ Created by Ubique Innovation AG
+  ~ https://www.ubique.ch
+  ~ Copyright (c) 2020. All rights reserved.
+  -->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	package="org.dpppt.android.sdk">
+
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+	<uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.BLUETOOTH" />
+	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+	<uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+	<application>
+
+		<service
+			android:name="org.dpppt.android.sdk.internal.TracingService"
+			android:enabled="true"
+			android:foregroundServiceType="location" />
+
+		<receiver
+			android:name="org.dpppt.android.sdk.internal.TracingServiceBroadcastReceiver"
+			android:enabled="true">
+			<intent-filter>
+				<action android:name="android.intent.action.BOOT_COMPLETED" />
+				<action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+			</intent-filter>
+		</receiver>
+
+	</application>
+
+</manifest>

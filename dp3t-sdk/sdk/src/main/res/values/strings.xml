@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Created by Ubique Innovation AG
+  ~ https://www.ubique.ch
+  ~ Copyright (c) 2020. All rights reserved.
+  -->
+
+<resources>
+
+	<string name="dp3t_sdk_service_notification_channel">DP3T SDK</string>
+	<string name="dp3t_sdk_service_notification_title">DP3T SDK</string>
+	<string name="dp3t_sdk_service_notification_text">Looking for people nearby…</string>
+	<string name="dp3t_sdk_service_notification_errors">App can\'t function properly:</string>
+	<string name="dp3t_sdk_service_notification_error_network_sync">error while loading new contact data</string>
+	<string name="dp3t_sdk_service_notification_error_location_permission">missing location permission</string>
+	<string name="dp3t_sdk_service_notification_error_bluetooth_disabled">bluetooth is disabled</string>
+	<string name="dp3t_sdk_service_notification_error_battery_optimization">battery optimization enabled</string>
+
+</resources>

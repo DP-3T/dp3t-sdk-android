@@ -1,0 +1,9 @@
+/*
+ * Created by Ubique Innovation AG
+ * https://www.ubique.ch
+ * Copyright (c) 2020. All rights reserved.
+ */
+
+rootProject.name = 'DP3T Calibration App'
+include ':app', ':dp3t-sdk'
+project(':dp3t-sdk').projectDir = new File('../dp3t-sdk/sdk')

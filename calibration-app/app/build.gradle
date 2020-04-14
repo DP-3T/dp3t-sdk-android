@@ -1,0 +1,68 @@
+/*
+ * Created by Ubique Innovation AG
+ * https://www.ubique.ch
+ * Copyright (c) 2020. All rights reserved.
+ */
+
+apply plugin: 'com.android.application'
+
+android {
+	compileSdkVersion 29
+	buildToolsVersion "29.0.3"
+
+	defaultConfig {
+		applicationId "org.dpppt.android.calibration"
+		minSdkVersion 23
+		targetSdkVersion 29
+		versionCode 1
+		versionName "0.1"
+
+		missingDimensionStrategy 'version', 'calibration'
+
+		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+	}
+
+	signingConfigs {
+		release {
+			storeFile file('../testKeystore')
+			storePassword '123456'
+			keyAlias 'keyAlias'
+			keyPassword '123456'
+		}
+	}
+	buildTypes {
+		release {
+			signingConfig signingConfigs.release
+		}
+	}
+
+	compileOptions {
+		sourceCompatibility JavaVersion.VERSION_1_8
+		targetCompatibility JavaVersion.VERSION_1_8
+	}
+
+	buildTypes {
+		release {
+			minifyEnabled false
+			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+		}
+	}
+
+}
+
+dependencies {
+	implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+	implementation project(':dp3t-sdk')
+
+	implementation 'androidx.appcompat:appcompat:1.1.0'
+	implementation 'androidx.core:core:1.2.0'
+	implementation 'androidx.fragment:fragment:1.2.4'
+	implementation "androidx.security:security-crypto:1.0.0-beta01"
+	implementation 'androidx.work:work-runtime:2.3.4'
+
+	implementation 'com.squareup.retrofit2:retrofit:2.6.2'
+	implementation 'com.squareup.retrofit2:converter-gson:2.6.2'
+
+	implementation 'com.google.android.material:material:1.1.0'
+}

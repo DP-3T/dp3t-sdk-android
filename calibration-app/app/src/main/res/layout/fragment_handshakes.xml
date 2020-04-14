@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Created by Ubique Innovation AG
+  ~ https://www.ubique.ch
+  ~ Copyright (c) 2020. All rights reserved.
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical">
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_margin="20dp"
+		android:gravity="center">
+
+		<TextView
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:gravity="right"
+			android:padding="5dp"
+			android:text="@string/merged_handshakes" />
+
+		<Switch
+			android:id="@+id/raw_handshake_switch"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:checked="true" />
+
+		<TextView
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:padding="5dp"
+			android:text="@string/raw_handshakes" />
+
+		<ImageButton
+			android:id="@+id/refresh"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:src="@drawable/ic_refresh" />
+
+	</LinearLayout>
+
+	<ScrollView
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
+
+		<TextView
+			android:id="@+id/handshake_list"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content" />
+
+	</ScrollView>
+
+</LinearLayout>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Created by Ubique Innovation AG
+  ~ https://www.ubique.ch
+  ~ Copyright (c) 2020. All rights reserved.
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:layout_margin="@dimen/spacing_large"
+	android:orientation="vertical">
+
+	<TextView
+		style="@style/Sample.Text.Title"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/parameter_scan_interval_title" />
+
+	<TextView
+		style="@style/Sample.Text.Light"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="@dimen/spacing_large"
+		android:text="@string/parameter_info_unit_seconds" />
+
+	<androidx.appcompat.widget.AppCompatSeekBar
+		android:id="@+id/parameter_seekbar_scan_interval"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="@dimen/spacing_small" />
+
+	<EditText
+		android:id="@+id/parameter_input_scan_interval"
+		style="@style/Sample.Text"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center_horizontal"
+		android:imeOptions="actionDone"
+		android:inputType="textNoSuggestions|numberSigned"
+		android:selectAllOnFocus="true"
+		tools:text="0" />
+
+	<TextView
+		style="@style/Sample.Text.Title"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="@dimen/spacing_large"
+		android:text="@string/parameter_scan_duration_title" />
+
+	<TextView
+		style="@style/Sample.Text.Light"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="@dimen/spacing_large"
+		android:text="@string/parameter_info_unit_seconds" />
+
+	<androidx.appcompat.widget.AppCompatSeekBar
+		android:id="@+id/parameter_seekbar_scan_duration"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="@dimen/spacing_small" />
+
+	<EditText
+		android:id="@+id/parameter_input_scan_duration"
+		style="@style/Sample.Text"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center_horizontal"
+		android:imeOptions="actionDone"
+		android:inputType="textNoSuggestions|numberSigned"
+		android:selectAllOnFocus="true"
+		tools:text="0" />
+
+	<TextView
+		style="@style/Sample.Text.Title"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="@dimen/spacing_large"
+		android:layout_marginBottom="@dimen/spacing_medium"
+		android:text="@string/parameter_advertisement_mode" />
+
+	<Spinner
+		android:id="@+id/parameter_spinner_advertising_mode"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content" />
+
+	<TextView
+		style="@style/Sample.Text.Title"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="@dimen/spacing_large"
+		android:layout_marginBottom="@dimen/spacing_medium"
+		android:text="@string/parameter_advertisement_power_level" />
+
+	<Spinner
+		android:id="@+id/parameter_spinner_power_level"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content" />
+
+</LinearLayout>

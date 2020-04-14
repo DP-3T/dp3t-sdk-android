@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Created by Ubique Innovation AG
+  ~ https://www.ubique.ch
+  ~ Copyright (c) 2020. All rights reserved.
+  -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+	<item
+		android:id="@+id/action_controls"
+		android:enabled="true"
+		android:icon="@drawable/ic_controls"
+		android:title="@string/tab_controls" />
+	<item
+		android:id="@+id/action_parameters"
+		android:enabled="true"
+		android:icon="@drawable/ic_parameters"
+		android:title="@string/tab_parameters" />
+	<item
+		android:id="@+id/action_handshakes"
+		android:enabled="true"
+		android:icon="@drawable/ic_handshakes"
+		android:title="@string/tab_handshakes" />
+	<item
+		android:id="@+id/action_logs"
+		android:enabled="true"
+		android:icon="@drawable/ic_logs"
+		android:title="@string/tab_logs" />
+</menu>
