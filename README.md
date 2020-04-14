@@ -55,7 +55,7 @@ stop | Stops Bluetooth tracing | `public static void stop(Context context)`
 sync | Pro-actively triggers sync with backend to refresh exposed list | `public static void sync(Context context)`
 status | Returns a TracingStatus-Object describing the current state. This contains:<br/>- `numberOfHandshakes` : `int` <br /> - `advertising` : `boolean` <br /> - `receiving` : `boolean` <br /> - `wasContactExposed`:`boolean`  <br /> - `lastSyncUpdate`:`long` <br /> - `errors` (permission, bluetooth disabled, no network, ...) : `List<ErrorState>` | `public static TracingStatus getStatus(Context context)`
 I was exposed | This method must be called upon positive test. | `public static void sendIWasExposed(Context context, Date onset, ExposeeAuthData exposeeAuthData, CallbackListener<Void> callback)`
-reset | Removes all SDK related data (key and database) and de-initializes SDK | `public static void reset(Context context)`
+clearData | Removes all SDK related data (key and database) and de-initializes SDK | `public static void clearData(Context context)`
 
 ### Broadcast
 Name | Description | Function Name
