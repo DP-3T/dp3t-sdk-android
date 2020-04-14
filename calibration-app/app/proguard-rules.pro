@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2020 Ubique Innovation AG <https://www.ubique.ch>
+#
+# SPDX-License-Identifier: MPL-2.0
+
 # Add project specific ProGuard rules here.
 # You can control the set of applied configuration files using the
 # proguardFiles setting in build.gradle.

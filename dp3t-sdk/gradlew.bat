@@ -1,4 +1,9 @@
 @if "%DEBUG%" == "" @echo off
+
+@rem SPDX-FileCopyrightText: 2020 Ubique Innovation AG <https://www.ubique.ch>
+@rem
+@rem SPDX-License-Identifier: MPL-2.0
+
 @rem ##########################################################################
 @rem
 @rem  Gradle startup script for Windows

@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2020 Ubique Innovation AG <https://www.ubique.ch>
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ */
 # DP3T-SDK for Android
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://github.com/DP-3T/dp3t-sdk-android/blob/master/LICENSE)
 ![Android Build](https://github.com/DP-3T/dp3t-sdk-android/workflows/Android%20Build/badge.svg)
