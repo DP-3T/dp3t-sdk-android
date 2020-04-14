@@ -83,15 +83,15 @@ implementation 'org.dpppt:dp3t-sdk-android:0.1.0'
 ### Initialization
 In your Application.onCreate() you have to initialize the SDK with:
 ```java
-D3PTTracing.init(getContext(), "com.example.your.app");
+DP3T.init(getContext(), "com.example.your.app");
 ```
 The provided app name has to be registered in the discovery service on [Github](https://github.com/DP-3T/dp3t-discovery/blob/master/discovery.json)
 
 ### Start / Stop tracing
 To start and stop tracing use
 ```java
-D3PTTracing.start(getContext());
-D3PTTracing.stop(getContext());
+DP3T.start(getContext());
+DP3T.stop(getContext());
 ```
 Make sure that the user has the permission Manifest.permission.ACCESS_FINE_LOCATION granted (this coarse-grained permission is required for any app with Bluetooth activity; our SDK uses BLE beaconing but does not require any "location" data), Bluetooth is enabled and BatteryOptimization is disabled. BatteryOptimization can be checked with
 ```java
@@ -120,18 +120,18 @@ To change the notification icon add your custom ic_handshakes drawable to the pr
 
 ### Checking the current tracing status
 ```java
-TracingStatus status = D3PTTracing.getStatus(getContext());
+TracingStatus status = DP3T.getStatus(getContext());
 ```
 The TracingStatus object contains all information of the current tracing status.
 
 To get notified when the status changes, you can register a broadcast receiver with
 ```java
-getContext().registerReceiver(broadcastReceiver, D3PTTracing.getUpdateIntentFilter());
+getContext().registerReceiver(broadcastReceiver, DP3T.getUpdateIntentFilter());
 ```
 
 ### Report user exposed
 ```java
-D3PTTracing.sendIWasExposed(getContext(), null, new CallbackListener<Void>() {
+DP3T.sendIWasExposed(getContext(), null, new CallbackListener<Void>() {
 				@Override
 				public void onSuccess(Void response) {
 				}
@@ -145,7 +145,7 @@ D3PTTracing.sendIWasExposed(getContext(), null, new CallbackListener<Void>() {
 ### Sync with backend for exposed user
 The SDK automatically registers a periodic Job to sync with the backend for new exposed users. If you want to trigger a sync manually (e.g., upon a push from your backend) you can use:
 ```java
-D3PTTracing.sync(getContext());
+DP3T.sync(getContext());
 ```
 Make sure you do not call this method on the UI thread, because it will perform the sync synchronously.
 
