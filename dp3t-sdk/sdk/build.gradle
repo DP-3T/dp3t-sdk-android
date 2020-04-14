@@ -47,15 +47,20 @@ android {
 	}
 }
 
+task androidSourcesJar(type: Jar) {
+	archiveClassifier = 'sources'
+	from android.sourceSets.main.java.srcDirs
+}
 
 afterEvaluate {
 	publishing {
 		publications {
 			"sdkRelease"(MavenPublication) {
+				from components.productionRelease
 				groupId 'org.dpppt'
 				artifactId 'dp3t-sdk-android'
 				version android.defaultConfig.versionName
-				from components.productionRelease
+				artifact androidSourcesJar
 			}
 		}
 	}
