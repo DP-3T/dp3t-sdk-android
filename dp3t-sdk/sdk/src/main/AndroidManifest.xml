@@ -16,7 +16,8 @@
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-	<application>
+	<application
+		android:fullBackupContent="@xml/dp3t_sdk_backup_rules">
 
 		<service
 			android:name="org.dpppt.android.sdk.internal.TracingService"

@@ -36,7 +36,7 @@ public class AppConfigManager {
 	private static final int DEFAULT_BLUETOOTH_POWER_LEVEL = BluetoothTxPowerLevel.ADVERTISE_TX_POWER_LOW.getValue();
 	private static final int DEFAULT_BLUETOOTH_ADVERTISE_MODE = BluetoothAdvertiseMode.ADVERTISE_MODE_LOW_POWER.getValue();
 
-	private static final String PREF_NAME = "appConfigPreferences";
+	private static final String PREFS_NAME = "dp3t_sdk_preferences";
 	private static final String PREF_APPLICATION_LIST = "applicationList";
 	private static final String PREF_ADVERTISING_ENABLED = "advertisingEnabled";
 	private static final String PREF_RECEIVING_ENABLED = "receivingEnabled";
@@ -57,7 +57,7 @@ public class AppConfigManager {
 
 	private AppConfigManager(Context context) {
 		discoveryRepository = new DiscoveryRepository(context);
-		sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+		sharedPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 	}
 
 	public void setAppId(String appId) {
