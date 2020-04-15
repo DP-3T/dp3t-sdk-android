@@ -4,12 +4,11 @@
 #
 name: REUSE compliance
 
-# on:
-#   push:
-#     branches: [ master, develop ]
-#   pull_request:
-#     branches: [ master, develop ]
-on: [push, pull_request]
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
 
 jobs:
   test:
