@@ -134,8 +134,13 @@ public class BleClient {
 	}
 
 	public synchronized void stopScan() {
+		final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+		if (!bluetoothAdapter.isEnabled()) {
+			bleScanner = null;
+			BroadcastHelper.sendUpdateBroadcast(context);
+			return;
+		}
 		if (bleScanner == null) {
-			final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 			bleScanner = bluetoothAdapter.getBluetoothLeScanner();
 		}
 		Logger.i(TAG, "bleScanner stopped");
