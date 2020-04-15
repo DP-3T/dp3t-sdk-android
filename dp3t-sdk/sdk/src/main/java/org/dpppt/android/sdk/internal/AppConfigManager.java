@@ -54,6 +54,7 @@ public class AppConfigManager {
 	private boolean isDevDiscoveryMode;
 	private SharedPreferences sharedPrefs;
 	private DiscoveryRepository discoveryRepository;
+	private final Gson gson = new Gson();
 
 	private AppConfigManager(Context context) {
 		discoveryRepository = new DiscoveryRepository(context);
@@ -69,7 +70,7 @@ public class AppConfigManager {
 		discoveryRepository.getDiscovery(new CallbackListener<ApplicationsList>() {
 			@Override
 			public void onSuccess(ApplicationsList response) {
-				sharedPrefs.edit().putString(PREF_APPLICATION_LIST, new Gson().toJson(response)).commit();
+				sharedPrefs.edit().putString(PREF_APPLICATION_LIST, gson.toJson(response)).apply();
 			}
 
 			@Override
@@ -84,18 +85,18 @@ public class AppConfigManager {
 		setAppId(applicationInfo.getAppId());
 		ApplicationsList applicationsList = new ApplicationsList();
 		applicationsList.getApplications().add(applicationInfo);
-		sharedPrefs.edit().putString(PREF_APPLICATION_LIST, new Gson().toJson(applicationsList)).commit();
+		sharedPrefs.edit().putString(PREF_APPLICATION_LIST, gson.toJson(applicationsList)).apply();
 	}
 
 	public void updateFromDiscoverySynchronous() throws IOException {
 		if (useDiscovery) {
 			ApplicationsList response = discoveryRepository.getDiscoverySync(isDevDiscoveryMode);
-			sharedPrefs.edit().putString(PREF_APPLICATION_LIST, new Gson().toJson(response)).commit();
+			sharedPrefs.edit().putString(PREF_APPLICATION_LIST, gson.toJson(response)).apply();
 		}
 	}
 
 	public ApplicationsList getLoadedApplicationsList() {
-		return new Gson().fromJson(sharedPrefs.getString(PREF_APPLICATION_LIST, "{}"), ApplicationsList.class);
+		return gson.fromJson(sharedPrefs.getString(PREF_APPLICATION_LIST, "{}"), ApplicationsList.class);
 	}
 
 	public ApplicationInfo getAppConfig() {
@@ -108,7 +109,7 @@ public class AppConfigManager {
 	}
 
 	public void setAdvertisingEnabled(boolean enabled) {
-		sharedPrefs.edit().putBoolean(PREF_ADVERTISING_ENABLED, enabled).commit();
+		sharedPrefs.edit().putBoolean(PREF_ADVERTISING_ENABLED, enabled).apply();
 	}
 
 	public boolean isAdvertisingEnabled() {
@@ -116,7 +117,7 @@ public class AppConfigManager {
 	}
 
 	public void setReceivingEnabled(boolean enabled) {
-		sharedPrefs.edit().putBoolean(PREF_RECEIVING_ENABLED, enabled).commit();
+		sharedPrefs.edit().putBoolean(PREF_RECEIVING_ENABLED, enabled).apply();
 	}
 
 	public boolean isReceivingEnabled() {
@@ -124,7 +125,7 @@ public class AppConfigManager {
 	}
 
 	public void setLastSyncDate(long lastSyncDate) {
-		sharedPrefs.edit().putLong(PREF_LAST_SYNC_DATE, lastSyncDate).commit();
+		sharedPrefs.edit().putLong(PREF_LAST_SYNC_DATE, lastSyncDate).apply();
 	}
 
 	public long getLastSyncDate() {
@@ -132,7 +133,7 @@ public class AppConfigManager {
 	}
 
 	public void setLastSyncNetworkSuccess(boolean success) {
-		sharedPrefs.edit().putBoolean(PREF_LAST_SYNC_NET_SUCCESS, success).commit();
+		sharedPrefs.edit().putBoolean(PREF_LAST_SYNC_NET_SUCCESS, success).apply();
 	}
 
 	public boolean getLastSyncNetworkSuccess() {
@@ -144,7 +145,7 @@ public class AppConfigManager {
 	}
 
 	public void setAmIExposed(boolean exposed) {
-		sharedPrefs.edit().putBoolean(PREF_AM_I_EXPOSED, exposed).commit();
+		sharedPrefs.edit().putBoolean(PREF_AM_I_EXPOSED, exposed).apply();
 	}
 
 	public BackendRepository getBackendRepository(Context context) {
@@ -163,7 +164,7 @@ public class AppConfigManager {
 					"CalibrationTestDevice Name must have length " + CALIBRATION_TEST_DEVICE_NAME_LENGTH + ", provided string '" +
 							name + "' with length " + name.length());
 		}
-		sharedPrefs.edit().putString(PREF_CALIBRATION_TEST_DEVICE_NAME, name).commit();
+		sharedPrefs.edit().putString(PREF_CALIBRATION_TEST_DEVICE_NAME, name).apply();
 	}
 
 	public String getCalibrationTestDeviceName() {
@@ -171,7 +172,7 @@ public class AppConfigManager {
 	}
 
 	public void setScanDuration(long scanDuration) {
-		sharedPrefs.edit().putLong(PREF_SCAN_DURATION, scanDuration).commit();
+		sharedPrefs.edit().putLong(PREF_SCAN_DURATION, scanDuration).apply();
 	}
 
 	public long getScanDuration() {
@@ -179,7 +180,7 @@ public class AppConfigManager {
 	}
 
 	public void setScanInterval(long scanInterval) {
-		sharedPrefs.edit().putLong(PREF_SCAN_INTERVAL, scanInterval).commit();
+		sharedPrefs.edit().putLong(PREF_SCAN_INTERVAL, scanInterval).apply();
 	}
 
 	public long getScanInterval() {
@@ -187,7 +188,7 @@ public class AppConfigManager {
 	}
 
 	public void setBluetoothPowerLevel(BluetoothTxPowerLevel powerLevel) {
-		sharedPrefs.edit().putInt(PREF_ADVERTISEMENT_POWER_LEVEL, powerLevel.ordinal()).commit();
+		sharedPrefs.edit().putInt(PREF_ADVERTISEMENT_POWER_LEVEL, powerLevel.ordinal()).apply();
 	}
 
 	public BluetoothTxPowerLevel getBluetoothTxPowerLevel() {
@@ -195,7 +196,7 @@ public class AppConfigManager {
 	}
 
 	public void setBluetoothAdvertiseMode(BluetoothAdvertiseMode advertiseMode) {
-		sharedPrefs.edit().putInt(PREF_ADVERTISEMENT_MODE, advertiseMode.ordinal()).commit();
+		sharedPrefs.edit().putInt(PREF_ADVERTISEMENT_MODE, advertiseMode.ordinal()).apply();
 	}
 
 	public BluetoothAdvertiseMode getBluetoothAdvertiseMode() {
@@ -203,7 +204,7 @@ public class AppConfigManager {
 	}
 
 	public void clearPreferences() {
-		sharedPrefs.edit().clear().commit();
+		sharedPrefs.edit().clear().apply();
 	}
 
 }
