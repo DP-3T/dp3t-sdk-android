@@ -174,12 +174,6 @@ public class TracingService extends Service {
 		}, scanDuration);
 	}
 
-	private void stopScanning() {
-		if (bleClient != null) {
-			bleClient.stopScan();
-		}
-	}
-
 	public static void scheduleNextRun(Context context, long scanInterval) {
 		long now = System.currentTimeMillis();
 		long delay = scanInterval - (now % scanInterval);
@@ -233,6 +227,12 @@ public class TracingService extends Service {
 			bleClient = new BleClient(this);
 			bleClient.setMinTimeToReconnectToSameDevice(scanInterval);
 			bleClient.start();
+		}
+	}
+
+	private void stopScanning() {
+		if (bleClient != null) {
+			bleClient.stopScan();
 		}
 	}
 
