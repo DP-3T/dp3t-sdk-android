@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2020 Nico Rikken <nico@nicorikken.eu>
+#
+# SPDX-License-Identifier: MPL-2.0
+#
+name: REUSE compliance
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check REUSE compliance
+        uses: docker://fsfe/reuse
+        with:
+          args: reuse lint
