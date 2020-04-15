@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: dp3t-sdk-android
+Upstream-Contact:  <>
+Source: https://github.com/DP-3T/dp3t-sdk-android
+
+Files: calibration-app/app/src/main/res/mipmap-xxhdpi/*.png
+Copyright: 2020 Ubique Innovation AG <https://www.ubique.ch>
+License: MPL-2.0
