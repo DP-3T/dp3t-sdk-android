@@ -49,14 +49,16 @@ public class SyncWorker extends Worker {
 	@NonNull
 	@Override
 	public Result doWork() {
-		long scanInterval = AppConfigManager.getInstance(getApplicationContext()).getScanInterval();
-		TracingService.scheduleNextRun(getApplicationContext(), scanInterval);
+		Context context = getApplicationContext();
+
+		long scanInterval = AppConfigManager.getInstance(context).getScanInterval();
+		TracingService.scheduleNextRun(context, scanInterval);
 
 		try {
-			doSync(getApplicationContext());
-			AppConfigManager.getInstance(getApplicationContext()).setLastSyncNetworkSuccess(true);
+			doSync(context);
+			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
 		} catch (IOException | ResponseException e) {
-			AppConfigManager.getInstance(getApplicationContext()).setLastSyncNetworkSuccess(false);
+			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(false);
 			return Result.retry();
 		}
 
@@ -78,7 +80,6 @@ public class SyncWorker extends Worker {
 		dateToLoad = dateToLoad.subtractDays(14);
 
 		for (int i = 0; i <= 14; i++) {
-
 			ExposedList exposedList = backendRepository.getExposees(dateToLoad);
 			for (Exposee exposee : exposedList.getExposed()) {
 				database.addKnownCase(
@@ -95,6 +96,8 @@ public class SyncWorker extends Worker {
 		database.removeOldKnownCases();
 
 		appConfigManager.setLastSyncDate(System.currentTimeMillis());
+
+		BroadcastHelper.sendUpdateBroadcast(context);
 	}
 
 }
