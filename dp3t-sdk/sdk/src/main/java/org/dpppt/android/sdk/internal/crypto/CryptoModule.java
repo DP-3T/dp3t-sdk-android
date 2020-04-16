@@ -39,8 +39,8 @@ public class CryptoModule {
 	public static final int KEY_LENGTH = 16;
 
 	public static final int NUMBER_OF_DAYS_TO_KEEP_DATA = 21;
-	private static final int NUMBER_OF_EPOCHS_PER_DAY = 24 * 12;
-	private static final int MILLISECONDS_PER_EPOCH = 24 * 60 * 60 * 1000 / NUMBER_OF_EPOCHS_PER_DAY;
+	private static final int NUMBER_OF_EPOCHS_PER_DAY = 24 * 4;
+	public static final int MILLISECONDS_PER_EPOCH = 24 * 60 * 60 * 1000 / NUMBER_OF_EPOCHS_PER_DAY;
 	private static final byte[] BROADCAST_KEY = "broadcast key".getBytes();
 
 

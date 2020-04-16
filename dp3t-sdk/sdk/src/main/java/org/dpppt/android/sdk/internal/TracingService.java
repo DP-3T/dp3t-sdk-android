@@ -25,15 +25,21 @@ import java.util.ArrayList;
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.R;
 import org.dpppt.android.sdk.TracingStatus;
+import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.gatt.BleClient;
 import org.dpppt.android.sdk.internal.gatt.BleServer;
 import org.dpppt.android.sdk.internal.logger.Logger;
+
+import static org.dpppt.android.sdk.internal.AppConfigManager.DEFAULT_SCAN_DURATION;
+import static org.dpppt.android.sdk.internal.AppConfigManager.DEFAULT_SCAN_INTERVAL;
 
 public class TracingService extends Service {
 
 	private static final String TAG = "TracingService";
 
 	public static final String ACTION_START = TracingService.class.getCanonicalName() + ".ACTION_START";
+	public static final String ACTION_RESTART_CLIENT = TracingService.class.getCanonicalName() + ".ACTION_RESTART_CLIENT";
+	public static final String ACTION_RESTART_SERVER = TracingService.class.getCanonicalName() + ".ACTION_RESTART_SERVER";
 	public static final String ACTION_STOP = TracingService.class.getCanonicalName() + ".ACTION_STOP";
 
 	public static final String EXTRA_ADVERTISE = TracingService.class.getCanonicalName() + ".EXTRA_ADVERTISE";
@@ -91,11 +97,11 @@ public class TracingService extends Service {
 			wl.acquire();
 		}
 
-		Logger.i(TAG, "service started");
+		Logger.i(TAG, "onHandleIntent() with " + intent.getAction());
 		Log.d(TAG, "onHandleIntent() with " + intent.getAction());
 
-		scanInterval = intent.getLongExtra(EXTRA_SCAN_INTERVAL, 5 * 60 * 1000);
-		scanDuration = intent.getLongExtra(EXTRA_SCAN_DURATION, 30 * 1000);
+		scanInterval = intent.getLongExtra(EXTRA_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL);
+		scanDuration = intent.getLongExtra(EXTRA_SCAN_DURATION, DEFAULT_SCAN_DURATION);
 
 		startAdvertising = intent.getBooleanExtra(EXTRA_ADVERTISE, true);
 		startReceiveing = intent.getBooleanExtra(EXTRA_RECEIVE, true);
@@ -103,6 +109,14 @@ public class TracingService extends Service {
 		if (ACTION_START.equals(intent.getAction())) {
 			startForeground(NOTIFICATION_ID, createForegroundNotification());
 			start();
+		} else if (ACTION_RESTART_CLIENT.equals(intent.getAction())) {
+			startForeground(NOTIFICATION_ID, createForegroundNotification());
+			ensureStarted();
+			restartClient();
+		} else if (ACTION_RESTART_SERVER.equals(intent.getAction())) {
+			startForeground(NOTIFICATION_ID, createForegroundNotification());
+			ensureStarted();
+			restartServer();
 		} else if (ACTION_STOP.equals(intent.getAction())) {
 			stopForegroundService();
 		}
@@ -175,16 +189,22 @@ public class TracingService extends Service {
 		}
 		handler = new Handler();
 
-		startTracing();
+		invalidateForegroundNotification();
+		restartClient();
+		restartServer();
 	}
 
-	private void startTracing() {
-		Log.d(TAG, "startTracing()");
+	private void ensureStarted() {
+		if (handler == null) {
+			handler = new Handler();
+		}
+		invalidateForegroundNotification();
+	}
+
+	private void restartClient() {
 
 		try {
-			invalidateForegroundNotification();
 			startClient();
-			startServer();
 		} catch (Throwable t) {
 			t.printStackTrace();
 			Logger.e(TAG, t);
@@ -192,16 +212,32 @@ public class TracingService extends Service {
 
 		handler.postDelayed(() -> {
 			stopScanning();
-			scheduleNextRun(this, scanInterval);
+			scheduleNextClientRestart(this, scanInterval);
 		}, scanDuration);
 	}
 
-	public static void scheduleNextRun(Context context, long scanInterval) {
+	private void restartServer() {
+		startServer();
+		scheduleNextServerRestart(this);
+	}
+
+	public static void scheduleNextClientRestart(Context context, long scanInterval) {
 		long now = System.currentTimeMillis();
 		long delay = scanInterval - (now % scanInterval);
 		AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 		Intent intent = new Intent(context, TracingServiceBroadcastReceiver.class);
+		intent.setAction(ACTION_RESTART_CLIENT);
 		PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, now + delay, pendingIntent);
+	}
+
+	public static void scheduleNextServerRestart(Context context) {
+		long now = System.currentTimeMillis();
+		long delay = CryptoModule.MILLISECONDS_PER_EPOCH - (now % CryptoModule.MILLISECONDS_PER_EPOCH);
+		AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+		Intent intent = new Intent(context, TracingServiceBroadcastReceiver.class);
+		intent.setAction(ACTION_RESTART_SERVER);
+		PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 		alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, now + delay, pendingIntent);
 	}
 
@@ -236,6 +272,7 @@ public class TracingService extends Service {
 			bleServer = new BleServer(this);
 			bleServer.start();
 			bleServer.startAdvertising();
+			Logger.d(TAG, "startAdvertising");
 		}
 	}
 
@@ -252,6 +289,7 @@ public class TracingService extends Service {
 			bleClient = new BleClient(this);
 			bleClient.setMinTimeToReconnectToSameDevice(scanInterval);
 			bleClient.start();
+			Logger.d(TAG, "startScanning");
 		}
 	}
 

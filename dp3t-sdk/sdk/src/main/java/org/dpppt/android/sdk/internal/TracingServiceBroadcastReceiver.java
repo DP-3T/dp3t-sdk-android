@@ -3,7 +3,6 @@
  * https://www.ubique.ch
  * Copyright (c) 2020. All rights reserved.
  */
-
 package org.dpppt.android.sdk.internal;
 
 import android.content.BroadcastReceiver;
@@ -26,7 +25,7 @@ public class TracingServiceBroadcastReceiver extends BroadcastReceiver {
 		long scanInterval = appConfigManager.getScanInterval();
 		long scanDuration = appConfigManager.getScanDuration();
 		if (advertising || receiving) {
-			Intent intent = new Intent(context, TracingService.class).setAction(TracingService.ACTION_START);
+			Intent intent = new Intent(context, TracingService.class).setAction(i.getAction());
 			intent.putExtra(TracingService.EXTRA_ADVERTISE, advertising);
 			intent.putExtra(TracingService.EXTRA_RECEIVE, receiving);
 			intent.putExtra(TracingService.EXTRA_SCAN_INTERVAL, scanInterval);
