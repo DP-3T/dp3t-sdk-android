@@ -12,6 +12,6 @@ import org.dpppt.android.sdk.internal.util.DayDate;
 public class EphIdsForDay {
 
 	DayDate dayDate;
-	List<byte[]> ephIds;
+	List<EphId> ephIds;
 
 }

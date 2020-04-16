@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 public class TracingStatus {
 
-	private int numberOfHandshakes;
+	private int numberOfContacts;
 	private boolean advertising;
 	private boolean receiving;
 	private boolean wasContactExposed;
@@ -17,10 +17,10 @@ public class TracingStatus {
 	private boolean reportedAsExposed;
 	private ArrayList<ErrorState> errors;
 
-	public TracingStatus(int numberOfHandshakes, boolean advertising, boolean receiving, boolean wasContactExposed,
+	public TracingStatus(int numberOfContacts, boolean advertising, boolean receiving, boolean wasContactExposed,
 			long lastSyncDate,
 			boolean reportedAsExposed, ArrayList<ErrorState> errors) {
-		this.numberOfHandshakes = numberOfHandshakes;
+		this.numberOfContacts = numberOfContacts;
 		this.advertising = advertising;
 		this.receiving = receiving;
 		this.wasContactExposed = wasContactExposed;
@@ -29,8 +29,8 @@ public class TracingStatus {
 		this.errors = errors;
 	}
 
-	public int getNumberOfHandshakes() {
-		return numberOfHandshakes;
+	public int getNumberOfContacts() {
+		return numberOfContacts;
 	}
 
 	public boolean isAdvertising() {

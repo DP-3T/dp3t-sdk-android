@@ -5,24 +5,26 @@
  */
 package org.dpppt.android.sdk.internal.database.models;
 
+import org.dpppt.android.sdk.internal.crypto.EphId;
+
 public class Handshake {
 
 	private int id;
 	private long timestamp;
-	private byte[] star;
+	private EphId ephId;
 	private int txPowerLevel;
 	private int rssi;
 
-	public Handshake(int id, long timstamp, byte[] star, int txPowerLevel, int rssi) {
+	public Handshake(int id, long timstamp, EphId ephId, int txPowerLevel, int rssi) {
 		this.id = id;
 		this.timestamp = timstamp;
-		this.star = star;
+		this.ephId = ephId;
 		this.txPowerLevel = txPowerLevel;
 		this.rssi = rssi;
 	}
 
-	public byte[] getEphId() {
-		return star;
+	public EphId getEphId() {
+		return ephId;
 	}
 
 	public long getTimestamp() {

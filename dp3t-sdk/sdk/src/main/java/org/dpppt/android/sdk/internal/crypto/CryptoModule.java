@@ -14,7 +14,6 @@ import androidx.security.crypto.MasterKeys;
 import java.io.IOException;
 import java.security.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.crypto.Cipher;
@@ -41,6 +40,7 @@ public class CryptoModule {
 	public static final int NUMBER_OF_DAYS_TO_KEEP_DATA = 21;
 	private static final int NUMBER_OF_EPOCHS_PER_DAY = 24 * 4;
 	public static final int MILLISECONDS_PER_EPOCH = 24 * 60 * 60 * 1000 / NUMBER_OF_EPOCHS_PER_DAY;
+	public static final int CONTACT_THRESHOLD = 1;
 	private static final byte[] BROADCAST_KEY = "broadcast key".getBytes();
 
 
@@ -123,7 +123,7 @@ public class CryptoModule {
 		return SKList.get(0).second;
 	}
 
-	protected List<byte[]> createEphIds(byte[] SK, boolean shuffle) {
+	protected List<EphId> createEphIds(byte[] SK, boolean shuffle) {
 		try {
 			Mac mac = Mac.getInstance("HmacSHA256");
 			mac.init(new SecretKeySpec(SK, "HmacSHA256"));
@@ -135,10 +135,10 @@ public class CryptoModule {
 			Cipher cipher = Cipher.getInstance("AES/CTR/NoPadding");
 			byte[] counter = new byte[16];
 			cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(counter));
-			ArrayList<byte[]> ephIds = new ArrayList<>();
+			ArrayList<EphId> ephIds = new ArrayList<>();
 			byte[] emptyArray = new byte[KEY_LENGTH];
 			for (int i = 0; i < NUMBER_OF_EPOCHS_PER_DAY; i++) {
-				ephIds.add(cipher.update(emptyArray));
+				ephIds.add(new EphId(cipher.update(emptyArray)));
 			}
 			if (shuffle) {
 				Collections.shuffle(ephIds, new SecureRandom());
@@ -169,7 +169,7 @@ public class CryptoModule {
 		esp.edit().putString(KEY_EPHIDS_TODAY_JSON, new Gson().toJson(ephIdsForDay)).commit();
 	}
 
-	protected List<byte[]> getEphIdsForToday(DayDate currentDay) {
+	protected List<EphId> getEphIdsForToday(DayDate currentDay) {
 		EphIdsForDay ephIdsForDay = getStoredEphIdsForToday();
 		if (ephIdsForDay == null || !ephIdsForDay.dayDate.equals(currentDay)) {
 			byte[] SK = getCurrentSK(currentDay);
@@ -181,7 +181,7 @@ public class CryptoModule {
 		return ephIdsForDay.ephIds;
 	}
 
-	public byte[] getCurrentEphId() {
+	public EphId getCurrentEphId() {
 		long now = System.currentTimeMillis();
 		DayDate currentDay = new DayDate(now);
 		return getEphIdsForToday(currentDay).get(getEpochCounter(now));
@@ -198,12 +198,12 @@ public class CryptoModule {
 			if (contactsOnDay.size() > 0) {
 
 				//generate all ephIds for day
-				List<byte[]> ephIds = createEphIds(skForDay, false);
+				List<EphId> ephIds = createEphIds(skForDay, false);
 
 				//check all contacts if they match any of the ephIds
 				for (Contact contact : contactsOnDay) {
-					for (byte[] ephId : ephIds) {
-						if (Arrays.equals(ephId, contact.getEphId())) {
+					for (EphId ephId : ephIds) {
+						if (ephId.equals(contact.getEphId())) {
 							matchCallback.contactMatched(contact);
 							break;
 						}

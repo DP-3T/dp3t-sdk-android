@@ -232,13 +232,12 @@ public class TracingService extends Service {
 	}
 
 	public static void scheduleNextServerRestart(Context context) {
-		long now = System.currentTimeMillis();
-		long delay = CryptoModule.MILLISECONDS_PER_EPOCH - (now % CryptoModule.MILLISECONDS_PER_EPOCH);
+		long nextEpochStart = CryptoModule.getInstance(context).getCurrentEpochStart() + CryptoModule.MILLISECONDS_PER_EPOCH;
 		AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 		Intent intent = new Intent(context, TracingServiceBroadcastReceiver.class);
 		intent.setAction(ACTION_RESTART_SERVER);
 		PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-		alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, now + delay, pendingIntent);
+		alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextEpochStart, pendingIntent);
 	}
 
 	private void stopForegroundService() {
