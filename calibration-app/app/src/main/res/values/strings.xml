@@ -19,6 +19,7 @@
 	<string name="req_battery_deactivated">"battery optimization deactivated"</string>
 	<string name="button_sync">force backend sync</string>
 	<string name="button_export_db">export database</string>
+	<string name="button_upload_db">upload database</string>
 	<string name="button_tracking_start">start tracking</string>
 	<string name="button_tracking_stop">stop tracking</string>
 	<string name="button_advertising_start">start advertising</string>

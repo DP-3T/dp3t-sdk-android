@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+	<base-config>
+		<trust-anchors>
+			<certificates src="system" />
+			<!-- Trust user added CAs while debuggable only -->
+			<certificates src="user" />
+		</trust-anchors>
+	</base-config>
+</network-security-config>
