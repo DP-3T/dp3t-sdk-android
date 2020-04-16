@@ -38,22 +38,31 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.dpppt.android.calibration.MainApplication;
 import org.dpppt.android.calibration.R;
+import org.dpppt.android.calibration.util.DeviceID;
 import org.dpppt.android.calibration.util.DialogUtil;
 import org.dpppt.android.calibration.util.RequirementsUtil;
+import org.dpppt.android.calibration.util.backend.FileUploadRepository;
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.internal.backend.CallbackListener;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthData;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ControlsFragment extends Fragment {
 
@@ -189,9 +198,39 @@ public class ControlsFragment extends Fragment {
 		buttonSaveDb.setOnClickListener(v -> {
 			Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
 			intent.setType("application/sqlite");
-			intent.putExtra(Intent.EXTRA_TITLE, "starsdk_sample_db.sqlite");
+			intent.putExtra(Intent.EXTRA_TITLE, "dp3t_sample_db.sqlite");
 			startActivityForResult(intent, REQUEST_CODE_SAVE_DB);
 			setExportDbLoadingViewVisible(true);
+		});
+
+		Button uploadDB = view.findViewById(R.id.home_button_upload_db);
+		uploadDB.setOnClickListener(v -> {
+			setUploadDbLoadingViewVisible(true);
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+			sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+			File dbFile = new File(getContext().getCacheDir(),
+					sdf.format(new Date()) + "_" + DeviceID.getID(getContext()) + "_dp3t_callibration_db.sqlite");
+			try {
+				DP3T.exportDb(getContext(), new FileOutputStream(dbFile), () ->
+						new FileUploadRepository().uploadFile(dbFile, new Callback<Void>() {
+							@Override
+							public void onResponse(Call<Void> call, Response<Void> response) {
+								setUploadDbLoadingViewVisible(false);
+							}
+
+							@Override
+							public void onFailure(Call<Void> call, Throwable t) {
+								t.printStackTrace();
+								Toast.makeText(getContext(), "Upload failed!", Toast.LENGTH_LONG).show();
+								setUploadDbLoadingViewVisible(false);
+							}
+						})
+				);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				Toast.makeText(getContext(), "Upload failed!", Toast.LENGTH_LONG).show();
+				setUploadDbLoadingViewVisible(false);
+			}
 		});
 
 		EditText deanonymizationDeviceId = view.findViewById(R.id.deanonymization_device_id);
@@ -311,6 +350,8 @@ public class ControlsFragment extends Fragment {
 		buttonClearData.setEnabled(!isRunning);
 		Button buttonSaveDb = view.findViewById(R.id.home_button_export_db);
 		buttonSaveDb.setEnabled(!isRunning);
+		Button buttonUploadDb = view.findViewById(R.id.home_button_upload_db);
+		buttonUploadDb.setEnabled(!isRunning);
 
 		Button buttonReportExposed = view.findViewById(R.id.home_button_report_exposed);
 		buttonReportExposed.setEnabled(!status.isReportedAsExposed());
@@ -401,6 +442,14 @@ public class ControlsFragment extends Fragment {
 		if (view != null) {
 			view.findViewById(R.id.home_loading_view_export_db).setVisibility(visible ? View.VISIBLE : View.GONE);
 			view.findViewById(R.id.home_button_export_db).setVisibility(visible ? View.INVISIBLE : View.VISIBLE);
+		}
+	}
+
+	private void setUploadDbLoadingViewVisible(boolean visible) {
+		View view = getView();
+		if (view != null) {
+			view.findViewById(R.id.home_loading_view_upload_db).setVisibility(visible ? View.VISIBLE : View.GONE);
+			view.findViewById(R.id.home_button_upload_db).setVisibility(visible ? View.INVISIBLE : View.VISIBLE);
 		}
 	}
 
