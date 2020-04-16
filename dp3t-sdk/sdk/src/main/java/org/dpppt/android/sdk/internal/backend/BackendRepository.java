@@ -7,7 +7,6 @@ package org.dpppt.android.sdk.internal.backend;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import java.io.IOException;
 
@@ -37,7 +36,6 @@ public class BackendRepository implements Repository {
 		backendService = retrofit.create(BackendService.class);
 	}
 
-	@Nullable
 	public CachedResult<ExposedList> getExposees(@NonNull DayDate dayDate) throws IOException, ResponseException {
 		Response<ExposedList> response = backendService.getExposees(dayDate.formatAsString()).execute();
 		if (response.isSuccessful()) {
