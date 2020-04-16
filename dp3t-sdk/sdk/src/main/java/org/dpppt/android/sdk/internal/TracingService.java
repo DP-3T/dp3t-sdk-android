@@ -57,7 +57,8 @@ public class TracingService extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		if (intent == null || intent.getAction() == null) {
-			return START_STICKY;
+			stopSelf();
+			return START_NOT_STICKY;
 		}
 
 		if (wl == null) {
@@ -83,7 +84,7 @@ public class TracingService extends Service {
 			stopForegroundService();
 		}
 
-		return START_STICKY;
+		return START_REDELIVER_INTENT;
 	}
 
 	private Notification createForegroundNotification() {
