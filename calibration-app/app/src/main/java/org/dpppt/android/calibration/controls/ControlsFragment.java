@@ -151,9 +151,13 @@ public class ControlsFragment extends Fragment {
 						Uri.parse("package:" + getContext().getPackageName()))));
 
 		Button bluetoothButton = view.findViewById(R.id.home_button_bluetooth);
-		if (BluetoothAdapter.getDefaultAdapter() != null) {
-			bluetoothButton.setOnClickListener(v -> BluetoothAdapter.getDefaultAdapter().enable());
-		}
+		bluetoothButton.setOnClickListener(v -> {
+			if (BluetoothAdapter.getDefaultAdapter() != null) {
+				BluetoothAdapter.getDefaultAdapter().enable();
+			} else {
+				Toast.makeText(getContext(), "No BluetoothAdapter found!", Toast.LENGTH_LONG).show();
+			}
+		});
 
 		Button refreshButton = view.findViewById(R.id.home_button_sync);
 		refreshButton.setOnClickListener(v -> resyncSdk());
