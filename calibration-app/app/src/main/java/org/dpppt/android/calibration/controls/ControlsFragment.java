@@ -151,7 +151,9 @@ public class ControlsFragment extends Fragment {
 						Uri.parse("package:" + getContext().getPackageName()))));
 
 		Button bluetoothButton = view.findViewById(R.id.home_button_bluetooth);
-		bluetoothButton.setOnClickListener(v -> BluetoothAdapter.getDefaultAdapter().enable());
+		if (BluetoothAdapter.getDefaultAdapter() != null) {
+			bluetoothButton.setOnClickListener(v -> BluetoothAdapter.getDefaultAdapter().enable());
+		}
 
 		Button refreshButton = view.findViewById(R.id.home_button_sync);
 		refreshButton.setOnClickListener(v -> resyncSdk());

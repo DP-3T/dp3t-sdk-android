@@ -48,7 +48,7 @@ public class BleClient {
 
 	public void start() {
 		final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-		if (!bluetoothAdapter.isEnabled()) {
+		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
 			BroadcastHelper.sendUpdateBroadcast(context);
 			return;
 		}
@@ -135,7 +135,7 @@ public class BleClient {
 
 	public synchronized void stopScan() {
 		final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-		if (!bluetoothAdapter.isEnabled()) {
+		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
 			bleScanner = null;
 			BroadcastHelper.sendUpdateBroadcast(context);
 			return;

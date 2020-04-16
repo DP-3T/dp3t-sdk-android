@@ -166,7 +166,9 @@ public class BleServer {
 	}
 
 	public void stopAdvertising() {
-		mLeAdvertiser.stopAdvertising(advertiseCallback);
+		if (mLeAdvertiser != null) {
+			mLeAdvertiser.stopAdvertising(advertiseCallback);
+		}
 	}
 
 	public void stop() {
