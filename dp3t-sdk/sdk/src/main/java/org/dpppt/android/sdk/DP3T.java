@@ -139,7 +139,7 @@ public class DP3T {
 		ArrayList<TracingStatus.ErrorState> errors = new ArrayList<>();
 
 		final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-		if (!bluetoothAdapter.isEnabled()) {
+		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
 			errors.add(TracingStatus.ErrorState.BLE_DISABLED);
 		}
 
