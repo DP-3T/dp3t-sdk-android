@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.security.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -198,15 +199,12 @@ public class CryptoModule {
 			if (contactsOnDay.size() > 0) {
 
 				//generate all ephIds for day
-				List<EphId> ephIds = createEphIds(skForDay, false);
+				HashSet<EphId> ephIdHashSet = new HashSet<>(createEphIds(skForDay, false));
 
 				//check all contacts if they match any of the ephIds
 				for (Contact contact : contactsOnDay) {
-					for (EphId ephId : ephIds) {
-						if (ephId.equals(contact.getEphId())) {
-							matchCallback.contactMatched(contact);
-							break;
-						}
+					if (ephIdHashSet.contains(contact.getEphId())) {
+						matchCallback.contactMatched(contact);
 					}
 				}
 			}
