@@ -78,6 +78,14 @@ implementation 'org.dpppt:dp3t-sdk-android:0.1.0'
 }
 ```
 
+### Certificate pinning
+Make sure you include the dp3t_network_security_config.xml in your application:
+```xml
+<application
+    android:networkSecurityConfig="@xml/dp3t_network_security_config">
+```
+This pins the SSL certificates to certificates signed by the "Let’s Encrypt Authority X3" authority https://discovery.dpppt.org/ uses at the moment. You can add your own networkSecurityConfig in order to pin to your custom certificates.
+
 ## Using the SDK
 
 ### Initialization

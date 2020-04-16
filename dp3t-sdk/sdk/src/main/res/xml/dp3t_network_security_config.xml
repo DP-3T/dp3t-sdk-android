@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+	<base-config>
+		<trust-anchors>
+			<!-- only allow Let’s Encrypt Authority X3 signed certificates -->
+			<certificates src="@raw/lets_encrypt" />
+		</trust-anchors>
+	</base-config>
+</network-security-config>
