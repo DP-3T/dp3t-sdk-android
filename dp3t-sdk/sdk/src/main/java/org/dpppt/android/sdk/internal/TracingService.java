@@ -6,8 +6,11 @@
 package org.dpppt.android.sdk.internal;
 
 import android.app.*;
+import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -38,14 +41,26 @@ public class TracingService extends Service {
 	public static final String EXTRA_SCAN_INTERVAL = TracingService.class.getCanonicalName() + ".EXTRA_SCAN_INTERVAL";
 	public static final String EXTRA_SCAN_DURATION = TracingService.class.getCanonicalName() + ".EXTRA_SCAN_DURATION";
 
-	private static String NOTIFICATION_CHANNEL_ID = "dp3t_tracing_service";
-	private static int NOTIFICATION_ID = 1827;
-	private Handler handler;
+	private static final String NOTIFICATION_CHANNEL_ID = "dp3t_tracing_service";
+	private static final int NOTIFICATION_ID = 1827;
 
+	private Handler handler;
 	private PowerManager.WakeLock wl;
 
 	private BleServer bleServer;
 	private BleClient bleClient;
+
+	private final BroadcastReceiver bluetoothStateChangeReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())) {
+				int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
+				if (state == BluetoothAdapter.STATE_OFF || state == BluetoothAdapter.STATE_ON) {
+					invalidateForegroundNotification();
+				}
+			}
+		}
+	};
 
 	private boolean startAdvertising;
 	private boolean startReceiveing;
@@ -53,6 +68,14 @@ public class TracingService extends Service {
 	private long scanDuration;
 
 	public TracingService() { }
+
+	@Override
+	public void onCreate() {
+		super.onCreate();
+
+		IntentFilter bluetoothFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+		registerReceiver(bluetoothStateChangeReceiver, bluetoothFilter);
+	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
@@ -99,39 +122,35 @@ public class TracingService extends Service {
 		}
 
 		TracingStatus status = DP3T.getStatus(this);
+
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+				.setOngoing(true)
+				.setSmallIcon(R.drawable.ic_handshakes)
+				.setContentIntent(contentIntent);
+
 		if (status.getErrors().size() > 0) {
 			String errorText = getNotificationErrorText(status.getErrors());
-			return new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-					.setOngoing(true)
-					.setContentTitle(getString(R.string.dp3t_sdk_service_notification_title))
-					.setSmallIcon(R.drawable.ic_handshakes)
-					.setStyle(new NotificationCompat.BigTextStyle()
-							.bigText(errorText))
-					.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-					.setContentIntent(contentIntent)
-					.build();
+			builder.setContentTitle(getString(R.string.dp3t_sdk_service_notification_title))
+					.setStyle(new NotificationCompat.BigTextStyle().bigText(errorText))
+					.setPriority(NotificationCompat.PRIORITY_DEFAULT);
 		} else {
-			return new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-					.setOngoing(true)
-					.setContentTitle(getString(R.string.dp3t_sdk_service_notification_title))
+			builder.setContentTitle(getString(R.string.dp3t_sdk_service_notification_title))
 					.setContentText(getString(R.string.dp3t_sdk_service_notification_text))
-					.setSmallIcon(R.drawable.ic_handshakes)
 					.setPriority(NotificationCompat.PRIORITY_LOW)
-					.setContentIntent(contentIntent)
 					.build();
 		}
+
+		return builder.build();
 	}
 
 	private String getNotificationErrorText(ArrayList<TracingStatus.ErrorState> errors) {
-		StringBuilder b = new StringBuilder(getString(R.string.dp3t_sdk_service_notification_errors)).append("\n");
-		for (int i = 0; i < errors.size(); i++) {
-			TracingStatus.ErrorState error = errors.get(i);
-			b.append(getString(error.getErrorString()));
-			if (i < errors.size() - 1) {
-				b.append(", ");
-			}
+		StringBuilder sb = new StringBuilder(getString(R.string.dp3t_sdk_service_notification_errors)).append("\n");
+		String sep = "";
+		for (TracingStatus.ErrorState error : errors) {
+			sb.append(sep).append(getString(error.getErrorString()));
+			sep = ", ";
 		}
-		return b.toString();
+		return sb.toString();
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.O)
@@ -142,6 +161,12 @@ public class TracingService extends Service {
 				new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_LOW);
 		channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
 		notificationManager.createNotificationChannel(channel);
+	}
+
+	private void invalidateForegroundNotification() {
+		Notification notification = createForegroundNotification();
+		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		mNotificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
 	private void start() {
@@ -157,11 +182,7 @@ public class TracingService extends Service {
 		Log.d(TAG, "startTracing()");
 
 		try {
-			Notification notification = createForegroundNotification();
-
-			NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-			mNotificationManager.notify(NOTIFICATION_ID, notification);
-
+			invalidateForegroundNotification();
 			startClient();
 			startServer();
 		} catch (Throwable t) {
@@ -194,10 +215,13 @@ public class TracingService extends Service {
 
 	@Override
 	public void onDestroy() {
+		Log.d(TAG, "onDestroy()");
+
+		unregisterReceiver(bluetoothStateChangeReceiver);
+
 		if (handler != null) {
 			handler.removeCallbacksAndMessages(null);
 		}
-		Log.d(TAG, "onDestroy()");
 	}
 
 	@Nullable
