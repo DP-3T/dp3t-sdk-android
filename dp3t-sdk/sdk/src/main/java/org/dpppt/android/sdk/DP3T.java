@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import org.dpppt.android.sdk.internal.AppConfigManager;
+import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.SyncWorker;
 import org.dpppt.android.sdk.internal.TracingService;
 import org.dpppt.android.sdk.internal.backend.CallbackListener;
@@ -100,6 +101,7 @@ public class DP3T {
 		intent.putExtra(TracingService.EXTRA_SCAN_DURATION, scanDuration);
 		ContextCompat.startForegroundService(context, intent);
 		SyncWorker.startSyncWorker(context);
+		BroadcastHelper.sendUpdateBroadcast(context);
 	}
 
 	public static boolean isStarted(Context context) {
@@ -196,11 +198,11 @@ public class DP3T {
 		Intent intent = new Intent(context, TracingService.class).setAction(TracingService.ACTION_STOP);
 		context.startService(intent);
 		SyncWorker.stopSyncWorker(context);
+		BroadcastHelper.sendUpdateBroadcast(context);
 	}
 
 	public static IntentFilter getUpdateIntentFilter() {
-		IntentFilter intentFilter = new IntentFilter(DP3T.UPDATE_INTENT_ACTION);
-		return intentFilter;
+		return new IntentFilter(DP3T.UPDATE_INTENT_ACTION);
 	}
 
 	public static void setCalibrationTestDeviceName(Context context, String name) {
