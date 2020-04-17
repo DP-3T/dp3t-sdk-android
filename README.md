@@ -142,7 +142,7 @@ DP3T.sendIWasExposed(getContext(), null, new CallbackListener<Void>() {
 			});
 ```
 
-### Sync with backend for exposed user
+### Sync with backend for exposed users
 The SDK automatically registers a periodic Job to sync with the backend for new exposed users. If you want to trigger a sync manually (e.g., upon a push from your backend) you can use:
 ```java
 DP3T.sync(getContext());
