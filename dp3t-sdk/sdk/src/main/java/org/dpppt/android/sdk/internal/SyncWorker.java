@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import org.dpppt.android.sdk.internal.backend.BackendRepository;
 import org.dpppt.android.sdk.internal.backend.ResponseException;
 import org.dpppt.android.sdk.internal.backend.models.ApplicationInfo;
+import org.dpppt.android.sdk.internal.backend.models.CachedResult;
 import org.dpppt.android.sdk.internal.backend.models.ExposedList;
 import org.dpppt.android.sdk.internal.backend.models.Exposee;
 import org.dpppt.android.sdk.internal.database.Database;
@@ -80,8 +81,13 @@ public class SyncWorker extends Worker {
 		dateToLoad = dateToLoad.subtractDays(14);
 
 		for (int i = 0; i <= 14; i++) {
-			ExposedList exposedList = backendRepository.getExposees(dateToLoad);
-			for (Exposee exposee : exposedList.getExposed()) {
+
+			CachedResult<ExposedList> result = backendRepository.getExposees(dateToLoad);
+			if (result.isFromCache()) {
+				//ignore if result comes from cache, we already added it to database
+				continue;
+			}
+			for (Exposee exposee : result.getData().getExposed()) {
 				database.addKnownCase(
 						context,
 						exposee.getKey(),

@@ -7,10 +7,10 @@ package org.dpppt.android.sdk.internal.backend;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import java.io.IOException;
 
+import org.dpppt.android.sdk.internal.backend.models.CachedResult;
 import org.dpppt.android.sdk.internal.backend.models.ExposedList;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.util.DayDate;
@@ -36,11 +36,10 @@ public class BackendRepository implements Repository {
 		backendService = retrofit.create(BackendService.class);
 	}
 
-	@Nullable
-	public ExposedList getExposees(@NonNull DayDate dayDate) throws IOException, ResponseException {
+	public CachedResult<ExposedList> getExposees(@NonNull DayDate dayDate) throws IOException, ResponseException {
 		Response<ExposedList> response = backendService.getExposees(dayDate.formatAsString()).execute();
 		if (response.isSuccessful()) {
-			return response.body();
+			return new CachedResult<>(response.body(), response.raw().networkResponse() == null);
 		}
 		throw new ResponseException(response.raw());
 	}
