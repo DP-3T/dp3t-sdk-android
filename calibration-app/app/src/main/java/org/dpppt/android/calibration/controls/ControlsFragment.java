@@ -59,6 +59,7 @@ import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.internal.backend.CallbackListener;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthData;
+import org.dpppt.android.sdk.internal.database.Database;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -391,7 +392,8 @@ public class ControlsFragment extends Fragment {
 		builder.append(getString(R.string.status_last_synced, lastSyncDateString)).append("\n")
 				.append(getString(R.string.status_self_exposed, status.isReportedAsExposed())).append("\n")
 				.append(getString(R.string.status_been_exposed, status.wasContactExposed())).append("\n")
-				.append(getString(R.string.status_number_handshakes, status.getNumberOfHandshakes()));
+				.append(getString(R.string.status_number_contacts, status.getNumberOfContacts())).append("\n")
+				.append(getString(R.string.status_number_handshakes, new Database(getContext()).getHandshakes().size()));
 
 		ArrayList<TracingStatus.ErrorState> errors = status.getErrors();
 		if (errors != null && errors.size() > 0) {

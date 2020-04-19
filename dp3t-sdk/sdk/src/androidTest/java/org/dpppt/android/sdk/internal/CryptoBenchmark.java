@@ -12,13 +12,13 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import java.util.ArrayList;
 
+import org.dpppt.android.sdk.internal.crypto.CryptoModule;
+import org.dpppt.android.sdk.internal.crypto.EphId;
+import org.dpppt.android.sdk.internal.database.models.Contact;
+import org.dpppt.android.sdk.internal.util.DayDate;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import org.dpppt.android.sdk.internal.crypto.CryptoModule;
-import org.dpppt.android.sdk.internal.database.models.Contact;
-import org.dpppt.android.sdk.internal.util.DayDate;
 
 @RunWith(AndroidJUnit4.class)
 public class CryptoBenchmark {
@@ -42,7 +42,7 @@ public class CryptoBenchmark {
 				module.checkContacts(key.getBytes(), new DayDate().subtractDays(NUMBER_OF_DAYS_TO_TEST), new DayDate(), (date -> {
 					ArrayList<Contact> contacts = new ArrayList<>();
 					for (int x = 0; x < NUMBER_OF_CONTACTS_PER_DAY; x++) {
-						contacts.add(new Contact(0, new DayDate(), new byte[CryptoModule.KEY_LENGTH], 0));
+						contacts.add(new Contact(0, new DayDate(), new EphId(new byte[CryptoModule.KEY_LENGTH]), 0));
 					}
 					return contacts;
 				}), (contact -> {}));

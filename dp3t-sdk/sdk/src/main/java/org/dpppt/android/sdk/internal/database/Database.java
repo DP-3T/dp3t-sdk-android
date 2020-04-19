@@ -18,7 +18,9 @@ import java.util.List;
 
 import org.dpppt.android.sdk.BuildConfig;
 import org.dpppt.android.sdk.internal.BroadcastHelper;
+import org.dpppt.android.sdk.internal.crypto.ContactsFactory;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
+import org.dpppt.android.sdk.internal.crypto.EphId;
 import org.dpppt.android.sdk.internal.database.models.Contact;
 import org.dpppt.android.sdk.internal.database.models.Handshake;
 import org.dpppt.android.sdk.internal.util.DayDate;
@@ -85,20 +87,16 @@ public class Database {
 
 	public List<Handshake> getHandshakes() {
 		SQLiteDatabase db = databaseOpenHelper.getReadableDatabase();
-		List<Handshake> handshakes = new ArrayList<>();
-		try (Cursor cursor = db
-				.query(Handshakes.TABLE_NAME, Handshakes.PROJECTION, null, null, null, null, Handshakes.ID)) {
-			while (cursor.moveToNext()) {
-				int id = cursor.getInt(cursor.getColumnIndexOrThrow(Handshakes.ID));
-				long timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(Handshakes.TIMESTAMP));
-				byte[] star = cursor.getBlob(cursor.getColumnIndexOrThrow(Handshakes.EPHID));
-				int txPowerLevel = cursor.getInt(cursor.getColumnIndexOrThrow(Handshakes.TX_POWER_LEVEL));
-				int rssi = cursor.getInt(cursor.getColumnIndexOrThrow(Handshakes.RSSI));
-				Handshake handShake = new Handshake(id, timestamp, star, txPowerLevel, rssi);
-				handshakes.add(handShake);
-			}
-		}
-		return handshakes;
+		Cursor cursor = db.query(Handshakes.TABLE_NAME, Handshakes.PROJECTION, null, null, null, null, Handshakes.ID);
+		return getHandshakesFromCursor(cursor);
+	}
+
+
+	public List<Handshake> getHandshakes(long maxTime) {
+		SQLiteDatabase db = databaseOpenHelper.getReadableDatabase();
+		Cursor cursor = db.query(Handshakes.TABLE_NAME, Handshakes.PROJECTION, Handshakes.TIMESTAMP + " < ?",
+				new String[] { "" + maxTime }, null, null, Handshakes.ID);
+		return getHandshakesFromCursor(cursor);
 	}
 
 	public void getHandshakes(@NonNull ResultListener<List<Handshake>> resultListener) {
@@ -113,15 +111,28 @@ public class Database {
 		});
 	}
 
+	private List<Handshake> getHandshakesFromCursor(Cursor cursor) {
+		List<Handshake> handshakes = new ArrayList<>();
+		while (cursor.moveToNext()) {
+			int id = cursor.getInt(cursor.getColumnIndexOrThrow(Handshakes.ID));
+			long timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(Handshakes.TIMESTAMP));
+			EphId ephId = new EphId(cursor.getBlob(cursor.getColumnIndexOrThrow(Handshakes.EPHID)));
+			int txPowerLevel = cursor.getInt(cursor.getColumnIndexOrThrow(Handshakes.TX_POWER_LEVEL));
+			int rssi = cursor.getInt(cursor.getColumnIndexOrThrow(Handshakes.RSSI));
+			Handshake handShake = new Handshake(id, timestamp, ephId, txPowerLevel, rssi);
+			handshakes.add(handShake);
+		}
+		return handshakes;
+	}
+
 	public void generateContactsFromHandshakes(Context context) {
 		databaseThread.post(() -> {
 
 			long currentEpochStart = CryptoModule.getInstance(context).getCurrentEpochStart();
 
-			List<Handshake> handshakes = getHandshakes();
-			//TODO add advanced logic to create contacts
-			for (Handshake handshake : handshakes) {
-				Contact contact = new Contact(-1, new DayDate(handshake.getTimestamp()), handshake.getEphId(), 0);
+			List<Handshake> handshakes = getHandshakes(currentEpochStart);
+			List<Contact> contacts = ContactsFactory.mergeHandshakesToContacts(handshakes);
+			for (Contact contact : contacts) {
 				addContact(contact);
 			}
 
@@ -139,9 +150,9 @@ public class Database {
 	private void addContact(Contact contact) {
 		SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 		ContentValues values = new ContentValues();
-		values.put(Contacts.EPHID, contact.getEphId());
+		values.put(Contacts.EPHID, contact.getEphId().getData());
 		values.put(Contacts.DATE, contact.getDate().getStartOfDayTimestamp());
-		db.insert(Contacts.TABLE_NAME, null, values);
+		db.insertWithOnConflict(Contacts.TABLE_NAME, null, values, CONFLICT_IGNORE);
 	}
 
 	public List<Contact> getContacts() {
@@ -164,7 +175,7 @@ public class Database {
 		while (cursor.moveToNext()) {
 			int id = cursor.getInt(cursor.getColumnIndexOrThrow(Contacts.ID));
 			DayDate date = new DayDate(cursor.getLong(cursor.getColumnIndexOrThrow(Contacts.DATE)));
-			byte[] ephid = cursor.getBlob(cursor.getColumnIndexOrThrow(Contacts.EPHID));
+			EphId ephid = new EphId(cursor.getBlob(cursor.getColumnIndexOrThrow(Contacts.EPHID)));
 			int associatedKnownCase = cursor.getInt(cursor.getColumnIndexOrThrow(Contacts.ASSOCIATED_KNOWN_CASE));
 			Contact contact = new Contact(id, date, ephid, associatedKnownCase);
 			contacts.add(contact);

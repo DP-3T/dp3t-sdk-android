@@ -24,7 +24,9 @@ interface Contacts {
 	static String create() {
 		return "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " (" + ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
 				DATE + " INTEGER NOT NULL, " + EPHID + " BLOB NOT NULL, " +
-				ASSOCIATED_KNOWN_CASE + " INTEGER, FOREIGN KEY (" + ASSOCIATED_KNOWN_CASE + ") REFERENCES " +
+				ASSOCIATED_KNOWN_CASE + " INTEGER, " +
+				"CONSTRAINT no_duplicates UNIQUE (" + DATE + ", " + EPHID + "), " +
+				"FOREIGN KEY (" + ASSOCIATED_KNOWN_CASE + ") REFERENCES " +
 				KnownCases.TABLE_NAME + " (" + KnownCases.ID + ") ON DELETE SET NULL)";
 	}
 

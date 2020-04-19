@@ -3,7 +3,6 @@
  * https://www.ubique.ch
  * Copyright (c) 2020. All rights reserved.
  */
-
 package org.dpppt.android.calibration.handshakes;
 
 import android.os.Bundle;
@@ -20,10 +19,10 @@ import androidx.fragment.app.Fragment;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import org.dpppt.android.calibration.R;
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.database.Database;
 import org.dpppt.android.sdk.internal.database.models.Handshake;
-import org.dpppt.android.calibration.R;
 
 public class HandshakesFragment extends Fragment {
 
@@ -69,7 +68,8 @@ public class HandshakesFragment extends Fragment {
 				for (Handshake handShake : response) {
 					stringBuilder.append(sdf.format(new Date(handShake.getTimestamp())));
 					stringBuilder.append(" ");
-					stringBuilder.append(new String(Base64.encode(handShake.getEphId(), Base64.NO_WRAP)).substring(0, 10));
+					stringBuilder
+							.append(new String(Base64.encode(handShake.getEphId().getData(), Base64.NO_WRAP)).substring(0, 10));
 					stringBuilder.append("...");
 					stringBuilder.append(" TxPowerLevel: ");
 					stringBuilder.append(handShake.getTxPowerLevel());
@@ -101,7 +101,7 @@ public class HandshakesFragment extends Fragment {
 		for (Handshake handshake : handshakes) {
 			byte[] head = new byte[4];
 			for (int i = 0; i < 4; i++) {
-				head[i] = handshake.getEphId()[i];
+				head[i] = handshake.getEphId().getData()[i];
 			}
 			String identifier = new String(head);
 			if (!groupedHandshakes.containsKey(identifier)) {

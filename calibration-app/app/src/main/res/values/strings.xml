@@ -33,6 +33,7 @@
 	<string name="status_receiving">receiving: %1$b</string>
 	<string name="status_last_synced">last synced: %1$s</string>
 	<string name="status_number_handshakes">handshakes: %1$d</string>
+	<string name="status_number_contacts">contacts: %1$d</string>
 	<string name="status_been_exposed">has been exposed: %1$b</string>
 	<string name="status_self_exposed">self exposed: %1$b</string>
 	<string name="dialog_clear_data_title">Clear local data</string>

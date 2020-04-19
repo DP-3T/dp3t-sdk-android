@@ -52,8 +52,9 @@ public class SyncWorker extends Worker {
 	public Result doWork() {
 		Context context = getApplicationContext();
 
-		long scanInterval = AppConfigManager.getInstance(context).getScanInterval();
-		TracingService.scheduleNextRun(context, scanInterval);
+		long scanInterval = AppConfigManager.getInstance(getApplicationContext()).getScanInterval();
+		TracingService.scheduleNextClientRestart(context, scanInterval);
+		TracingService.scheduleNextServerRestart(context);
 
 		try {
 			doSync(context);

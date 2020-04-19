@@ -26,6 +26,8 @@ import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.database.Database;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
+import static org.dpppt.android.sdk.internal.AppConfigManager.DEFAULT_SCAN_INTERVAL;
+
 public class BleClient {
 
 	private static final String TAG = "BleClient";
@@ -34,7 +36,7 @@ public class BleClient {
 	private BluetoothLeScanner bleScanner;
 	private ScanCallback bleScanCallback;
 	private GattConnectionThread gattConnectionThread;
-	private long minTimeToReconnectToSameDevice = 5 * 60 * 1000;
+	private long minTimeToReconnectToSameDevice = DEFAULT_SCAN_INTERVAL;
 
 	public BleClient(Context context) {
 		this.context = context;

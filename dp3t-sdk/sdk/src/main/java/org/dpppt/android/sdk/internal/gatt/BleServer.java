@@ -112,7 +112,7 @@ public class BleServer {
 	}
 
 	private byte[] getAdvertiseData() {
-		byte[] advertiseData = CryptoModule.getInstance(context).getCurrentEphId();
+		byte[] advertiseData = CryptoModule.getInstance(context).getCurrentEphId().getData();
 		String calibrationTestDeviceName = AppConfigManager.getInstance(context).getCalibrationTestDeviceName();
 		if (calibrationTestDeviceName != null) {
 			byte[] nameBytes = calibrationTestDeviceName.getBytes();

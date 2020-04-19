@@ -31,11 +31,11 @@ public class CryptoTest {
 		CryptoModule module = CryptoModule.getInstance(InstrumentationRegistry.getInstrumentation().getContext());
 		module.reset();
 		module.init();
-		List<byte[]> allEphIdsOfToday = module.getEphIdsForToday(new DayDate());
-		byte[] currentEphId = module.getCurrentEphId();
+		List<EphId> allEphIdsOfToday = module.getEphIdsForToday(new DayDate());
+		EphId currentEphId = module.getCurrentEphId();
 		int matchingCount = 0;
-		for (byte[] ephId : allEphIdsOfToday) {
-			if (Arrays.equals(ephId, currentEphId)) {
+		for (EphId ephId : allEphIdsOfToday) {
+			if (ephId.equals(currentEphId)) {
 				matchingCount++;
 			}
 		}
@@ -47,11 +47,11 @@ public class CryptoTest {
 		CryptoModule module = CryptoModule.getInstance(InstrumentationRegistry.getInstrumentation().getContext());
 		module.reset();
 		module.init();
-		List<byte[]> allEphIdsOfToday = module.getEphIdsForToday(new DayDate());
-		List<byte[]> allEphIdsOfToday2 = module.getEphIdsForToday(new DayDate());
+		List<EphId> allEphIdsOfToday = module.getEphIdsForToday(new DayDate());
+		List<EphId> allEphIdsOfToday2 = module.getEphIdsForToday(new DayDate());
 
 		for (int i = 0; i < allEphIdsOfToday.size(); i++) {
-			assertTrue(Arrays.equals(allEphIdsOfToday.get(i), allEphIdsOfToday2.get(i)));
+			assertTrue(allEphIdsOfToday.get(i).equals(allEphIdsOfToday2.get(i)));
 		}
 	}
 
@@ -63,22 +63,22 @@ public class CryptoTest {
 
 		DayDate today = new DayDate();
 		byte[] oldSecretKey = module.getCurrentSK(today);
-		byte[] oldCurrentEphId = module.getCurrentEphId();
+		EphId oldCurrentEphId = module.getCurrentEphId();
 
 		module.reset();
 		module.init();
 
 		byte[] newSecretKey = module.getCurrentSK(today);
-		byte[] mewCurrentEphId = module.getCurrentEphId();
+		EphId mewCurrentEphId = module.getCurrentEphId();
 
 		assertFalse(Arrays.equals(oldSecretKey, newSecretKey));
-		assertFalse(Arrays.equals(oldCurrentEphId, mewCurrentEphId));
+		assertFalse(oldCurrentEphId.equals(mewCurrentEphId));
 	}
 
 	@Test
 	public void testTokenToday() {
 		String key = "jZzsrFhswzLQlJDNnyvLotjoSTu4zZFAFXGUOfNA7Hw=";
-		String token = "3daU4Ky04Zugx7RwRm7mQw==";
+		String token = "WoCgN+PiEk4mhKhMj6XD8w==";
 		testKeyAndTokenToday(key, token, 1);
 	}
 
@@ -94,7 +94,7 @@ public class CryptoTest {
 		module.reset();
 		module.init();
 
-		byte[] ephId = fromBase64(token);
+		EphId ephId = new EphId(fromBase64(token));
 		DayDate today = new DayDate();
 		List<Contact> contacts = new ArrayList<>();
 		contacts.add(new Contact(0, today, ephId, 0));
@@ -117,7 +117,7 @@ public class CryptoTest {
 		module.reset();
 		module.init();
 
-		byte[] ephId = fromBase64(token);
+		EphId ephId = new EphId(fromBase64(token));
 		DayDate today = new DayDate();
 		DayDate yesterday = today.subtractDays(1);
 		List<Contact> contacts = new ArrayList<>();
