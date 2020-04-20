@@ -10,13 +10,12 @@ import android.content.SharedPreferences;
 
 import java.io.IOException;
 
-import com.google.gson.Gson;
-
 import org.dpppt.android.sdk.internal.backend.BackendRepository;
 import org.dpppt.android.sdk.internal.backend.CallbackListener;
 import org.dpppt.android.sdk.internal.backend.DiscoveryRepository;
 import org.dpppt.android.sdk.internal.backend.models.ApplicationInfo;
 import org.dpppt.android.sdk.internal.backend.models.ApplicationsList;
+import org.dpppt.android.sdk.internal.util.Json;
 
 public class AppConfigManager {
 
@@ -54,7 +53,6 @@ public class AppConfigManager {
 	private boolean isDevDiscoveryMode;
 	private SharedPreferences sharedPrefs;
 	private DiscoveryRepository discoveryRepository;
-	private final Gson gson = new Gson();
 
 	private AppConfigManager(Context context) {
 		discoveryRepository = new DiscoveryRepository(context);
@@ -70,7 +68,7 @@ public class AppConfigManager {
 		discoveryRepository.getDiscovery(new CallbackListener<ApplicationsList>() {
 			@Override
 			public void onSuccess(ApplicationsList response) {
-				sharedPrefs.edit().putString(PREF_APPLICATION_LIST, gson.toJson(response)).apply();
+				sharedPrefs.edit().putString(PREF_APPLICATION_LIST, Json.toJson(response)).apply();
 			}
 
 			@Override
@@ -85,18 +83,18 @@ public class AppConfigManager {
 		setAppId(applicationInfo.getAppId());
 		ApplicationsList applicationsList = new ApplicationsList();
 		applicationsList.getApplications().add(applicationInfo);
-		sharedPrefs.edit().putString(PREF_APPLICATION_LIST, gson.toJson(applicationsList)).apply();
+		sharedPrefs.edit().putString(PREF_APPLICATION_LIST, Json.toJson(applicationsList)).apply();
 	}
 
 	public void updateFromDiscoverySynchronous() throws IOException {
 		if (useDiscovery) {
 			ApplicationsList response = discoveryRepository.getDiscoverySync(isDevDiscoveryMode);
-			sharedPrefs.edit().putString(PREF_APPLICATION_LIST, gson.toJson(response)).apply();
+			sharedPrefs.edit().putString(PREF_APPLICATION_LIST, Json.toJson(response)).apply();
 		}
 	}
 
 	public ApplicationsList getLoadedApplicationsList() {
-		return gson.fromJson(sharedPrefs.getString(PREF_APPLICATION_LIST, "{}"), ApplicationsList.class);
+		return Json.safeFromJson(sharedPrefs.getString(PREF_APPLICATION_LIST, "{}"), ApplicationsList.class, ApplicationsList::new);
 	}
 
 	public ApplicationInfo getAppConfig() {
