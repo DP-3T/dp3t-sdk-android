@@ -145,11 +145,14 @@ public class TracingService extends Service {
 		if (status.getErrors().size() > 0) {
 			String errorText = getNotificationErrorText(status.getErrors());
 			builder.setContentTitle(getString(R.string.dp3t_sdk_service_notification_title))
+					.setContentText(errorText)
 					.setStyle(new NotificationCompat.BigTextStyle().bigText(errorText))
 					.setPriority(NotificationCompat.PRIORITY_DEFAULT);
 		} else {
+			String text = getString(R.string.dp3t_sdk_service_notification_text);
 			builder.setContentTitle(getString(R.string.dp3t_sdk_service_notification_title))
-					.setContentText(getString(R.string.dp3t_sdk_service_notification_text))
+					.setContentText(text)
+					.setStyle(new NotificationCompat.BigTextStyle().bigText(text))
 					.setPriority(NotificationCompat.PRIORITY_LOW)
 					.build();
 		}
