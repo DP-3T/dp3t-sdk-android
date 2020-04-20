@@ -5,6 +5,7 @@
  */
 package org.dpppt.android.sdk.internal.crypto;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Pair;
@@ -25,12 +26,11 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.google.gson.Gson;
-
 import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthData;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.database.models.Contact;
 import org.dpppt.android.sdk.internal.util.DayDate;
+import org.dpppt.android.sdk.internal.util.Json;
 
 import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
@@ -44,10 +44,11 @@ public class CryptoModule {
 	public static final int CONTACT_THRESHOLD = 1;
 	private static final byte[] BROADCAST_KEY = "broadcast key".getBytes();
 
-
 	private static final String KEY_SK_LIST_JSON = "SK_LIST_JSON";
 	private static final String KEY_EPHIDS_TODAY_JSON = "EPHIDS_TODAY_JSON";
+
 	private static CryptoModule instance;
+
 	private SharedPreferences esp;
 
 	public static CryptoModule getInstance(Context context) {
@@ -75,7 +76,7 @@ public class CryptoModule {
 			KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA256");
 			SecretKey secretKey = keyGenerator.generateKey();
 			SKList skList = new SKList();
-			skList.add(new Pair(new DayDate(System.currentTimeMillis()), secretKey.getEncoded()));
+			skList.add(Pair.create(new DayDate(System.currentTimeMillis()), secretKey.getEncoded()));
 			storeSKList(skList);
 			return true;
 		} catch (Exception ex) {
@@ -86,11 +87,11 @@ public class CryptoModule {
 
 	private SKList getSKList() {
 		String skListJson = esp.getString(KEY_SK_LIST_JSON, null);
-		return new Gson().fromJson(skListJson, SKList.class);
+		return Json.safeFromJson(skListJson, SKList.class, SKList::new);
 	}
 
 	private void storeSKList(SKList skList) {
-		esp.edit().putString(KEY_SK_LIST_JSON, new Gson().toJson(skList)).commit();
+		esp.edit().putString(KEY_SK_LIST_JSON, Json.toJson(skList)).apply();
 	}
 
 	protected byte[] getSKt1(byte[] SKt0) {
@@ -107,8 +108,8 @@ public class CryptoModule {
 		SKList skList = getSKList();
 		DayDate nextDay = skList.get(0).first.getNextDay();
 		byte[] SKt1 = getSKt1(skList.get(0).second);
-		skList.add(0, new Pair(nextDay, SKt1));
-		List subList = skList.subList(0, Math.min(NUMBER_OF_DAYS_TO_KEEP_DATA, skList.size()));
+		skList.add(0, Pair.create(nextDay, SKt1));
+		List<Pair<DayDate, byte[]>> subList = skList.subList(0, Math.min(NUMBER_OF_DAYS_TO_KEEP_DATA, skList.size()));
 		skList = new SKList();
 		skList.addAll(subList);
 		storeSKList(skList);
@@ -163,11 +164,11 @@ public class CryptoModule {
 
 	private EphIdsForDay getStoredEphIdsForToday() {
 		String ephIdsJson = esp.getString(KEY_EPHIDS_TODAY_JSON, "null");
-		return new Gson().fromJson(ephIdsJson, EphIdsForDay.class);
+		return Json.safeFromJson(ephIdsJson, EphIdsForDay.class, () -> null);
 	}
 
 	private void storeEphIdsForToday(EphIdsForDay ephIdsForDay) {
-		esp.edit().putString(KEY_EPHIDS_TODAY_JSON, new Gson().toJson(ephIdsForDay)).commit();
+		esp.edit().putString(KEY_EPHIDS_TODAY_JSON, Json.toJson(ephIdsForDay)).apply();
 	}
 
 	protected List<EphId> getEphIdsForToday(DayDate currentDay) {
@@ -190,14 +191,11 @@ public class CryptoModule {
 
 	public void checkContacts(byte[] sk, DayDate onsetDate, DayDate bucketDate, GetContactsCallback contactCallback,
 			MatchCallback matchCallback) {
-
 		DayDate dayToTest = onsetDate;
 		byte[] skForDay = sk;
 		while (dayToTest.isBeforeOrEquals(bucketDate)) {
-
 			List<Contact> contactsOnDay = contactCallback.getContacts(dayToTest);
 			if (contactsOnDay.size() > 0) {
-
 				//generate all ephIds for day
 				HashSet<EphId> ephIdHashSet = new HashSet<>(createEphIds(skForDay, false));
 
@@ -234,11 +232,10 @@ public class CryptoModule {
 		return null;
 	}
 
+	@SuppressLint("ApplySharedPref")
 	public void reset() {
 		try {
-			SharedPreferences.Editor editor = esp.edit();
-			editor.clear();
-			editor.commit();
+			esp.edit().clear().commit();
 			init();
 		} catch (Exception ex) {
 			ex.printStackTrace();
