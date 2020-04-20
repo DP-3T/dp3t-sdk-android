@@ -122,6 +122,7 @@ public class Database {
 			Handshake handShake = new Handshake(id, timestamp, ephId, txPowerLevel, rssi);
 			handshakes.add(handShake);
 		}
+		cursor.close();
 		return handshakes;
 	}
 
@@ -180,6 +181,7 @@ public class Database {
 			Contact contact = new Contact(id, date, ephid, associatedKnownCase);
 			contacts.add(contact);
 		}
+		cursor.close();
 		return contacts;
 	}
 
