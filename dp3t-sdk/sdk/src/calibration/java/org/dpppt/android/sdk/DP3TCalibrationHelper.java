@@ -6,6 +6,7 @@ import java.io.OutputStream;
 
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.database.Database;
+import org.dpppt.android.sdk.internal.database.LogDatabaseHelper;
 
 public class DP3TCalibrationHelper {
 
@@ -22,8 +23,11 @@ public class DP3TCalibrationHelper {
 	}
 
 	public static void exportDb(Context context, OutputStream targetOut, Runnable onExportedListener) {
-		Database db = new Database(context);
-		db.exportTo(context, targetOut, response -> onExportedListener.run());
+		new Thread(() -> {
+			LogDatabaseHelper.copyLogDatabase(context);
+			Database db = new Database(context);
+			db.exportTo(context, targetOut, response -> onExportedListener.run());
+		}).start();
 	}
 
 	public static void start(Context context, boolean advertise, boolean receive) {
