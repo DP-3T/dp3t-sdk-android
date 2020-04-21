@@ -3,7 +3,6 @@
  * https://www.ubique.ch
  * Copyright (c) 2020. All rights reserved.
  */
-
 package org.dpppt.android.sdk.internal.logger;
 
 import android.content.Context;
@@ -18,7 +17,7 @@ public class Logger {
 
 	private static Logger instance = null;
 
-	private final LogLevel activeLevel;
+	private final LogLevel minLevel;
 	private final LogDatabase database;
 
 	public static void init(Context context, LogLevel level) {
@@ -26,7 +25,7 @@ public class Logger {
 	}
 
 	private Logger(Context context, LogLevel level) {
-		this.activeLevel = level;
+		this.minLevel = level;
 		this.database = new LogDatabase(context);
 	}
 
@@ -39,6 +38,12 @@ public class Logger {
 	public static void i(String tag, String message) {
 		if (instance != null) {
 			instance.log(LogLevel.INFO, tag, message);
+		}
+	}
+
+	public static void w(String tag, String message) {
+		if (instance != null) {
+			instance.log(LogLevel.WARNING, tag, message);
 		}
 	}
 
@@ -76,9 +81,11 @@ public class Logger {
 	}
 
 	private void log(LogLevel level, String tag, String message) {
-		if (level.getI() < activeLevel.getI()) {
+		if (level.getImportance() < minLevel.getImportance()) {
 			return;
 		}
+
+		level.getLogcat().log(tag, message);
 
 		database.log(level.getKey(), tag, message, System.currentTimeMillis());
 	}

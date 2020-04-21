@@ -108,7 +108,7 @@ class LogsAdapter extends RecyclerView.Adapter<LogsViewHolder> {
 	private List<LogEntry> getFilteredLogs(List<LogEntry> logs) {
 		List<LogEntry> filteredLogs = new ArrayList<>();
 		for (LogEntry log : logs) {
-			if (log.getLevel().getI() >= filterLogLevel.getI()) {
+			if (log.getLevel().getImportance() >= filterLogLevel.getImportance()) {
 				if (filterTags.isEmpty() || filterTags.contains(log.getTag())) {
 					filteredLogs.add(log);
 				}

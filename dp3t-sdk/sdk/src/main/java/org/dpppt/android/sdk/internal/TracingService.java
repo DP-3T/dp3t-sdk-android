@@ -15,7 +15,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
@@ -97,8 +96,7 @@ public class TracingService extends Service {
 			wl.acquire();
 		}
 
-		Logger.i(TAG, "onHandleIntent() with " + intent.getAction());
-		Log.d(TAG, "onHandleIntent() with " + intent.getAction());
+		Logger.i(TAG, "onStartCommand() with " + intent.getAction());
 
 		scanInterval = intent.getLongExtra(EXTRA_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL);
 		scanDuration = intent.getLongExtra(EXTRA_SCAN_DURATION, DEFAULT_SCAN_DURATION);
@@ -205,7 +203,6 @@ public class TracingService extends Service {
 	}
 
 	private void restartClient() {
-
 		try {
 			startClient();
 		} catch (Throwable t) {
@@ -253,7 +250,7 @@ public class TracingService extends Service {
 
 	@Override
 	public void onDestroy() {
-		Log.d(TAG, "onDestroy()");
+		Logger.i(TAG, "onDestroy()");
 
 		unregisterReceiver(bluetoothStateChangeReceiver);
 

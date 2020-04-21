@@ -19,8 +19,11 @@ import java.util.UUID;
 
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
+import org.dpppt.android.sdk.internal.logger.Logger;
 
 public class BleServer {
+
+	private static final String TAG = "BleServer";
 
 	public static final UUID SERVICE_UUID = UUID.fromString("8c8494e3-bab5-1848-40a0-1b06991c0000");
 	public static final int MANUFACTURER_ID = 0xabba;
@@ -30,12 +33,12 @@ public class BleServer {
 	private final AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
 		@Override
 		public void onStartFailure(int errorCode) {
-			Log.d("advertise", "onStartFailure: " + errorCode);
+			Logger.e(TAG, "advertise onStartFailure: " + errorCode);
 		}
 
 		@Override
 		public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-			Log.d("advertise", "onStartSuccess: " + settingsInEffect.toString());
+			Logger.i(TAG, "advertise onStartSuccess: " + settingsInEffect.toString());
 		}
 	};
 	private BluetoothAdapter mAdapter;
@@ -62,20 +65,22 @@ public class BleServer {
 
 	private BluetoothGattServerCallback createGattServerCallback() {
 		return new BluetoothGattServerCallback() {
+			private static final String TAG = "GattServer";
+
 			@Override
 			public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-				Log.d("GattServer", "Our gatt server connection state changed, new state " + Integer.toString(newState));
+				Logger.d(TAG, "Our gatt server connection state changed, new state " + newState);
 			}
 
 			@Override
 			public void onServiceAdded(int status, BluetoothGattService service) {
-				Log.d("GattServer", "Our gatt server service was added.");
+				Logger.d(TAG, "Our gatt server service was added.");
 			}
 
 			@Override
 			public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset,
 					BluetoothGattCharacteristic characteristic) {
-				Log.d("GattServer", "Our gatt characteristic was read.");
+				Logger.i(TAG, "Our gatt characteristic was read.");
 				mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset,
 						characteristic.getValue());
 			}
@@ -84,29 +89,29 @@ public class BleServer {
 			public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId,
 					BluetoothGattCharacteristic characteristic, boolean preparedWrite,
 					boolean responseNeeded, int offset, byte[] value) {
-				Log.d("GattServer", "We have received a write request for one of our hosted characteristics");
+				Logger.i(TAG, "We have received a write request for one of our hosted characteristics");
 			}
 
 			@Override
 			public void onNotificationSent(BluetoothDevice device, int status) {
-				Log.d("GattServer", "onNotificationSent");
+				Logger.d(TAG, "onNotificationSent");
 			}
 
 			@Override
 			public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int offset,
 					BluetoothGattDescriptor descriptor) {
-				Log.d("GattServer", "Gatt server descriptor was read.");
+				Logger.d(TAG, "Gatt server descriptor was read.");
 			}
 
 			@Override
 			public void onDescriptorWriteRequest(BluetoothDevice device, int requestId, BluetoothGattDescriptor descriptor,
 					boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
-				Log.d("GattServer", "Gatt server descriptor was written.");
+				Logger.d(TAG, "Gatt server descriptor was written.");
 			}
 
 			@Override
 			public void onExecuteWrite(BluetoothDevice device, int requestId, boolean execute) {
-				Log.d("GattServer", "Gatt server on execute write.");
+				Logger.d(TAG, "Gatt server on execute write.");
 			}
 		};
 	}

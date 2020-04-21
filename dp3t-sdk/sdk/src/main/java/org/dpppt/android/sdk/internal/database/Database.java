@@ -72,7 +72,7 @@ public class Database {
 		});
 	}
 
-	public void addHandshake(Context context, byte[] star, int txPowerLevel, int rssi, long timestamp) {
+	public ContentValues addHandshake(Context context, byte[] star, int txPowerLevel, int rssi, long timestamp) {
 		SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 		ContentValues values = new ContentValues();
 		values.put(Handshakes.EPHID, star);
@@ -83,6 +83,7 @@ public class Database {
 			db.insert(Handshakes.TABLE_NAME, null, values);
 			BroadcastHelper.sendUpdateBroadcast(context);
 		});
+		return values;
 	}
 
 	public List<Handshake> getHandshakes() {

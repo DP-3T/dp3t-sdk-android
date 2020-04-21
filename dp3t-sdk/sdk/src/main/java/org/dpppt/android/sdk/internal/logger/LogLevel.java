@@ -6,21 +6,26 @@
 
 package org.dpppt.android.sdk.internal.logger;
 
+import android.util.Log;
+
 public enum LogLevel {
 
-	DEBUG("d", "debug", 1),
-	INFO("i", "info", 2),
-	ERROR("e", "error", 3),
-	OFF("-", "off", Integer.MAX_VALUE);
+	DEBUG("d", "debug", 1, Log::d),
+	INFO("i", "info", 2, Log::i),
+	WARNING("w", "warning", 3, Log::w),
+	ERROR("e", "error", 4, Log::e),
+	OFF("-", "off", Integer.MAX_VALUE, null);
 
 	private final String key;
 	private final String value;
-	private final int i;
+	private final int importance;
+	private final LogFunction logcat;
 
-	LogLevel(String key, String value, int i) {
+	LogLevel(String key, String value, int importance, LogFunction logcat) {
 		this.key = key;
 		this.value = value;
-		this.i = i;
+		this.importance = importance;
+		this.logcat = logcat;
 	}
 
 	public static LogLevel byKey(String key) {
@@ -40,7 +45,11 @@ public enum LogLevel {
 		return value;
 	}
 
-	public int getI() {
-		return i;
+	public int getImportance() {
+		return importance;
+	}
+
+	public LogFunction getLogcat() {
+		return logcat;
 	}
 }
