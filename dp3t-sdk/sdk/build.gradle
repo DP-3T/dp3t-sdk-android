@@ -16,7 +16,7 @@ android {
 	defaultConfig {
 		minSdkVersion 23
 		targetSdkVersion 29
-		versionCode 1
+		versionCode 2
 		versionName "0.1.2"
 		testInstrumentationRunnerArgument 'androidx.benchmark.suppressErrors', 'EMULATOR,LOW-BATTERY,ACTIVITY-MISSING,DEBUGGABLE,UNLOCKED,UNSUSTAINED-ACTIVITY-MISSING'
 		testInstrumentationRunner "androidx.benchmark.junit4.AndroidBenchmarkRunner"
@@ -28,6 +28,7 @@ android {
 	publishNonDefault true
 
 	flavorDimensions "version"
+
 	productFlavors {
 		calibration {
 		}
