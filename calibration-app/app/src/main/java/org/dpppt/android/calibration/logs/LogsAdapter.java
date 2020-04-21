@@ -58,6 +58,9 @@ class LogsAdapter extends RecyclerView.Adapter<LogsViewHolder> {
 			case INFO:
 				color |= 0x00AA00;
 				break;
+			case WARNING:
+				color |= 0xFFAA00;
+				break;
 			case ERROR:
 				color |= 0xFF0000;
 				break;

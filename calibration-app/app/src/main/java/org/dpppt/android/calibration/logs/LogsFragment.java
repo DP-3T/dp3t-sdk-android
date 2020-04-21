@@ -38,7 +38,7 @@ public class LogsFragment extends Fragment {
 	private Handler handler = new Handler();
 	private Runnable updateLogsRunnable;
 
-	private final List<LogLevel> logLevels = Arrays.asList(LogLevel.DEBUG, LogLevel.INFO, LogLevel.ERROR);
+	private final List<LogLevel> logLevels = Arrays.asList(LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARNING, LogLevel.ERROR);
 
 	public static LogsFragment newInstance() {
 		return new LogsFragment();
