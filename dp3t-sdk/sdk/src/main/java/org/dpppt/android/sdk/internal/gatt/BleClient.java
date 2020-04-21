@@ -125,7 +125,9 @@ public class BleClient {
 				// if Android, optimize (meaning: send/read payload directly in the SCAN_RESP)
 				Logger.d(TAG, "read star payload from manufacturer data");
 				ContentValues handshakeData = new Database(context)
-						.addHandshake(context, payload, power, scanResult.getRssi(), System.currentTimeMillis());
+						.addHandshake(context, payload, power, scanResult.getRssi(), System.currentTimeMillis(),
+								BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
+								scanResult.getTimestampNanos());
 				Logger.i(TAG, "saved handshake: " + handshakeData.toString());
 			} else {
 				gattConnectionThread.addTask(new GattConnectionTask(context, bluetoothDevice, scanResult));

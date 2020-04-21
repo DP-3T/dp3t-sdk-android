@@ -96,7 +96,9 @@ public class GattConnectionTask {
 				if (characteristic.getUuid().equals(BleServer.TOTP_CHARACTERISTIC_UUID)) {
 					if (status == BluetoothGatt.GATT_SUCCESS) {
 						addHandshakeToDatabase(characteristic.getValue(), gatt.getDevice().getAddress(),
-								scanResult.getScanRecord().getTxPowerLevel(), scanResult.getRssi());
+								scanResult.getScanRecord().getTxPowerLevel(), scanResult.getRssi(),
+								BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
+								scanResult.getTimestampNanos());
 					} else {
 						Logger.e(TAG, "Failed to read characteristic. Status: " + status);
 
@@ -117,11 +119,13 @@ public class GattConnectionTask {
 		startTime = System.currentTimeMillis();
 	}
 
-	public void addHandshakeToDatabase(byte[] starValue, String macAddress, int rxPowerLevel, int rssi) {
+	public void addHandshakeToDatabase(byte[] starValue, String macAddress, int rxPowerLevel, int rssi, String phyPrimary,
+			String phySecondary, long timestampNanos) {
 		try {
 			String base64String = toBase64(starValue);
 			ContentValues handshakeData = new Database(context)
-					.addHandshake(context, starValue, rxPowerLevel, rssi, System.currentTimeMillis());
+					.addHandshake(context, starValue, rxPowerLevel, rssi, System.currentTimeMillis(),
+							phyPrimary, phySecondary, timestampNanos);
 			Logger.d(TAG, "received " + base64String);
 			Logger.i(TAG, "saved handshake: " + handshakeData.toString());
 		} catch (Exception e) {

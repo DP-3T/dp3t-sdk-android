@@ -72,13 +72,17 @@ public class Database {
 		});
 	}
 
-	public ContentValues addHandshake(Context context, byte[] star, int txPowerLevel, int rssi, long timestamp) {
+	public ContentValues addHandshake(Context context, byte[] star, int txPowerLevel, int rssi, long timestamp, String phyPrimary,
+			String phySecondary, long timestampNanos) {
 		SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 		ContentValues values = new ContentValues();
 		values.put(Handshakes.EPHID, star);
 		values.put(Handshakes.TIMESTAMP, timestamp);
 		values.put(Handshakes.TX_POWER_LEVEL, txPowerLevel);
 		values.put(Handshakes.RSSI, rssi);
+		values.put(Handshakes.PHY_PRIMARY, phyPrimary);
+		values.put(Handshakes.PHY_SECONDARY, phySecondary);
+		values.put(Handshakes.TIMESTAMP_NANOS, timestampNanos);
 		databaseThread.post(() -> {
 			db.insert(Handshakes.TABLE_NAME, null, values);
 			BroadcastHelper.sendUpdateBroadcast(context);
