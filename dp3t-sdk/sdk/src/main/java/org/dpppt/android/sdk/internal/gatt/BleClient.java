@@ -12,9 +12,9 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.ContentValues;
 import android.content.Context;
 import android.os.ParcelUuid;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,6 +74,8 @@ public class BleClient {
 				.build();
 
 		bleScanCallback = new ScanCallback() {
+			private static final String TAG = "ScanCallback";
+
 			public void onScanResult(int callbackType, ScanResult result) {
 				if (result.getScanRecord() != null) {
 					onDeviceFound(result);
@@ -89,12 +91,12 @@ public class BleClient {
 			}
 
 			public void onScanFailed(int errorCode) {
-				Log.e("ScanCallback", "error: " + errorCode);
+				Logger.e(TAG, "error: " + errorCode);
 			}
 		};
 
+		Logger.i(TAG, "starting BLE scanner");
 		bleScanner.startScan(scanFilters, scanSettings, bleScanCallback);
-		Logger.i(TAG, "bleScanner started");
 	}
 
 	private Map<String, Long> deviceLastConnected = new HashMap<>();
@@ -102,12 +104,11 @@ public class BleClient {
 	public void onDeviceFound(ScanResult scanResult) {
 		try {
 			BluetoothDevice bluetoothDevice = scanResult.getDevice();
-			Log.d(TAG, bluetoothDevice.getAddress() + "; " + scanResult.getScanRecord().getDeviceName());
+			Logger.d(TAG, "found " + bluetoothDevice.getAddress() + "; " + scanResult.getScanRecord().getDeviceName());
 
-			if (deviceLastConnected.get(bluetoothDevice.getAddress()) != null &&
-					deviceLastConnected.get(bluetoothDevice.getAddress()) > System.currentTimeMillis() -
-							minTimeToReconnectToSameDevice) {
-				Log.d(TAG, "skipped");
+			Long lastConnected = deviceLastConnected.get(bluetoothDevice.getAddress());
+			if (lastConnected != null && lastConnected > System.currentTimeMillis() - minTimeToReconnectToSameDevice) {
+				Logger.d(TAG, "skipped");
 				return;
 			}
 
@@ -122,15 +123,14 @@ public class BleClient {
 			byte[] payload = scanResult.getScanRecord().getManufacturerSpecificData(BleServer.MANUFACTURER_ID);
 			if (payload != null && payload.length == CryptoModule.KEY_LENGTH) {
 				// if Android, optimize (meaning: send/read payload directly in the SCAN_RESP)
-				Logger.d(TAG, "read star payload from manufatorer data");
-				new Database(context)
-						.addHandshake(context, payload, power, scanResult.getRssi(),
-								System.currentTimeMillis());
+				Logger.d(TAG, "read star payload from manufacturer data");
+				ContentValues handshakeData = new Database(context)
+						.addHandshake(context, payload, power, scanResult.getRssi(), System.currentTimeMillis());
+				Logger.i(TAG, "saved handshake: " + handshakeData.toString());
 			} else {
 				gattConnectionThread.addTask(new GattConnectionTask(context, bluetoothDevice, scanResult));
 			}
 		} catch (Throwable t) {
-			t.printStackTrace();
 			Logger.e(TAG, t);
 		}
 	}
@@ -145,8 +145,7 @@ public class BleClient {
 		if (bleScanner == null) {
 			bleScanner = bluetoothAdapter.getBluetoothLeScanner();
 		}
-		Logger.i(TAG, "bleScanner stopped");
-		Log.d(TAG, "stopping BLE scanner");
+		Logger.i(TAG, "stopping BLE scanner");
 		bleScanner.stopScan(bleScanCallback);
 		bleScanner = null;
 	}

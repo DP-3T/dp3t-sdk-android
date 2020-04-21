@@ -58,6 +58,9 @@ class LogsAdapter extends RecyclerView.Adapter<LogsViewHolder> {
 			case INFO:
 				color |= 0x00AA00;
 				break;
+			case WARNING:
+				color |= 0xFFAA00;
+				break;
 			case ERROR:
 				color |= 0xFF0000;
 				break;
@@ -108,7 +111,7 @@ class LogsAdapter extends RecyclerView.Adapter<LogsViewHolder> {
 	private List<LogEntry> getFilteredLogs(List<LogEntry> logs) {
 		List<LogEntry> filteredLogs = new ArrayList<>();
 		for (LogEntry log : logs) {
-			if (log.getLevel().getI() >= filterLogLevel.getI()) {
+			if (log.getLevel().getImportance() >= filterLogLevel.getImportance()) {
 				if (filterTags.isEmpty() || filterTags.contains(log.getTag())) {
 					filteredLogs.add(log);
 				}
