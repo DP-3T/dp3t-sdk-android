@@ -12,6 +12,7 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.ContentValues;
 import android.content.Context;
 import android.os.ParcelUuid;
 import android.util.Log;
@@ -123,9 +124,11 @@ public class BleClient {
 			if (payload != null && payload.length == CryptoModule.KEY_LENGTH) {
 				// if Android, optimize (meaning: send/read payload directly in the SCAN_RESP)
 				Logger.d(TAG, "read star payload from manufatorer data");
-				new Database(context)
-						.addHandshake(context, payload, power, scanResult.getRssi(),
-								System.currentTimeMillis());
+				ContentValues handshakeData = new Database(context)
+						.addHandshake(context, payload, power, scanResult.getRssi(), System.currentTimeMillis(),
+								BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
+								scanResult.getTimestampNanos());
+				Logger.i(TAG, "saved handshake: " + handshakeData.toString());
 			} else {
 				gattConnectionThread.addTask(new GattConnectionTask(context, bluetoothDevice, scanResult));
 			}

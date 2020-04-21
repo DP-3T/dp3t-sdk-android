@@ -68,21 +68,25 @@ public class Database {
 			SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 			DayDate lastDayToKeep = new DayDate().subtractDays(CryptoModule.NUMBER_OF_DAYS_TO_KEEP_DATA);
 			db.delete(KnownCases.TABLE_NAME, KnownCases.BUCKET_DAY + " < ?",
-					new String[] { "" + lastDayToKeep.getStartOfDayTimestamp() });
+					new String[] { String.valueOf(lastDayToKeep.getStartOfDayTimestamp()) });
 		});
 	}
 
-	public void addHandshake(Context context, byte[] star, int txPowerLevel, int rssi, long timestamp) {
+	public ContentValues addHandshake(Context context, byte[] star, int txPowerLevel, int rssi, long timestamp, String phyPrimary, String phySecondary, long timestampNanos) {
 		SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 		ContentValues values = new ContentValues();
 		values.put(Handshakes.EPHID, star);
 		values.put(Handshakes.TIMESTAMP, timestamp);
 		values.put(Handshakes.TX_POWER_LEVEL, txPowerLevel);
 		values.put(Handshakes.RSSI, rssi);
+		values.put(Handshakes.PHY_PRIMARY, phyPrimary);
+		values.put(Handshakes.PHY_SECONDARY, phySecondary);
+		values.put(Handshakes.TIMESTAMP_NANOS, timestampNanos);
 		databaseThread.post(() -> {
 			db.insert(Handshakes.TABLE_NAME, null, values);
 			BroadcastHelper.sendUpdateBroadcast(context);
 		});
+		return values;
 	}
 
 	public List<Handshake> getHandshakes() {
@@ -95,7 +99,7 @@ public class Database {
 	public List<Handshake> getHandshakes(long maxTime) {
 		SQLiteDatabase db = databaseOpenHelper.getReadableDatabase();
 		Cursor cursor = db.query(Handshakes.TABLE_NAME, Handshakes.PROJECTION, Handshakes.TIMESTAMP + " < ?",
-				new String[] { "" + maxTime }, null, null, Handshakes.ID);
+				new String[] { String.valueOf(maxTime) }, null, null, Handshakes.ID);
 		return getHandshakesFromCursor(cursor);
 	}
 
@@ -141,7 +145,7 @@ public class Database {
 			if (!BuildConfig.FLAVOR.equals("calibration")) {
 				//unless in calibration mode, delete handshakes after converting them to contacts
 				db.delete(Handshakes.TABLE_NAME, Handshakes.TIMESTAMP + " < ?",
-						new String[] { "" + currentEpochStart });
+						new String[] { String.valueOf(currentEpochStart) });
 			}
 			DayDate lastDayToKeep = new DayDate().subtractDays(CryptoModule.NUMBER_OF_DAYS_TO_KEEP_DATA);
 			db.delete(Contacts.TABLE_NAME, Contacts.DATE + " < ?", new String[] { "" + lastDayToKeep.getStartOfDayTimestamp() });
@@ -167,7 +171,7 @@ public class Database {
 		SQLiteDatabase db = databaseOpenHelper.getReadableDatabase();
 		Cursor cursor = db
 				.query(Contacts.TABLE_NAME, Contacts.PROJECTION, Contacts.DATE + "=?",
-						new String[] { "" + dayDate.getStartOfDayTimestamp() }, null, null, Contacts.ID);
+						new String[] { String.valueOf(dayDate.getStartOfDayTimestamp()) }, null, null, Contacts.ID);
 		return getContactsFromCursor(cursor);
 	}
 

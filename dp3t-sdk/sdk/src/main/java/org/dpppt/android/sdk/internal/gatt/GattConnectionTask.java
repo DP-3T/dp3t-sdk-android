@@ -8,6 +8,7 @@ package org.dpppt.android.sdk.internal.gatt;
 
 import android.bluetooth.*;
 import android.bluetooth.le.ScanResult;
+import android.content.ContentValues;
 import android.content.Context;
 import android.os.Build;
 import android.util.Log;
@@ -98,7 +99,9 @@ public class GattConnectionTask {
 				if (characteristic.getUuid().equals(BleServer.TOTP_CHARACTERISTIC_UUID)) {
 					if (status == BluetoothGatt.GATT_SUCCESS) {
 						addHandshakeToDatabase(characteristic.getValue(), gatt.getDevice().getAddress(),
-								scanResult.getScanRecord().getTxPowerLevel(), scanResult.getRssi());
+								scanResult.getScanRecord().getTxPowerLevel(), scanResult.getRssi(),
+								BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
+								scanResult.getTimestampNanos());
 					} else {
 						Log.e("BluetoothGattCallback", "Failed to read characteristic. Status: " + status);
 
@@ -119,12 +122,15 @@ public class GattConnectionTask {
 		startTime = System.currentTimeMillis();
 	}
 
-	public void addHandshakeToDatabase(byte[] starValue, String macAddress, int rxPowerLevel, int rssi) {
+	public void addHandshakeToDatabase(byte[] starValue, String macAddress, int rxPowerLevel, int rssi, String phyPrimary,
+			String phySecondary, long timestampNanos) {
 		try {
 			String base64String = toBase64(starValue);
 			Log.d("received", base64String);
-			new Database(context)
-					.addHandshake(context, starValue, rxPowerLevel, rssi, System.currentTimeMillis());
+			ContentValues handshakeData = new Database(context)
+					.addHandshake(context, starValue, rxPowerLevel, rssi, System.currentTimeMillis(),
+							phyPrimary, phySecondary, timestampNanos);
+			Logger.i(TAG, "saved handshake: " + handshakeData.toString());
 			Logger.d(TAG, "received " + base64String);
 		} catch (Exception e) {
 			e.printStackTrace();
