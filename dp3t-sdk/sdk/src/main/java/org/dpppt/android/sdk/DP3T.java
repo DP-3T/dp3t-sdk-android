@@ -36,6 +36,8 @@ import org.dpppt.android.sdk.internal.util.ProcessUtil;
 
 public class DP3T {
 
+	private static final String TAG = "DP3T Interface";
+
 	public static final String UPDATE_INTENT_ACTION = "org.dpppt.android.sdk.UPDATE_ACTION";
 
 	private static String appId;
@@ -77,9 +79,9 @@ public class DP3T {
 		}
 	}
 
-	private static void checkInit() {
+	private static void checkInit() throws IllegalStateException {
 		if (appId == null) {
-			throw new IllegalStateException("You have to call STARTracing.init() in your application onCreate()");
+			throw new IllegalStateException("You have to call DP3T.init() in your application onCreate()");
 		}
 	}
 
@@ -167,25 +169,30 @@ public class DP3T {
 	public static void sendIWasExposed(Context context, Date onset, ExposeeAuthData exposeeAuthData,
 			CallbackListener<Void> callback) {
 		checkInit();
+
 		DayDate onsetDate = new DayDate(onset.getTime());
 		ExposeeRequest exposeeRequest = CryptoModule.getInstance(context).getSecretKeyForPublishing(onsetDate, exposeeAuthData);
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		appConfigManager.getBackendRepository(context)
-				.addExposee(exposeeRequest,
-						new CallbackListener<Void>() {
-							@Override
-							public void onSuccess(Void response) {
-								appConfigManager.setAmIExposed(true);
-								CryptoModule.getInstance(context).reset();
-								callback.onSuccess(response);
-							}
+		try {
+			appConfigManager.getBackendRepository(context).addExposee(exposeeRequest,
+					new CallbackListener<Void>() {
+						@Override
+						public void onSuccess(Void response) {
+							appConfigManager.setAmIExposed(true);
+							CryptoModule.getInstance(context).reset();
+							callback.onSuccess(response);
+						}
 
-							@Override
-							public void onError(Throwable throwable) {
-								callback.onError(throwable);
-							}
-						});
+						@Override
+						public void onError(Throwable throwable) {
+							callback.onError(throwable);
+						}
+					});
+		} catch (IllegalStateException e) {
+			callback.onError(e);
+			Logger.e(TAG, e);
+		}
 	}
 
 	public static void stop(Context context) {

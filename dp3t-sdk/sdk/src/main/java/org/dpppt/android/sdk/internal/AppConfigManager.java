@@ -97,7 +97,7 @@ public class AppConfigManager {
 		return Json.safeFromJson(sharedPrefs.getString(PREF_APPLICATION_LIST, "{}"), ApplicationsList.class, ApplicationsList::new);
 	}
 
-	public ApplicationInfo getAppConfig() {
+	public ApplicationInfo getAppConfig() throws IllegalStateException {
 		for (ApplicationInfo application : getLoadedApplicationsList().getApplications()) {
 			if (application.getAppId().equals(appId)) {
 				return application;
@@ -146,9 +146,8 @@ public class AppConfigManager {
 		sharedPrefs.edit().putBoolean(PREF_AM_I_EXPOSED, exposed).apply();
 	}
 
-	public BackendRepository getBackendRepository(Context context) {
+	public BackendRepository getBackendRepository(Context context) throws IllegalStateException {
 		ApplicationInfo appConfig = getAppConfig();
-		//TODO what if appConfig is not yet loaded?
 		return new BackendRepository(context, appConfig.getBackendBaseUrl());
 	}
 
