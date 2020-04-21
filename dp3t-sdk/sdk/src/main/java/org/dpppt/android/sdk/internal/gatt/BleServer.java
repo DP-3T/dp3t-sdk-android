@@ -25,7 +25,7 @@ public class BleServer {
 
 	private static final String TAG = "BleServer";
 
-	public static final UUID SERVICE_UUID = UUID.fromString("8c8494e3-bab5-1848-40a0-1b06991c0000");
+	public static final UUID SERVICE_UUID = UUID.fromString("0000FD6F-0000-1000-8000-00805F9B34FB");
 	public static final int MANUFACTURER_ID = 0xabba;
 	public static final UUID TOTP_CHARACTERISTIC_UUID = UUID.fromString("8c8494e3-bab5-1848-40a0-1b06991c0001");
 
@@ -151,14 +151,16 @@ public class BleServer {
 	public void startAdvertising() {
 		mLeAdvertiser = mAdapter.getBluetoothLeAdvertiser();
 
-		AdvertiseData.Builder advBuilder = new AdvertiseData.Builder().setIncludeTxPowerLevel(true);
+		AdvertiseData.Builder advBuilder = new AdvertiseData.Builder();
+		advBuilder.setIncludeTxPowerLevel(true);
 		advBuilder.addServiceUuid(new ParcelUuid(SERVICE_UUID));
+		advBuilder.addServiceData(new ParcelUuid(SERVICE_UUID), getAdvertiseData());
 		advBuilder.setIncludeDeviceName(false);
 
-		AdvertiseData scanResponse = new AdvertiseData.Builder()
+		/*AdvertiseData scanResponse = new AdvertiseData.Builder()
 				.setIncludeDeviceName(false).setIncludeTxPowerLevel(false)
 				.addManufacturerData(MANUFACTURER_ID, getAdvertiseData())
-				.build();
+				.build();*/
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 
@@ -167,7 +169,7 @@ public class BleServer {
 		settingBuilder.setTxPowerLevel(appConfigManager.getBluetoothTxPowerLevel().getValue());
 		settingBuilder.setConnectable(true);
 
-		mLeAdvertiser.startAdvertising(settingBuilder.build(), advBuilder.build(), scanResponse, advertiseCallback);
+		mLeAdvertiser.startAdvertising(settingBuilder.build(), advBuilder.build(), advertiseCallback);
 	}
 
 	public void stopAdvertising() {

@@ -27,6 +27,7 @@ import org.dpppt.android.sdk.internal.database.Database;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
 import static org.dpppt.android.sdk.internal.AppConfigManager.DEFAULT_SCAN_INTERVAL;
+import static org.dpppt.android.sdk.internal.gatt.BleServer.SERVICE_UUID;
 
 public class BleClient {
 
@@ -58,7 +59,7 @@ public class BleClient {
 
 		List<ScanFilter> scanFilters = new ArrayList<>();
 		scanFilters.add(new ScanFilter.Builder()
-				.setServiceUuid(new ParcelUuid(BleServer.SERVICE_UUID))
+				.setServiceUuid(new ParcelUuid(SERVICE_UUID))
 				.build());
 
 		// Scan for Apple devices as iOS does not advertise service uuid when in background,
@@ -120,7 +121,8 @@ public class BleClient {
 
 			deviceLastConnected.put(bluetoothDevice.getAddress(), System.currentTimeMillis());
 
-			byte[] payload = scanResult.getScanRecord().getManufacturerSpecificData(BleServer.MANUFACTURER_ID);
+			//byte[] payload = scanResult.getScanRecord().getManufacturerSpecificData(BleServer.MANUFACTURER_ID);
+			byte[] payload = scanResult.getScanRecord().getServiceData(new ParcelUuid(SERVICE_UUID));
 			if (payload != null && payload.length == CryptoModule.KEY_LENGTH) {
 				// if Android, optimize (meaning: send/read payload directly in the SCAN_RESP)
 				Logger.d(TAG, "read star payload from manufacturer data");
