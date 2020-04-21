@@ -3,7 +3,6 @@
  * https://www.ubique.ch
  * Copyright (c) 2020. All rights reserved.
  */
-
 package org.dpppt.android.sdk.internal.logger;
 
 import android.content.ContentValues;
@@ -16,6 +15,8 @@ import android.provider.BaseColumns;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.dpppt.android.sdk.BuildConfig;
+
 class LogDatabase {
 
 	private final LogDatabaseHelper dbHelper;
@@ -27,6 +28,8 @@ class LogDatabase {
 	void log(String level, String tag, String message, long time) {
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		ContentValues values = new ContentValues();
+		values.put(LogSpec.COLUMN_NAME_VERSION, BuildConfig.VERSION_CODE);
+		values.put(LogSpec.COLUMN_NAME_BUILD_TIME, BuildConfig.BUILD_TIME);
 		values.put(LogSpec.COLUMN_NAME_LEVEL, level);
 		values.put(LogSpec.COLUMN_NAME_TAG, tag);
 		values.put(LogSpec.COLUMN_NAME_MESSAGE, message);
@@ -120,18 +123,22 @@ class LogDatabase {
 		static final String COLUMN_NAME_TAG = "tag";
 		static final String COLUMN_NAME_MESSAGE = "msg";
 		static final String COLUMN_NAME_TIME = "time";
+		static final String COLUMN_NAME_VERSION = "version";
+		static final String COLUMN_NAME_BUILD_TIME = "build";
 
 	}
 
 
 	private static class LogDatabaseHelper extends SQLiteOpenHelper {
 
-		private static final int DATABASE_VERSION = 1;
+		private static final int DATABASE_VERSION = 2;
 		private static final String DATABASE_NAME = "dp3t_sdk_log.db";
 
 		private static final String SQL_CREATE_ENTRIES =
 				"CREATE TABLE " + LogSpec.TABLE_NAME + " (" +
 						LogSpec._ID + " INTEGER PRIMARY KEY," +
+						LogSpec.COLUMN_NAME_VERSION + " INTEGER NOT NULL," +
+						LogSpec.COLUMN_NAME_BUILD_TIME + " INTEGER NOT NULL," +
 						LogSpec.COLUMN_NAME_LEVEL + " TEXT NOT NULL," +
 						LogSpec.COLUMN_NAME_TAG + " TEXT NOT NULL," +
 						LogSpec.COLUMN_NAME_MESSAGE + " TEXT NOT NULL," +
@@ -145,6 +152,10 @@ class LogDatabase {
 		private static final String SQL_CREATE_INDEX_TIME =
 				"CREATE INDEX " + LogSpec.INDEX_NAME_TIME + " ON " + LogSpec.TABLE_NAME + "(" + LogSpec.COLUMN_NAME_TIME + ")";
 
+		private static final String SQL_UPDATE_2_ADD_VERSION_COLUMN =
+				"ALTER TABLE " + LogSpec.TABLE_NAME + " ADD COLUMN " + LogSpec.COLUMN_NAME_VERSION + " INTEGER NOT NULL DEFAULT 1";
+		private static final String SQL_UPDATE_2_ADD_BUILDTIME_COLUMN =
+				"ALTER TABLE " + LogSpec.TABLE_NAME + " ADD COLUMN " + LogSpec.COLUMN_NAME_BUILD_TIME + " INTEGER NOT NULL DEFAULT 0";
 
 		LogDatabaseHelper(Context context) {
 			super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -158,7 +169,10 @@ class LogDatabase {
 		}
 
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-			// nothing yet
+			if (oldVersion < 2) {
+				db.execSQL(SQL_UPDATE_2_ADD_VERSION_COLUMN);
+				db.execSQL(SQL_UPDATE_2_ADD_BUILDTIME_COLUMN);
+			}
 		}
 
 	}
