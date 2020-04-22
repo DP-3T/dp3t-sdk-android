@@ -89,7 +89,7 @@ public class DP3T {
 		start(context, true, true);
 	}
 
-	public static void start(Context context, boolean advertise, boolean receive) {
+	protected static void start(Context context, boolean advertise, boolean receive) {
 		checkInit();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.setAdvertisingEnabled(advertise);
@@ -212,21 +212,6 @@ public class DP3T {
 		return new IntentFilter(DP3T.UPDATE_INTENT_ACTION);
 	}
 
-	public static void setCalibrationTestDeviceName(Context context, String name) {
-		checkInit();
-		AppConfigManager.getInstance(context).setCalibrationTestDeviceName(name);
-	}
-
-	public static String getCalibrationTestDeviceName(Context context) {
-		checkInit();
-		return AppConfigManager.getInstance(context).getCalibrationTestDeviceName();
-	}
-
-	public static void disableCalibrationTestDeviceName(Context context) {
-		checkInit();
-		AppConfigManager.getInstance(context).setCalibrationTestDeviceName(null);
-	}
-
 	public static void clearData(Context context, Runnable onDeleteListener) {
 		checkInit();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
@@ -239,11 +224,6 @@ public class DP3T {
 		Logger.clear();
 		Database db = new Database(context);
 		db.recreateTables(response -> onDeleteListener.run());
-	}
-
-	public static void exportDb(Context context, OutputStream targetOut, Runnable onExportedListener) {
-		Database db = new Database(context);
-		db.exportTo(context, targetOut, response -> onExportedListener.run());
 	}
 
 }
