@@ -203,6 +203,9 @@ public class TracingService extends Service {
 	}
 
 	private void restartClient() {
+		//also restart server here to generate a new mac-address so we get rediscovered by apple devices
+		startServer();
+		
 		try {
 			startClient();
 		} catch (Throwable t) {
@@ -275,7 +278,6 @@ public class TracingService extends Service {
 		stopServer();
 		if (startAdvertising) {
 			bleServer = new BleServer(this);
-			bleServer.start();
 			bleServer.startAdvertising();
 			Logger.d(TAG, "startAdvertising");
 		}
