@@ -7,6 +7,8 @@ package org.dpppt.android.sdk;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.ScanCallback;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -17,7 +19,10 @@ import androidx.core.content.ContextCompat;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BroadcastHelper;
@@ -30,6 +35,7 @@ import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthData;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.database.Database;
+import org.dpppt.android.sdk.internal.gatt.BluetoothServiceStatus;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.DayDate;
 import org.dpppt.android.sdk.internal.util.ProcessUtil;
@@ -127,7 +133,7 @@ public class DP3T {
 		checkInit();
 		Database database = new Database(context);
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		ArrayList<TracingStatus.ErrorState> errorStates = checkTracingStatus(context);
+		Collection<TracingStatus.ErrorState> errorStates = checkTracingStatus(context);
 		return new TracingStatus(
 				database.getContacts().size(),
 				appConfigManager.isAdvertisingEnabled(),
@@ -139,8 +145,8 @@ public class DP3T {
 		);
 	}
 
-	private static ArrayList<TracingStatus.ErrorState> checkTracingStatus(Context context) {
-		ArrayList<TracingStatus.ErrorState> errors = new ArrayList<>();
+	private static Collection<TracingStatus.ErrorState> checkTracingStatus(Context context) {
+		Set<TracingStatus.ErrorState> errors = new HashSet<>();
 
 		if (!context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
 			errors.add(TracingStatus.ErrorState.BLE_NOT_SUPPORTED);
@@ -166,6 +172,43 @@ public class DP3T {
 
 		if (!AppConfigManager.getInstance(context).getLastSyncNetworkSuccess()) {
 			errors.add(TracingStatus.ErrorState.NETWORK_ERROR_WHILE_SYNCING);
+		}
+
+		if (!errors.contains(TracingStatus.ErrorState.BLE_DISABLED)) {
+			BluetoothServiceStatus bluetoothServiceStatus = BluetoothServiceStatus.getInstance(context);
+			switch (bluetoothServiceStatus.getAdvertiseStatus()) {
+				case BluetoothServiceStatus.ADVERTISE_OK:
+					// ok
+					break;
+				case AdvertiseCallback.ADVERTISE_FAILED_INTERNAL_ERROR:
+				case AdvertiseCallback.ADVERTISE_FAILED_TOO_MANY_ADVERTISERS:
+					errors.add(TracingStatus.ErrorState.BLE_INTERNAL_ERROR);
+					break;
+				case AdvertiseCallback.ADVERTISE_FAILED_FEATURE_UNSUPPORTED:
+					errors.add(TracingStatus.ErrorState.BLE_NOT_SUPPORTED);
+					break;
+				case AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED:
+				case AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE:
+				default:
+					errors.add(TracingStatus.ErrorState.BLE_ADVERTISING_ERROR);
+					break;
+			}
+			switch (bluetoothServiceStatus.getScanStatus()) {
+				case BluetoothServiceStatus.SCAN_OK:
+					// ok
+					break;
+				case ScanCallback.SCAN_FAILED_INTERNAL_ERROR:
+					errors.add(TracingStatus.ErrorState.BLE_INTERNAL_ERROR);
+					break;
+				case ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED:
+					errors.add(TracingStatus.ErrorState.BLE_NOT_SUPPORTED);
+					break;
+				case ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED:
+				case ScanCallback.SCAN_FAILED_ALREADY_STARTED:
+				default:
+					errors.add(TracingStatus.ErrorState.BLE_SCANNER_ERROR);
+					break;
+			}
 		}
 
 		return errors;

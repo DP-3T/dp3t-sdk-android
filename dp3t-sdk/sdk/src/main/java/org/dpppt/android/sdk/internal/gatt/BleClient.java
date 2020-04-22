@@ -36,7 +36,9 @@ public class BleClient {
 	private BluetoothLeScanner bleScanner;
 	private ScanCallback bleScanCallback;
 	private GattConnectionThread gattConnectionThread;
+
 	private long minTimeToReconnectToSameDevice = DEFAULT_SCAN_INTERVAL;
+	private Map<String, Long> deviceLastConnected = new HashMap<>();
 
 	public BleClient(Context context) {
 		this.context = context;
@@ -76,10 +78,13 @@ public class BleClient {
 				.setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
 				.build();
 
+		BluetoothServiceStatus bluetoothServiceStatus = BluetoothServiceStatus.getInstance(context);
+
 		bleScanCallback = new ScanCallback() {
 			private static final String TAG = "ScanCallback";
 
 			public void onScanResult(int callbackType, ScanResult result) {
+				bluetoothServiceStatus.updateScanStatus(BluetoothServiceStatus.SCAN_OK);
 				if (result.getScanRecord() != null) {
 					onDeviceFound(result);
 				}
@@ -87,6 +92,7 @@ public class BleClient {
 
 			@Override
 			public void onBatchScanResults(List<ScanResult> results) {
+				bluetoothServiceStatus.updateScanStatus(BluetoothServiceStatus.SCAN_OK);
 				Logger.d(TAG, "Batch size " + results.size());
 				for (ScanResult result : results) {
 					onScanResult(0, result);
@@ -94,6 +100,7 @@ public class BleClient {
 			}
 
 			public void onScanFailed(int errorCode) {
+				bluetoothServiceStatus.updateScanStatus(errorCode);
 				Logger.e(TAG, "error: " + errorCode);
 			}
 		};
@@ -103,8 +110,6 @@ public class BleClient {
 
 		return BluetoothState.ENABLED;
 	}
-
-	private Map<String, Long> deviceLastConnected = new HashMap<>();
 
 	public void onDeviceFound(ScanResult scanResult) {
 		try {

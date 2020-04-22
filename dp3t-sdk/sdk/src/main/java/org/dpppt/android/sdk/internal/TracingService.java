@@ -20,6 +20,7 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.R;
@@ -27,6 +28,7 @@ import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.gatt.BleClient;
 import org.dpppt.android.sdk.internal.gatt.BleServer;
+import org.dpppt.android.sdk.internal.gatt.BluetoothServiceStatus;
 import org.dpppt.android.sdk.internal.gatt.BluetoothState;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
@@ -62,6 +64,7 @@ public class TracingService extends Service {
 			if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())) {
 				int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
 				if (state == BluetoothAdapter.STATE_OFF || state == BluetoothAdapter.STATE_ON) {
+					BluetoothServiceStatus.resetInstance();
 					invalidateForegroundNotification();
 				}
 			}
@@ -159,7 +162,7 @@ public class TracingService extends Service {
 		return builder.build();
 	}
 
-	private String getNotificationErrorText(ArrayList<TracingStatus.ErrorState> errors) {
+	private String getNotificationErrorText(Collection<TracingStatus.ErrorState> errors) {
 		StringBuilder sb = new StringBuilder(getString(R.string.dp3t_sdk_service_notification_errors)).append("\n");
 		String sep = "";
 		for (TracingStatus.ErrorState error : errors) {
@@ -248,26 +251,10 @@ public class TracingService extends Service {
 	private void stopForegroundService() {
 		stopClient();
 		stopServer();
+		BluetoothServiceStatus.resetInstance();
 		stopForeground(true);
 		wl.release();
 		stopSelf();
-	}
-
-	@Override
-	public void onDestroy() {
-		Logger.i(TAG, "onDestroy()");
-
-		unregisterReceiver(bluetoothStateChangeReceiver);
-
-		if (handler != null) {
-			handler.removeCallbacksAndMessages(null);
-		}
-	}
-
-	@Nullable
-	@Override
-	public IBinder onBind(Intent intent) {
-		return null;
 	}
 
 	private BluetoothState startServer() {
@@ -282,11 +269,7 @@ public class TracingService extends Service {
 
 			Logger.d(TAG, "startAdvertising");
 			BluetoothState advertiserState = bleServer.startAdvertising();
-			if (advertiserState != BluetoothState.ENABLED) {
-				return advertiserState;
-			}
-
-			return BluetoothState.ENABLED;
+			return advertiserState;
 		}
 		return null;
 	}
@@ -320,6 +303,23 @@ public class TracingService extends Service {
 		if (bleClient != null) {
 			bleClient.stop();
 			bleClient = null;
+		}
+	}
+
+	@Nullable
+	@Override
+	public IBinder onBind(Intent intent) {
+		return null;
+	}
+
+	@Override
+	public void onDestroy() {
+		Logger.i(TAG, "onDestroy()");
+
+		unregisterReceiver(bluetoothStateChangeReceiver);
+
+		if (handler != null) {
+			handler.removeCallbacksAndMessages(null);
 		}
 	}
 

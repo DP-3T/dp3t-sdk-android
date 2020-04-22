@@ -18,6 +18,7 @@ import android.util.Log;
 import java.util.UUID;
 
 import org.dpppt.android.sdk.internal.AppConfigManager;
+import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
@@ -34,11 +35,13 @@ public class BleServer {
 		@Override
 		public void onStartFailure(int errorCode) {
 			Logger.e(TAG, "advertise onStartFailure: " + errorCode);
+			BluetoothServiceStatus.getInstance(context).updateAdvertiseStatus(errorCode);
 		}
 
 		@Override
 		public void onStartSuccess(AdvertiseSettings settingsInEffect) {
 			Logger.i(TAG, "advertise onStartSuccess: " + settingsInEffect.toString());
+			BluetoothServiceStatus.getInstance(context).updateAdvertiseStatus(BluetoothServiceStatus.ADVERTISE_OK);
 		}
 	};
 	private BluetoothAdapter mAdapter;
@@ -189,8 +192,8 @@ public class BleServer {
 		stopAdvertising();
 		if (mGattServer != null) {
 			mGattServer.close();
+			mGattServer = null;
 		}
-		mGattServer = null;
 		mAdapter = null;
 	}
 
