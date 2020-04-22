@@ -42,7 +42,7 @@ public final class BluetoothServiceStatus {
 	void updateScanStatus(int scanStatus) {
 		if (this.scanStatus != scanStatus) {
 			this.scanStatus = scanStatus;
-			BroadcastHelper.sendUpdateBroadcast(context);
+			BroadcastHelper.sendErrorUpdateBroadcast(context);
 		}
 	}
 
@@ -60,7 +60,7 @@ public final class BluetoothServiceStatus {
 	void updateAdvertiseStatus(int advertiseStatus) {
 		if (this.advertiseStatus != advertiseStatus) {
 			this.advertiseStatus = advertiseStatus;
-			BroadcastHelper.sendUpdateBroadcast(context);
+			BroadcastHelper.sendErrorUpdateBroadcast(context);
 		}
 	}
 

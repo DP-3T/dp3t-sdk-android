@@ -11,7 +11,6 @@ import android.bluetooth.le.ScanResult;
 import android.content.ContentValues;
 import android.content.Context;
 import android.os.Build;
-import android.util.Log;
 
 import java.util.Arrays;
 
@@ -98,8 +97,7 @@ public class GattConnectionTask {
 						addHandshakeToDatabase(characteristic.getValue(), gatt.getDevice().getAddress(),
 								scanResult.getScanRecord().getTxPowerLevel(), scanResult.getRssi());
 					} else {
-						Logger.e(TAG, "Failed to read characteristic. Status: " + status);
-
+						Logger.w(TAG, "Failed to read characteristic. Status: " + status);
 						// TODO error
 					}
 				}

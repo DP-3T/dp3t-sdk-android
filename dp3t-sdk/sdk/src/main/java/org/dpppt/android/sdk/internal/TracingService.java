@@ -19,7 +19,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import org.dpppt.android.sdk.DP3T;
@@ -65,8 +64,17 @@ public class TracingService extends Service {
 				int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
 				if (state == BluetoothAdapter.STATE_OFF || state == BluetoothAdapter.STATE_ON) {
 					BluetoothServiceStatus.resetInstance();
-					invalidateForegroundNotification();
+					BroadcastHelper.sendErrorUpdateBroadcast(context);
 				}
+			}
+		}
+	};
+
+	private final BroadcastReceiver errorsUpdateReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (BroadcastHelper.ACTION_UPDATE_ERRORS.equals(intent.getAction())) {
+				invalidateForegroundNotification();
 			}
 		}
 	};
@@ -76,14 +84,21 @@ public class TracingService extends Service {
 	private long scanInterval;
 	private long scanDuration;
 
+	private boolean isFinishing;
+
 	public TracingService() { }
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
 
+		isFinishing = false;
+
 		IntentFilter bluetoothFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
 		registerReceiver(bluetoothStateChangeReceiver, bluetoothFilter);
+
+		IntentFilter errorsUpdateFilter = new IntentFilter(BroadcastHelper.ACTION_UPDATE_ERRORS);
+		registerReceiver(errorsUpdateReceiver, errorsUpdateFilter);
 	}
 
 	@Override
@@ -183,6 +198,10 @@ public class TracingService extends Service {
 	}
 
 	private void invalidateForegroundNotification() {
+		if (isFinishing) {
+			return;
+		}
+
 		Notification notification = createForegroundNotification();
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		mNotificationManager.notify(NOTIFICATION_ID, notification);
@@ -249,6 +268,7 @@ public class TracingService extends Service {
 	}
 
 	private void stopForegroundService() {
+		isFinishing = true;
 		stopClient();
 		stopServer();
 		BluetoothServiceStatus.resetInstance();
@@ -287,7 +307,6 @@ public class TracingService extends Service {
 			bleClient = new BleClient(this);
 			bleClient.setMinTimeToReconnectToSameDevice(scanInterval);
 			BluetoothState clientState = bleClient.start();
-			Logger.d(TAG, "startScanning");
 			return clientState;
 		}
 		return null;
@@ -316,6 +335,7 @@ public class TracingService extends Service {
 	public void onDestroy() {
 		Logger.i(TAG, "onDestroy()");
 
+		unregisterReceiver(errorsUpdateReceiver);
 		unregisterReceiver(bluetoothStateChangeReceiver);
 
 		if (handler != null) {

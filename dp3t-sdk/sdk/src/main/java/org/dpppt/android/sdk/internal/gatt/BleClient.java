@@ -53,7 +53,7 @@ public class BleClient {
 	public BluetoothState start() {
 		final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
-			BroadcastHelper.sendUpdateBroadcast(context);
+			BroadcastHelper.sendErrorUpdateBroadcast(context);
 			return bluetoothAdapter == null ? BluetoothState.NOT_SUPPORTED : BluetoothState.DISABLED;
 		}
 		bleScanner = bluetoothAdapter.getBluetoothLeScanner();
@@ -149,15 +149,14 @@ public class BleClient {
 		final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
 			bleScanner = null;
-			BroadcastHelper.sendUpdateBroadcast(context);
+			BroadcastHelper.sendErrorUpdateBroadcast(context);
 			return;
 		}
-		if (bleScanner == null) {
-			bleScanner = bluetoothAdapter.getBluetoothLeScanner();
+		if (bleScanner != null) {
+			Logger.i(TAG, "stopping BLE scanner");
+			bleScanner.stopScan(bleScanCallback);
+			bleScanner = null;
 		}
-		Logger.i(TAG, "stopping BLE scanner");
-		bleScanner.stopScan(bleScanCallback);
-		bleScanner = null;
 	}
 
 	public synchronized void stop() {
