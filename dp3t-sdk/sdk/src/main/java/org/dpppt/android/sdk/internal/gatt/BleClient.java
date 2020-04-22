@@ -48,13 +48,16 @@ public class BleClient {
 		this.minTimeToReconnectToSameDevice = minTimeToReconnectToSameDevice;
 	}
 
-	public void start() {
+	public BluetoothState start() {
 		final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
 			BroadcastHelper.sendUpdateBroadcast(context);
-			return;
+			return bluetoothAdapter == null ? BluetoothState.NOT_SUPPORTED : BluetoothState.DISABLED;
 		}
 		bleScanner = bluetoothAdapter.getBluetoothLeScanner();
+		if (bleScanner == null) {
+			return BluetoothState.NOT_SUPPORTED;
+		}
 
 		List<ScanFilter> scanFilters = new ArrayList<>();
 		scanFilters.add(new ScanFilter.Builder()
@@ -97,6 +100,8 @@ public class BleClient {
 
 		Logger.i(TAG, "starting BLE scanner");
 		bleScanner.startScan(scanFilters, scanSettings, bleScanCallback);
+
+		return BluetoothState.ENABLED;
 	}
 
 	private Map<String, Long> deviceLastConnected = new HashMap<>();

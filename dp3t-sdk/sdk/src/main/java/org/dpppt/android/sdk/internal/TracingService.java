@@ -27,6 +27,7 @@ import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.gatt.BleClient;
 import org.dpppt.android.sdk.internal.gatt.BleServer;
+import org.dpppt.android.sdk.internal.gatt.BluetoothState;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
 import static org.dpppt.android.sdk.internal.AppConfigManager.DEFAULT_SCAN_DURATION;
@@ -68,7 +69,7 @@ public class TracingService extends Service {
 	};
 
 	private boolean startAdvertising;
-	private boolean startReceiveing;
+	private boolean startReceiving;
 	private long scanInterval;
 	private long scanDuration;
 
@@ -102,7 +103,7 @@ public class TracingService extends Service {
 		scanDuration = intent.getLongExtra(EXTRA_SCAN_DURATION, DEFAULT_SCAN_DURATION);
 
 		startAdvertising = intent.getBooleanExtra(EXTRA_ADVERTISE, true);
-		startReceiveing = intent.getBooleanExtra(EXTRA_RECEIVE, true);
+		startReceiving = intent.getBooleanExtra(EXTRA_RECEIVE, true);
 
 		if (ACTION_START.equals(intent.getAction())) {
 			startForeground(NOTIFICATION_ID, createForegroundNotification());
@@ -203,11 +204,10 @@ public class TracingService extends Service {
 	}
 
 	private void restartClient() {
-		try {
-			startClient();
-		} catch (Throwable t) {
-			t.printStackTrace();
-			Logger.e(TAG, t);
+		BluetoothState bluetoothState = startClient();
+		if (bluetoothState == BluetoothState.NOT_SUPPORTED) {
+			Logger.e(TAG, "bluetooth not supported");
+			return;
 		}
 
 		handler.postDelayed(() -> {
@@ -217,7 +217,12 @@ public class TracingService extends Service {
 	}
 
 	private void restartServer() {
-		startServer();
+		BluetoothState bluetoothState = startServer();
+		if (bluetoothState == BluetoothState.NOT_SUPPORTED) {
+			Logger.e(TAG, "bluetooth not supported");
+			return;
+		}
+
 		scheduleNextServerRestart(this);
 	}
 
@@ -265,14 +270,25 @@ public class TracingService extends Service {
 		return null;
 	}
 
-	private void startServer() {
+	private BluetoothState startServer() {
 		stopServer();
 		if (startAdvertising) {
 			bleServer = new BleServer(this);
-			bleServer.start();
-			bleServer.startAdvertising();
+
+			BluetoothState serverState = bleServer.start();
+			if (serverState != BluetoothState.ENABLED) {
+				return serverState;
+			}
+
 			Logger.d(TAG, "startAdvertising");
+			BluetoothState advertiserState = bleServer.startAdvertising();
+			if (advertiserState != BluetoothState.ENABLED) {
+				return advertiserState;
+			}
+
+			return BluetoothState.ENABLED;
 		}
+		return null;
 	}
 
 	private void stopServer() {
@@ -282,14 +298,16 @@ public class TracingService extends Service {
 		}
 	}
 
-	private void startClient() {
+	private BluetoothState startClient() {
 		stopClient();
-		if (startReceiveing) {
+		if (startReceiving) {
 			bleClient = new BleClient(this);
 			bleClient.setMinTimeToReconnectToSameDevice(scanInterval);
-			bleClient.start();
+			BluetoothState clientState = bleClient.start();
 			Logger.d(TAG, "startScanning");
+			return clientState;
 		}
+		return null;
 	}
 
 	private void stopScanning() {

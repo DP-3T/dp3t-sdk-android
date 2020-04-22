@@ -61,6 +61,8 @@ public class TracingStatus {
 		NETWORK_ERROR_WHILE_SYNCING(R.string.dp3t_sdk_service_notification_error_network_sync),
 		MISSING_LOCATION_PERMISSION(R.string.dp3t_sdk_service_notification_error_location_permission),
 		BLE_DISABLED(R.string.dp3t_sdk_service_notification_error_bluetooth_disabled),
+		BLE_NOT_SUPPORTED(R.string.dp3t_sdk_service_notification_error_bluetooth_not_supported),
+		BLE_CRASHED(R.string.dp3t_sdk_service_notification_error_bluetooth_crashed),
 		BATTERY_OPTIMIZER_ENABLED(R.string.dp3t_sdk_service_notification_error_battery_optimization);
 
 		private int errorString;

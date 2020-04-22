@@ -49,17 +49,21 @@ public class BleServer {
 		this.context = context;
 	}
 
-	public void start() {
+	public BluetoothState start() {
 		BluetoothManager mManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
 
-		if (mManager == null || !context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))
-			throw new UnsupportedOperationException("whea's mah bluetooth?");
+		if (mManager == null || !context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+			return BluetoothState.NOT_SUPPORTED;
+		}
 
 		mAdapter = mManager.getAdapter();
 		if (mAdapter.isEnabled()) {
 			mGattServer = mManager.openGattServer(context, createGattServerCallback());
 
 			setupService();
+			return BluetoothState.ENABLED;
+		} else {
+			return BluetoothState.DISABLED;
 		}
 	}
 
@@ -148,8 +152,11 @@ public class BleServer {
 		mGattServer.addService(gattService);
 	}
 
-	public void startAdvertising() {
+	public BluetoothState startAdvertising() {
 		mLeAdvertiser = mAdapter.getBluetoothLeAdvertiser();
+		if (mLeAdvertiser == null) {
+			return BluetoothState.NOT_SUPPORTED;
+		}
 
 		AdvertiseData.Builder advBuilder = new AdvertiseData.Builder().setIncludeTxPowerLevel(true);
 		advBuilder.addServiceUuid(new ParcelUuid(SERVICE_UUID));
@@ -168,6 +175,8 @@ public class BleServer {
 		settingBuilder.setConnectable(true);
 
 		mLeAdvertiser.startAdvertising(settingBuilder.build(), advBuilder.build(), scanResponse, advertiseCallback);
+
+		return BluetoothState.ENABLED;
 	}
 
 	public void stopAdvertising() {

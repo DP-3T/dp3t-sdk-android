@@ -15,5 +15,7 @@
 	<string name="dp3t_sdk_service_notification_error_location_permission">missing location permission</string>
 	<string name="dp3t_sdk_service_notification_error_bluetooth_disabled">bluetooth is disabled</string>
 	<string name="dp3t_sdk_service_notification_error_battery_optimization">battery optimization enabled</string>
+	<string name="dp3t_sdk_service_notification_error_bluetooth_not_supported">bluetooth low-energy is not supported on this device</string>
+	<string name="dp3t_sdk_service_notification_error_bluetooth_crashed">bluetooth not reliable, please restart device</string>
 
 </resources>

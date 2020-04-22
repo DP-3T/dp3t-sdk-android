@@ -142,13 +142,18 @@ public class DP3T {
 	private static ArrayList<TracingStatus.ErrorState> checkTracingStatus(Context context) {
 		ArrayList<TracingStatus.ErrorState> errors = new ArrayList<>();
 
-		final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
-			errors.add(TracingStatus.ErrorState.BLE_DISABLED);
+		if (!context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+			errors.add(TracingStatus.ErrorState.BLE_NOT_SUPPORTED);
+		} else {
+			final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+			if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+				errors.add(TracingStatus.ErrorState.BLE_DISABLED);
+			}
 		}
 
 		PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-		boolean batteryOptimizationsDeactivated = powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
+		boolean batteryOptimizationsDeactivated =
+				powerManager == null || powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
 		if (!batteryOptimizationsDeactivated) {
 			errors.add(TracingStatus.ErrorState.BATTERY_OPTIMIZER_ENABLED);
 		}
