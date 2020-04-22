@@ -6,7 +6,6 @@
 package org.dpppt.android.calibration.handshakes;
 
 import android.os.Bundle;
-import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,7 +68,7 @@ public class HandshakesFragment extends Fragment {
 					stringBuilder.append(sdf.format(new Date(handShake.getTimestamp())));
 					stringBuilder.append(" ");
 					stringBuilder
-							.append(new String(Base64.encode(handShake.getEphId().getData(), Base64.NO_WRAP)).substring(0, 10));
+							.append(new String(handShake.getEphId().getData()).substring(0, 10));
 					stringBuilder.append("...");
 					stringBuilder.append(" TxPowerLevel: ");
 					stringBuilder.append(handShake.getTxPowerLevel());
