@@ -56,6 +56,7 @@ import org.dpppt.android.calibration.util.DialogUtil;
 import org.dpppt.android.calibration.util.RequirementsUtil;
 import org.dpppt.android.calibration.util.backend.FileUploadRepository;
 import org.dpppt.android.sdk.DP3T;
+import org.dpppt.android.sdk.DP3TCalibrationHelper;
 import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.internal.backend.CallbackListener;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthData;
@@ -135,7 +136,7 @@ public class ControlsFragment extends Fragment {
 			Uri uri = data.getData();
 			try {
 				OutputStream targetOut = getContext().getContentResolver().openOutputStream(uri);
-				DP3T.exportDb(getContext(), targetOut, () ->
+				DP3TCalibrationHelper.exportDb(getContext(), targetOut, () ->
 						new Handler(getContext().getMainLooper()).post(() -> setExportDbLoadingViewVisible(false)));
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
@@ -175,13 +176,13 @@ public class ControlsFragment extends Fragment {
 
 		Button buttonStartAdvertising = view.findViewById(R.id.home_button_start_advertising);
 		buttonStartAdvertising.setOnClickListener(v -> {
-			DP3T.start(v.getContext(), true, false);
+			DP3TCalibrationHelper.start(v.getContext(), true, false);
 			updateSdkStatus();
 		});
 
 		Button buttonStartReceiving = view.findViewById(R.id.home_button_start_receiving);
 		buttonStartReceiving.setOnClickListener(v -> {
-			DP3T.start(v.getContext(), false, true);
+			DP3TCalibrationHelper.start(v.getContext(), false, true);
 			updateSdkStatus();
 		});
 
@@ -212,7 +213,7 @@ public class ControlsFragment extends Fragment {
 			File dbFile = new File(getContext().getCacheDir(),
 					sdf.format(new Date()) + "_" + DeviceID.getID(getContext()) + "_dp3t_callibration_db.sqlite");
 			try {
-				DP3T.exportDb(getContext(), new FileOutputStream(dbFile), () ->
+				DP3TCalibrationHelper.exportDb(getContext(), new FileOutputStream(dbFile), () ->
 						new FileUploadRepository().uploadFile(dbFile, new Callback<Void>() {
 							@Override
 							public void onResponse(Call<Void> call, Response<Void> response) {
@@ -236,15 +237,15 @@ public class ControlsFragment extends Fragment {
 
 		EditText deanonymizationDeviceId = view.findViewById(R.id.deanonymization_device_id);
 		Switch deanonymizationSwitch = view.findViewById(R.id.deanonymization_switch);
-		if (DP3T.getCalibrationTestDeviceName(getContext()) != null) {
+		if (DP3TCalibrationHelper.getCalibrationTestDeviceName(getContext()) != null) {
 			deanonymizationSwitch.setChecked(true);
-			deanonymizationDeviceId.setText(DP3T.getCalibrationTestDeviceName(getContext()));
+			deanonymizationDeviceId.setText(DP3TCalibrationHelper.getCalibrationTestDeviceName(getContext()));
 		}
 		deanonymizationSwitch.setOnCheckedChangeListener((compoundButton, enabled) -> {
 			if (enabled) {
 				setDeviceId(deanonymizationDeviceId.getText().toString());
 			} else {
-				DP3T.disableCalibrationTestDeviceName(getContext());
+				DP3TCalibrationHelper.disableCalibrationTestDeviceName(getContext());
 			}
 		});
 		deanonymizationDeviceId.addTextChangedListener(new TextWatcher() {
@@ -275,7 +276,7 @@ public class ControlsFragment extends Fragment {
 				deviceId = deviceId + " ";
 			}
 		}
-		DP3T.setCalibrationTestDeviceName(getContext(), deviceId);
+		DP3TCalibrationHelper.setCalibrationTestDeviceName(getContext(), deviceId);
 	}
 
 	@Override
@@ -369,9 +370,9 @@ public class ControlsFragment extends Fragment {
 
 		EditText deanonymizationDeviceId = view.findViewById(R.id.deanonymization_device_id);
 		Switch deanonymizationSwitch = view.findViewById(R.id.deanonymization_switch);
-		if (DP3T.getCalibrationTestDeviceName(getContext()) != null) {
+		if (DP3TCalibrationHelper.getCalibrationTestDeviceName(getContext()) != null) {
 			deanonymizationSwitch.setChecked(true);
-			deanonymizationDeviceId.setText(DP3T.getCalibrationTestDeviceName(getContext()));
+			deanonymizationDeviceId.setText(DP3TCalibrationHelper.getCalibrationTestDeviceName(getContext()));
 		} else {
 			deanonymizationSwitch.setChecked(false);
 			deanonymizationDeviceId.setText("0000");

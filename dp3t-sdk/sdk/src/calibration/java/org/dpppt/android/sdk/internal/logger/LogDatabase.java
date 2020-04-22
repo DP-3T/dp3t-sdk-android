@@ -17,7 +17,7 @@ import java.util.List;
 
 import org.dpppt.android.sdk.BuildConfig;
 
-class LogDatabase {
+public class LogDatabase {
 
 	private final LogDatabaseHelper dbHelper;
 
@@ -27,6 +27,10 @@ class LogDatabase {
 
 	void log(String level, String tag, String message, long time) {
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		insert(db, level, tag, message, time);
+	}
+
+	public static void insert(SQLiteDatabase db, String level, String tag, String message, long time) {
 		ContentValues values = new ContentValues();
 		values.put(LogSpec.COLUMN_NAME_VERSION, BuildConfig.VERSION_CODE);
 		values.put(LogSpec.COLUMN_NAME_BUILD_TIME, BuildConfig.BUILD_TIME);
@@ -113,9 +117,9 @@ class LogDatabase {
 	}
 
 
-	private static class LogSpec implements BaseColumns {
+	public static class LogSpec implements BaseColumns {
 
-		static final String TABLE_NAME = "log";
+		public static final String TABLE_NAME = "log";
 		static final String INDEX_NAME_LEVEL = "i_lvl";
 		static final String INDEX_NAME_TAG = "i_tag";
 		static final String INDEX_NAME_TIME = "i_time";
@@ -129,9 +133,9 @@ class LogDatabase {
 	}
 
 
-	private static class LogDatabaseHelper extends SQLiteOpenHelper {
+	public static class LogDatabaseHelper extends SQLiteOpenHelper {
 
-		private static final int DATABASE_VERSION = 2;
+		public static final int DATABASE_VERSION = 2;
 		private static final String DATABASE_NAME = "dp3t_sdk_log.db";
 
 		private static final String SQL_CREATE_ENTRIES =
@@ -155,13 +159,18 @@ class LogDatabase {
 		private static final String SQL_UPDATE_2_ADD_VERSION_COLUMN =
 				"ALTER TABLE " + LogSpec.TABLE_NAME + " ADD COLUMN " + LogSpec.COLUMN_NAME_VERSION + " INTEGER NOT NULL DEFAULT 1";
 		private static final String SQL_UPDATE_2_ADD_BUILDTIME_COLUMN =
-				"ALTER TABLE " + LogSpec.TABLE_NAME + " ADD COLUMN " + LogSpec.COLUMN_NAME_BUILD_TIME + " INTEGER NOT NULL DEFAULT 0";
+				"ALTER TABLE " + LogSpec.TABLE_NAME + " ADD COLUMN " + LogSpec.COLUMN_NAME_BUILD_TIME +
+						" INTEGER NOT NULL DEFAULT 0";
 
 		LogDatabaseHelper(Context context) {
 			super(context, DATABASE_NAME, null, DATABASE_VERSION);
 		}
 
 		public void onCreate(SQLiteDatabase db) {
+			executeCreate(db);
+		}
+
+		public static void executeCreate(SQLiteDatabase db) {
 			db.execSQL(SQL_CREATE_ENTRIES);
 			db.execSQL(SQL_CREATE_INDEX_LEVEL);
 			db.execSQL(SQL_CREATE_INDEX_TAG);
