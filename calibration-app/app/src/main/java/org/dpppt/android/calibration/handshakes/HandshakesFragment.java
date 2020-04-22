@@ -110,6 +110,7 @@ public class HandshakesFragment extends Fragment {
 		}
 
 		long scanInterval = AppConfigManager.getInstance(getContext()).getScanInterval();
+		long scanDuration = AppConfigManager.getInstance(getContext()).getScanDuration();
 		List<HandshakeInterval> result = new ArrayList<>();
 		for (Map.Entry<String, List<Handshake>> entry : groupedHandshakes.entrySet()) {
 			Collections.sort(entry.getValue(), (h1, h2) -> Long.compare(h1.getTimestamp(), h2.getTimestamp()));
@@ -124,7 +125,9 @@ public class HandshakesFragment extends Fragment {
 					interval.endtime = entry.getValue().get(end - 1).getTimestamp();
 					interval.count = end - start;
 					interval.expectedCount =
-							1 + (int) Math.ceil((interval.endtime - interval.starttime) * 1.0 / scanInterval);
+							1 + (int) Math
+									.ceil((interval.endtime - interval.starttime) * 1.0 / scanInterval) *
+									((int) scanDuration / 5120);
 					result.add(interval);
 					start = end;
 				}
@@ -137,7 +140,8 @@ public class HandshakesFragment extends Fragment {
 			interval.endtime = entry.getValue().get(end - 1).getTimestamp();
 			interval.count = end - start;
 			interval.expectedCount =
-					1 + (int) Math.ceil((interval.endtime - interval.starttime) * 1.0 / scanInterval);
+					1 + (int) Math.ceil((interval.endtime - interval.starttime) * 1.0 / scanInterval) *
+							((int) scanDuration / 5120);
 			result.add(interval);
 		}
 

@@ -205,7 +205,7 @@ public class TracingService extends Service {
 	private void restartClient() {
 		//also restart server here to generate a new mac-address so we get rediscovered by apple devices
 		startServer();
-		
+
 		try {
 			startClient();
 		} catch (Throwable t) {
@@ -294,7 +294,6 @@ public class TracingService extends Service {
 		stopClient();
 		if (startReceiveing) {
 			bleClient = new BleClient(this);
-			bleClient.setMinTimeToReconnectToSameDevice(scanInterval);
 			bleClient.start();
 			Logger.d(TAG, "startScanning");
 		}
