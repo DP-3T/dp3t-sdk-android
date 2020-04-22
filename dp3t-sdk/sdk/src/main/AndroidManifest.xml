@@ -16,8 +16,14 @@
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-	<application
-		android:fullBackupContent="@xml/dp3t_sdk_backup_rules">
+	<uses-feature
+		android:name="android.hardware.bluetooth"
+		android:required="true" />
+	<uses-feature
+		android:name="android.hardware.bluetooth_le"
+		android:required="true" />
+
+	<application android:fullBackupContent="@xml/dp3t_sdk_backup_rules">
 
 		<service
 			android:name="org.dpppt.android.sdk.internal.TracingService"
