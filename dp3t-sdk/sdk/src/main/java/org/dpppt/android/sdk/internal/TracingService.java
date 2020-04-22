@@ -203,6 +203,9 @@ public class TracingService extends Service {
 	}
 
 	private void restartClient() {
+		//also restart server here to generate a new mac-address so we get rediscovered by apple devices
+		startServer();
+
 		try {
 			startClient();
 		} catch (Throwable t) {
@@ -233,11 +236,17 @@ public class TracingService extends Service {
 
 	public static void scheduleNextServerRestart(Context context) {
 		long nextEpochStart = CryptoModule.getInstance(context).getCurrentEpochStart() + CryptoModule.MILLISECONDS_PER_EPOCH;
+		long nextAdvertiseChange = nextEpochStart;
+		String calibrationTestDeviceName = AppConfigManager.getInstance(context).getCalibrationTestDeviceName();
+		if (calibrationTestDeviceName != null) {
+			long now = System.currentTimeMillis();
+			nextAdvertiseChange = now - (now % (60 * 1000)) + 60 * 1000;
+		}
 		AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 		Intent intent = new Intent(context, TracingServiceBroadcastReceiver.class);
 		intent.setAction(ACTION_RESTART_SERVER);
 		PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-		alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextEpochStart, pendingIntent);
+		alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextAdvertiseChange, pendingIntent);
 	}
 
 	private void stopForegroundService() {
@@ -269,7 +278,6 @@ public class TracingService extends Service {
 		stopServer();
 		if (startAdvertising) {
 			bleServer = new BleServer(this);
-			bleServer.start();
 			bleServer.startAdvertising();
 			Logger.d(TAG, "startAdvertising");
 		}
@@ -286,7 +294,6 @@ public class TracingService extends Service {
 		stopClient();
 		if (startReceiveing) {
 			bleClient = new BleClient(this);
-			bleClient.setMinTimeToReconnectToSameDevice(scanInterval);
 			bleClient.start();
 			Logger.d(TAG, "startScanning");
 		}

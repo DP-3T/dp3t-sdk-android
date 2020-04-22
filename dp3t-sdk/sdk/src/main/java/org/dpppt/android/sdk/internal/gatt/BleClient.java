@@ -17,16 +17,14 @@ import android.content.Context;
 import android.os.ParcelUuid;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.database.Database;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
-import static org.dpppt.android.sdk.internal.AppConfigManager.DEFAULT_SCAN_INTERVAL;
+import static org.dpppt.android.sdk.internal.gatt.BleServer.SERVICE_UUID;
 
 public class BleClient {
 
@@ -36,16 +34,11 @@ public class BleClient {
 	private BluetoothLeScanner bleScanner;
 	private ScanCallback bleScanCallback;
 	private GattConnectionThread gattConnectionThread;
-	private long minTimeToReconnectToSameDevice = DEFAULT_SCAN_INTERVAL;
 
 	public BleClient(Context context) {
 		this.context = context;
 		gattConnectionThread = new GattConnectionThread();
 		gattConnectionThread.start();
-	}
-
-	public void setMinTimeToReconnectToSameDevice(long minTimeToReconnectToSameDevice) {
-		this.minTimeToReconnectToSameDevice = minTimeToReconnectToSameDevice;
 	}
 
 	public void start() {
@@ -58,7 +51,7 @@ public class BleClient {
 
 		List<ScanFilter> scanFilters = new ArrayList<>();
 		scanFilters.add(new ScanFilter.Builder()
-				.setServiceUuid(new ParcelUuid(BleServer.SERVICE_UUID))
+				.setServiceUuid(new ParcelUuid(SERVICE_UUID))
 				.build());
 
 		// Scan for Apple devices as iOS does not advertise service uuid when in background,
@@ -99,18 +92,10 @@ public class BleClient {
 		bleScanner.startScan(scanFilters, scanSettings, bleScanCallback);
 	}
 
-	private Map<String, Long> deviceLastConnected = new HashMap<>();
-
 	public void onDeviceFound(ScanResult scanResult) {
 		try {
 			BluetoothDevice bluetoothDevice = scanResult.getDevice();
 			Logger.d(TAG, "found " + bluetoothDevice.getAddress() + "; " + scanResult.getScanRecord().getDeviceName());
-
-			Long lastConnected = deviceLastConnected.get(bluetoothDevice.getAddress());
-			if (lastConnected != null && lastConnected > System.currentTimeMillis() - minTimeToReconnectToSameDevice) {
-				Logger.d(TAG, "skipped");
-				return;
-			}
 
 			int power = scanResult.getScanRecord().getTxPowerLevel();
 			if (power == Integer.MIN_VALUE) {
@@ -118,12 +103,10 @@ public class BleClient {
 				power = 12;
 			}
 
-			deviceLastConnected.put(bluetoothDevice.getAddress(), System.currentTimeMillis());
-
-			byte[] payload = scanResult.getScanRecord().getManufacturerSpecificData(BleServer.MANUFACTURER_ID);
+			byte[] payload = scanResult.getScanRecord().getServiceData(new ParcelUuid(SERVICE_UUID));
 			if (payload != null && payload.length == CryptoModule.KEY_LENGTH) {
 				// if Android, optimize (meaning: send/read payload directly in the SCAN_RESP)
-				Logger.d(TAG, "read star payload from manufacturer data");
+				Logger.d(TAG, "read ephid payload from servicedata data");
 				ContentValues handshakeData = new Database(context)
 						.addHandshake(context, payload, power, scanResult.getRssi(), System.currentTimeMillis(),
 								BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
