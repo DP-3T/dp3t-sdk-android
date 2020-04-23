@@ -137,7 +137,7 @@ public class GattConnectionTask {
 		return bluetoothGatt == null;
 	}
 
-	public void finish() {
+	public synchronized void finish() {
 		if (bluetoothGatt != null) {
 			Logger.d(TAG, "disconnect() and close(): " + bluetoothGatt.getDevice().getAddress());
 			// Order matters! Call disconnect() before close() as the latter de-registers our client
