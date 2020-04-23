@@ -232,7 +232,7 @@ public class DP3T {
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		try {
-			appConfigManager.getBackendRepository(context).addExposee(exposeeRequest, exposeeAuthMethod,
+			appConfigManager.getBackendReportRepository(context).addExposee(exposeeRequest, exposeeAuthMethod,
 					new CallbackListener<Void>() {
 						@Override
 						public void onSuccess(Void response) {

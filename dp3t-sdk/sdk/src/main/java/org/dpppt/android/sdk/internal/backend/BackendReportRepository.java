@@ -23,26 +23,19 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class BackendRepository implements Repository {
+public class BackendReportRepository implements Repository {
 
-	private BackendService backendService;
+	private ReportService reportService;
 
-	public BackendRepository(@NonNull Context context, @NonNull String backendBaseUrl) {
-		Retrofit retrofit = new Retrofit.Builder()
-				.baseUrl(backendBaseUrl)
+	public BackendReportRepository(@NonNull Context context, String reportBaseUrl) {
+
+		Retrofit reportRetrofit = new Retrofit.Builder()
+				.baseUrl(reportBaseUrl)
 				.client(getClientBuilder(context).build())
 				.addConverterFactory(GsonConverterFactory.create())
 				.build();
 
-		backendService = retrofit.create(BackendService.class);
-	}
-
-	public CachedResult<ExposedList> getExposees(@NonNull DayDate dayDate) throws IOException, ResponseException {
-		Response<ExposedList> response = backendService.getExposees(dayDate.formatAsString()).execute();
-		if (response.isSuccessful()) {
-			return new CachedResult<>(response.body(), response.raw().networkResponse() == null);
-		}
-		throw new ResponseException(response.raw());
+		reportService = reportRetrofit.create(ReportService.class);
 	}
 
 	public void addExposee(@NonNull ExposeeRequest exposeeRequest, ExposeeAuthMethod exposeeAuthMethod,
@@ -50,7 +43,7 @@ public class BackendRepository implements Repository {
 		String authorizationHeader =
 				exposeeAuthMethod instanceof ExposeeAuthMethodAuthorization ? ((ExposeeAuthMethodAuthorization) exposeeAuthMethod)
 						.getAuthorization() : null;
-		backendService.addExposee(exposeeRequest, authorizationHeader).enqueue(new Callback<Void>() {
+		reportService.addExposee(exposeeRequest, authorizationHeader).enqueue(new Callback<Void>() {
 			@Override
 			public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
 				if (response.isSuccessful()) {

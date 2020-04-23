@@ -16,12 +16,9 @@ import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 
-interface BackendService {
+interface BucketService {
 
 	@GET("v1/exposed/{dayDate}")
 	Call<ExposedList> getExposees(@Path("dayDate") String dayDate);
-
-	@POST("v1/exposed")
-	Call<Void> addExposee(@Body ExposeeRequest exposeeRequest, @Header("Authorization") String authorizationHeader);
 
 }

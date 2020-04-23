@@ -10,7 +10,7 @@ import android.content.SharedPreferences;
 
 import java.io.IOException;
 
-import org.dpppt.android.sdk.internal.backend.BackendRepository;
+import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
 import org.dpppt.android.sdk.internal.backend.CallbackListener;
 import org.dpppt.android.sdk.internal.backend.DiscoveryRepository;
 import org.dpppt.android.sdk.internal.backend.models.ApplicationInfo;
@@ -147,9 +147,9 @@ public class AppConfigManager {
 		sharedPrefs.edit().putBoolean(PREF_I_AM_INFECTED, exposed).apply();
 	}
 
-	public BackendRepository getBackendRepository(Context context) throws IllegalStateException {
+	public BackendReportRepository getBackendReportRepository(Context context) throws IllegalStateException {
 		ApplicationInfo appConfig = getAppConfig();
-		return new BackendRepository(context, appConfig.getBackendBaseUrl());
+		return new BackendReportRepository(context, appConfig.getReportBaseUrl());
 	}
 
 	public void setDevDiscoveryModeEnabled(boolean enable) {

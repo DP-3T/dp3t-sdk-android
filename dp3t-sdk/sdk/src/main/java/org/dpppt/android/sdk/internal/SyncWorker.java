@@ -12,7 +12,7 @@ import androidx.work.*;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import org.dpppt.android.sdk.internal.backend.BackendRepository;
+import org.dpppt.android.sdk.internal.backend.BackendBucketRepository;
 import org.dpppt.android.sdk.internal.backend.ResponseException;
 import org.dpppt.android.sdk.internal.backend.models.ApplicationInfo;
 import org.dpppt.android.sdk.internal.backend.models.CachedResult;
@@ -75,15 +75,15 @@ public class SyncWorker extends Worker {
 		Database database = new Database(context);
 		database.generateContactsFromHandshakes(context);
 
-		BackendRepository backendRepository =
-				new BackendRepository(context, appConfig.getBackendBaseUrl());
+		BackendBucketRepository backendBucketRepository =
+				new BackendBucketRepository(context, appConfig.getBucketBaseUrl());
 
 		DayDate dateToLoad = new DayDate();
 		dateToLoad = dateToLoad.subtractDays(14);
 
 		for (int i = 0; i <= 14; i++) {
 
-			CachedResult<ExposedList> result = backendRepository.getExposees(dateToLoad);
+			CachedResult<ExposedList> result = backendBucketRepository.getExposees(dateToLoad);
 			if (result.isFromCache()) {
 				//ignore if result comes from cache, we already added it to database
 				continue;
