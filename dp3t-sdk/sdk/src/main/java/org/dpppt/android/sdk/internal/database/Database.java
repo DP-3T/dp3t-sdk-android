@@ -81,13 +81,13 @@ public class Database {
 		});
 	}
 
-	public ContentValues addHandshake(Context context, byte[] star, int txPowerLevel, int rssi, long timestamp) {
+	public ContentValues addHandshake(Context context, Handshake handshake) {
 		SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 		ContentValues values = new ContentValues();
-		values.put(Handshakes.EPHID, star);
-		values.put(Handshakes.TIMESTAMP, timestamp);
-		values.put(Handshakes.TX_POWER_LEVEL, txPowerLevel);
-		values.put(Handshakes.RSSI, rssi);
+		values.put(Handshakes.EPHID, handshake.getEphId().getData());
+		values.put(Handshakes.TIMESTAMP, handshake.getTimestamp());
+		values.put(Handshakes.TX_POWER_LEVEL, handshake.getTxPowerLevel());
+		values.put(Handshakes.RSSI, handshake.getRssi());
 		databaseThread.post(() -> {
 			db.insert(Handshakes.TABLE_NAME, null, values);
 			BroadcastHelper.sendUpdateBroadcast(context);

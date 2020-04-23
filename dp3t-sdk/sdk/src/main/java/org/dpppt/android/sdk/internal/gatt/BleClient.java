@@ -12,16 +12,19 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
-import android.content.ContentValues;
 import android.content.Context;
 import android.os.ParcelUuid;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
+import org.dpppt.android.sdk.internal.crypto.EphId;
 import org.dpppt.android.sdk.internal.database.Database;
+import org.dpppt.android.sdk.internal.database.models.Handshake;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
 import static org.dpppt.android.sdk.internal.gatt.BleServer.SERVICE_UUID;
@@ -34,6 +37,9 @@ public class BleClient {
 	private BluetoothLeScanner bleScanner;
 	private ScanCallback bleScanCallback;
 	private GattConnectionThread gattConnectionThread;
+
+	private HashMap<String, List<Handshake>> scanResultMap = new HashMap<>();
+	private HashMap<String, EphId> connectedEphIdMap = new HashMap<>();
 
 	public BleClient(Context context) {
 		this.context = context;
@@ -53,9 +59,9 @@ public class BleClient {
 		}
 
 		List<ScanFilter> scanFilters = new ArrayList<>();
-		scanFilters.add(new ScanFilter.Builder()
+		/*scanFilters.add(new ScanFilter.Builder()
 				.setServiceUuid(new ParcelUuid(SERVICE_UUID))
-				.build());
+				.build());*/
 
 		// Scan for Apple devices as iOS does not advertise service uuid when in background,
 		// but instead pushes it to the "overflow" area (manufacturer data). For now let's
@@ -105,23 +111,34 @@ public class BleClient {
 	public void onDeviceFound(ScanResult scanResult) {
 		try {
 			BluetoothDevice bluetoothDevice = scanResult.getDevice();
-			Logger.d(TAG, "found " + bluetoothDevice.getAddress() + "; " + scanResult.getScanRecord().getDeviceName());
 
 			int power = scanResult.getScanRecord().getTxPowerLevel();
 			if (power == Integer.MIN_VALUE) {
-				Logger.d(TAG, "No power levels found for (" + scanResult.getDevice().getName() + "), use default of 12dbm");
+				Logger.d(TAG, "No power levels found for (" + scanResult.getDevice().getAddress() + "), use default of 12dbm");
 				power = 12;
 			}
 
+			if (!scanResultMap.containsKey(scanResult.getDevice().getAddress())) {
+				scanResultMap.put(scanResult.getDevice().getAddress(), new ArrayList<>());
+			}
 			byte[] payload = scanResult.getScanRecord().getServiceData(new ParcelUuid(SERVICE_UUID));
-			if (payload != null && payload.length == CryptoModule.KEY_LENGTH) {
-				// if Android, optimize (meaning: send/read payload directly in the SCAN_RESP)
+			boolean correctPayload = payload != null && payload.length == CryptoModule.EPHID_LENGTH;
+			Logger.d(TAG, "found " + bluetoothDevice.getAddress() + " power: " + power + " rssi: " + scanResult.getRssi() +
+					" payload:" + " " + correctPayload);
+			if (correctPayload) {
+				// if Android, optimize (meaning: send/read payload directly in the advertisement
 				Logger.d(TAG, "read ephid payload from servicedata data");
-				ContentValues handshakeData = new Database(context)
-						.addHandshake(context, payload, power, scanResult.getRssi(), System.currentTimeMillis());
-				Logger.i(TAG, "saved handshake: " + handshakeData.toString());
+				scanResultMap.get(scanResult.getDevice().getAddress())
+						.add(new Handshake(-1, System.currentTimeMillis(), new EphId(payload), power, scanResult.getRssi()));
 			} else {
-				gattConnectionThread.addTask(new GattConnectionTask(context, bluetoothDevice, scanResult));
+				if (scanResultMap.get(scanResult.getDevice().getAddress()).size() == 0) {
+					gattConnectionThread.addTask(new GattConnectionTask(context, bluetoothDevice, scanResult,
+							(ephId, device) -> {
+								connectedEphIdMap.put(device.getAddress(), ephId);
+							}));
+				}
+				scanResultMap.get(scanResult.getDevice().getAddress())
+						.add(new Handshake(-1, System.currentTimeMillis(), null, power, scanResult.getRssi()));
 			}
 		} catch (Throwable t) {
 			Logger.e(TAG, t);
@@ -145,6 +162,22 @@ public class BleClient {
 	public synchronized void stop() {
 		gattConnectionThread.terminate();
 		stopScan();
+
+		Database database = new Database(context);
+		for (Map.Entry<String, List<Handshake>> entry : scanResultMap.entrySet()) {
+			if (connectedEphIdMap.containsKey(entry.getKey())) {
+				for (Handshake handshake : scanResultMap.get(entry.getKey())) {
+					handshake.setEphId(connectedEphIdMap.get(entry.getKey()));
+					database.addHandshake(context, handshake);
+				}
+			} else {
+				for (Handshake handshake : scanResultMap.get(entry.getKey())) {
+					if (handshake.getEphId() != null) {
+						database.addHandshake(context, handshake);
+					}
+				}
+			}
+		}
 	}
 
 }

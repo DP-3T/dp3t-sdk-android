@@ -27,6 +27,10 @@ public class Handshake {
 		return ephId;
 	}
 
+	public void setEphId(EphId ephId) {
+		this.ephId = ephId;
+	}
+
 	public long getTimestamp() {
 		return timestamp;
 	}
