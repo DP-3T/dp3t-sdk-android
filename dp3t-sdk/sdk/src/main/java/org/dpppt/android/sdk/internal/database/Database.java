@@ -62,6 +62,7 @@ public class Database {
 				ContentValues insertValues = new ContentValues();
 				insertValues.put(MatchedContacts.REPORT_DATE, bucketDate.getStartOfDayTimestamp());
 				insertValues.put(MatchedContacts.ASSOCIATED_KNOWN_CASE, idOfAddedCase);
+				db.insert(MatchedContacts.TABLE_NAME, null, insertValues);
 				BroadcastHelper.sendUpdateBroadcast(context);
 			});
 		});
