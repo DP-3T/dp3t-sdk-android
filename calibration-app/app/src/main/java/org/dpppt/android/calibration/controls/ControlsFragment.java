@@ -38,30 +38,27 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.TimeZone;
 
 import org.dpppt.android.calibration.MainApplication;
 import org.dpppt.android.calibration.R;
-import org.dpppt.android.calibration.util.DeviceID;
 import org.dpppt.android.calibration.util.DialogUtil;
 import org.dpppt.android.calibration.util.RequirementsUtil;
-import org.dpppt.android.calibration.util.backend.FileUploadRepository;
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.DP3TCalibrationHelper;
 import org.dpppt.android.sdk.InfectionStatus;
 import org.dpppt.android.sdk.TracingStatus;
+import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.backend.CallbackListener;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthData;
 import org.dpppt.android.sdk.internal.database.Database;
+import org.dpppt.android.sdk.util.FileUploadRepository;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -209,31 +206,21 @@ public class ControlsFragment extends Fragment {
 		Button uploadDB = view.findViewById(R.id.home_button_upload_db);
 		uploadDB.setOnClickListener(v -> {
 			setUploadDbLoadingViewVisible(true);
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-			sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-			File dbFile = new File(getContext().getCacheDir(),
-					sdf.format(new Date()) + "_" + DeviceID.getID(getContext()) + "_dp3t_callibration_db.sqlite");
-			try {
-				DP3TCalibrationHelper.exportDb(getContext(), new FileOutputStream(dbFile), () ->
-						new FileUploadRepository().uploadFile(dbFile, new Callback<Void>() {
-							@Override
-							public void onResponse(Call<Void> call, Response<Void> response) {
-								setUploadDbLoadingViewVisible(false);
-							}
+			new FileUploadRepository()
+					.uploadDatabase(getContext(), AppConfigManager.getInstance(getContext()).getCalibrationTestDeviceName(),
+							new Callback<Void>() {
+								@Override
+								public void onResponse(Call<Void> call, Response<Void> response) {
+									setUploadDbLoadingViewVisible(false);
+								}
 
-							@Override
-							public void onFailure(Call<Void> call, Throwable t) {
-								t.printStackTrace();
-								Toast.makeText(getContext(), "Upload failed!", Toast.LENGTH_LONG).show();
-								setUploadDbLoadingViewVisible(false);
-							}
-						})
-				);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-				Toast.makeText(getContext(), "Upload failed!", Toast.LENGTH_LONG).show();
-				setUploadDbLoadingViewVisible(false);
-			}
+								@Override
+								public void onFailure(Call<Void> call, Throwable t) {
+									t.printStackTrace();
+									Toast.makeText(getContext(), "Upload failed!", Toast.LENGTH_LONG).show();
+									setUploadDbLoadingViewVisible(false);
+								}
+							});
 		});
 
 		EditText deanonymizationDeviceId = view.findViewById(R.id.deanonymization_device_id);
