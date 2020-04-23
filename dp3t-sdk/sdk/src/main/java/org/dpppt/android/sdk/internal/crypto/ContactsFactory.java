@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.dpppt.android.sdk.internal.backend.BackendRepository;
+import org.dpppt.android.sdk.internal.backend.BackendBucketRepository;
 import org.dpppt.android.sdk.internal.database.models.Contact;
 import org.dpppt.android.sdk.internal.database.models.Handshake;
 
@@ -36,7 +36,7 @@ public class ContactsFactory {
 	}
 
 	private static long floorTimestampToBucket(long timestamp) {
-		return timestamp - (timestamp % BackendRepository.BATCH_LENGTH);
+		return timestamp - (timestamp % BackendBucketRepository.BATCH_LENGTH);
 	}
 
 }

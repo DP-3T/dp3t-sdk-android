@@ -12,14 +12,14 @@ import androidx.work.*;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import org.dpppt.android.sdk.internal.backend.BackendRepository;
+import org.dpppt.android.sdk.internal.backend.BackendBucketRepository;
 import org.dpppt.android.sdk.internal.backend.ResponseException;
 import org.dpppt.android.sdk.internal.backend.models.ApplicationInfo;
 import org.dpppt.android.sdk.internal.backend.proto.Exposed;
 import org.dpppt.android.sdk.internal.database.Database;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
-import static org.dpppt.android.sdk.internal.backend.BackendRepository.BATCH_LENGTH;
+import static org.dpppt.android.sdk.internal.backend.BackendBucketRepository.BATCH_LENGTH;
 
 public class SyncWorker extends Worker {
 
@@ -87,13 +87,14 @@ public class SyncWorker extends Worker {
 			nextBatchReleaseTime = lastLoadedBatchReleaseTime + BATCH_LENGTH;
 		}
 
-		BackendRepository backendRepository = new BackendRepository(context, appConfig.getBackendBaseUrl());
+		BackendBucketRepository backendBucketRepository =
+				new BackendBucketRepository(context, appConfig.getBucketBaseUrl());
 
 		for (long batchReleaseTime = nextBatchReleaseTime;
 			 batchReleaseTime < System.currentTimeMillis();
 			 batchReleaseTime += BATCH_LENGTH) {
 
-			Exposed.ProtoExposedList result = backendRepository.getExposees(batchReleaseTime);
+			Exposed.ProtoExposedList result = backendBucketRepository.getExposees(batchReleaseTime);
 			long batchReleaseServerTime = result.getBatchReleaseTime();
 			for (Exposed.ProtoExposeeOrBuilder exposee : result.getExposedOrBuilderList()) {
 				database.addKnownCase(

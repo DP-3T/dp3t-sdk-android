@@ -5,20 +5,17 @@
  */
 package org.dpppt.android.sdk.internal.backend;
 
-import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.backend.proto.Exposed;
 
 import retrofit2.Call;
-import retrofit2.http.*;
+import retrofit2.http.GET;
+import retrofit2.http.Headers;
+import retrofit2.http.Path;
 
-interface BackendService {
+interface BucketService {
 
 	@Headers("Accept: application/x-protobuf")
 	@GET("v1/exposed/{batchReleaseTime}")
 	Call<Exposed.ProtoExposedList> getExposees(@Path("batchReleaseTime") long batchReleaseTime);
-
-	@Headers("Accept: application/json")
-	@POST("v1/exposed")
-	Call<Void> addExposee(@Body ExposeeRequest exposeeRequest, @Header("Authorization") String authorizationHeader);
 
 }

@@ -14,7 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.dpppt.android.sdk.internal.backend.BackendRepository;
+import org.dpppt.android.sdk.internal.backend.BackendBucketRepository;
 import org.dpppt.android.sdk.internal.database.models.Contact;
 import org.dpppt.android.sdk.internal.util.DayDate;
 import org.junit.Test;
@@ -103,7 +103,7 @@ public class CryptoTest {
 
 		HashSet<Contact> infectedContacts = new HashSet<>();
 		module.checkContacts(keyByte, today.getStartOfDayTimestamp(),
-				today.getStartOfDayTimestamp() + BackendRepository.BATCH_LENGTH,
+				today.getStartOfDayTimestamp() + BackendBucketRepository.BATCH_LENGTH,
 				(timeFrom, timeUntil) -> contacts.stream().filter(c -> timeFrom <= c.getDate() && c.getDate() < timeUntil)
 						.collect(Collectors.toList()),
 				contact -> infectedContacts.add(contact));
