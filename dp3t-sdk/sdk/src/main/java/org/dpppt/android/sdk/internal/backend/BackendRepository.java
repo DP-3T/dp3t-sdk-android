@@ -7,6 +7,7 @@ package org.dpppt.android.sdk.internal.backend;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.IOException;
 
@@ -26,7 +27,6 @@ public class BackendRepository implements Repository {
 	private BackendService backendService;
 
 	public BackendRepository(@NonNull Context context, @NonNull String backendBaseUrl) {
-
 		Retrofit retrofit = new Retrofit.Builder()
 				.baseUrl(backendBaseUrl)
 				.client(getClientBuilder(context).build())
@@ -44,10 +44,9 @@ public class BackendRepository implements Repository {
 		throw new ResponseException(response.raw());
 	}
 
-	public void addExposee(@NonNull ExposeeRequest exposeeRequest, @NonNull CallbackListener<Void> callbackListener) {
-
-		backendService.addExposee(exposeeRequest).enqueue(new Callback<Void>() {
-
+	public void addExposee(@NonNull ExposeeRequest exposeeRequest, @Nullable String authorizationHeader,
+			@NonNull CallbackListener<Void> callbackListener) {
+		backendService.addExposee(exposeeRequest, authorizationHeader).enqueue(new Callback<Void>() {
 			@Override
 			public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
 				if (response.isSuccessful()) {
