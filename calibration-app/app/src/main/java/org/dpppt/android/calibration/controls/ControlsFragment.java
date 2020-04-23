@@ -59,6 +59,7 @@ import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.DP3TCalibrationHelper;
 import org.dpppt.android.sdk.InfectionStatus;
 import org.dpppt.android.sdk.TracingStatus;
+import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.backend.CallbackListener;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthData;
 import org.dpppt.android.sdk.internal.database.Database;
@@ -212,7 +213,9 @@ public class ControlsFragment extends Fragment {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 			sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 			File dbFile = new File(getContext().getCacheDir(),
-					sdf.format(new Date()) + "_" + DeviceID.getID(getContext()) + "_dp3t_callibration_db.sqlite");
+					sdf.format(new Date()) + "_" + AppConfigManager.getInstance(getContext()).getCalibrationTestDeviceName() +
+							"_" +
+							DeviceID.getID(getContext()) + "_dp3t_callibration_db.sqlite");
 			try {
 				DP3TCalibrationHelper.exportDb(getContext(), new FileOutputStream(dbFile), () ->
 						new FileUploadRepository().uploadFile(dbFile, new Callback<Void>() {
