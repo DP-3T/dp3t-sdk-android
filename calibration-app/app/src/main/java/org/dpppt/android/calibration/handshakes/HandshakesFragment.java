@@ -6,7 +6,6 @@
 package org.dpppt.android.calibration.handshakes;
 
 import android.os.Bundle;
-import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,7 +68,7 @@ public class HandshakesFragment extends Fragment {
 					stringBuilder.append(sdf.format(new Date(handShake.getTimestamp())));
 					stringBuilder.append(" ");
 					stringBuilder
-							.append(new String(Base64.encode(handShake.getEphId().getData(), Base64.NO_WRAP)).substring(0, 10));
+							.append(new String(handShake.getEphId().getData()).substring(0, 10));
 					stringBuilder.append("...");
 					stringBuilder.append(" TxPowerLevel: ");
 					stringBuilder.append(handShake.getTxPowerLevel());
@@ -111,6 +110,7 @@ public class HandshakesFragment extends Fragment {
 		}
 
 		long scanInterval = AppConfigManager.getInstance(getContext()).getScanInterval();
+		long scanDuration = AppConfigManager.getInstance(getContext()).getScanDuration();
 		List<HandshakeInterval> result = new ArrayList<>();
 		for (Map.Entry<String, List<Handshake>> entry : groupedHandshakes.entrySet()) {
 			Collections.sort(entry.getValue(), (h1, h2) -> Long.compare(h1.getTimestamp(), h2.getTimestamp()));
@@ -125,7 +125,9 @@ public class HandshakesFragment extends Fragment {
 					interval.endtime = entry.getValue().get(end - 1).getTimestamp();
 					interval.count = end - start;
 					interval.expectedCount =
-							1 + (int) Math.ceil((interval.endtime - interval.starttime) * 1.0 / scanInterval);
+							1 + (int) Math
+									.ceil((interval.endtime - interval.starttime) * 1.0 / scanInterval) *
+									((int) scanDuration / 5120);
 					result.add(interval);
 					start = end;
 				}
@@ -138,7 +140,8 @@ public class HandshakesFragment extends Fragment {
 			interval.endtime = entry.getValue().get(end - 1).getTimestamp();
 			interval.count = end - start;
 			interval.expectedCount =
-					1 + (int) Math.ceil((interval.endtime - interval.starttime) * 1.0 / scanInterval);
+					1 + (int) Math.ceil((interval.endtime - interval.starttime) * 1.0 / scanInterval) *
+							((int) scanDuration / 5120);
 			result.add(interval);
 		}
 

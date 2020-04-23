@@ -5,7 +5,8 @@
  */
 package org.dpppt.android.sdk.internal.gatt;
 
-import android.bluetooth.*;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseData;
 import android.bluetooth.le.AdvertiseSettings;
@@ -24,8 +25,7 @@ public class BleServer {
 
 	private static final String TAG = "BleServer";
 
-	public static final UUID SERVICE_UUID = UUID.fromString("8c8494e3-bab5-1848-40a0-1b06991c0000");
-	public static final int MANUFACTURER_ID = 0xabba;
+	public static final UUID SERVICE_UUID = UUID.fromString("0000FD6F-0000-1000-8000-00805F9B34FB");
 	public static final UUID TOTP_CHARACTERISTIC_UUID = UUID.fromString("8c8494e3-bab5-1848-40a0-1b06991c0001");
 
 	private final Context context;
@@ -43,14 +43,32 @@ public class BleServer {
 		}
 	};
 	private BluetoothAdapter mAdapter;
-	private BluetoothGattServer mGattServer;
 	private BluetoothLeAdvertiser mLeAdvertiser;
 
 	public BleServer(Context context) {
 		this.context = context;
 	}
 
-	public BluetoothState start() {
+	private byte[] getAdvertiseData() {
+		CryptoModule cryptoModule = CryptoModule.getInstance(context);
+		byte[] advertiseData = cryptoModule.getCurrentEphId().getData();
+		String calibrationTestDeviceName = AppConfigManager.getInstance(context).getCalibrationTestDeviceName();
+		if (calibrationTestDeviceName != null) {
+			byte[] nameBytes = calibrationTestDeviceName.getBytes();
+			for (int i = 0; i < AppConfigManager.CALIBRATION_TEST_DEVICE_NAME_LENGTH; i++) {
+				advertiseData[i] = nameBytes[i];
+			}
+			long curMinInEpoch = ((System.currentTimeMillis() - cryptoModule.getCurrentEpochStart()) / (60 * 1000));
+			byte[] minData = Long.toString(curMinInEpoch).getBytes();
+			advertiseData[AppConfigManager.CALIBRATION_TEST_DEVICE_NAME_LENGTH] = minData[0];
+			if (minData.length > 1) {
+				advertiseData[AppConfigManager.CALIBRATION_TEST_DEVICE_NAME_LENGTH + 1] = minData[1];
+			}
+		}
+		return advertiseData;
+	}
+
+	public BluetoothState startAdvertising() {
 		BluetoothManager mManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
 
 		if (mManager == null || !context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
@@ -58,115 +76,16 @@ public class BleServer {
 		}
 
 		mAdapter = mManager.getAdapter();
-		if (mAdapter.isEnabled()) {
-			mGattServer = mManager.openGattServer(context, createGattServerCallback());
-
-			setupService();
-			return BluetoothState.ENABLED;
-		} else {
-			return BluetoothState.DISABLED;
-		}
-	}
-
-	private BluetoothGattServerCallback createGattServerCallback() {
-		return new BluetoothGattServerCallback() {
-			private static final String TAG = "GattServer";
-
-			@Override
-			public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-				Logger.d(TAG, "Our gatt server connection state changed, new state " + newState);
-			}
-
-			@Override
-			public void onServiceAdded(int status, BluetoothGattService service) {
-				Logger.d(TAG, "Our gatt server service was added.");
-			}
-
-			@Override
-			public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset,
-					BluetoothGattCharacteristic characteristic) {
-				Logger.i(TAG, "Our gatt characteristic was read.");
-				mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset,
-						characteristic.getValue());
-			}
-
-			@Override
-			public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId,
-					BluetoothGattCharacteristic characteristic, boolean preparedWrite,
-					boolean responseNeeded, int offset, byte[] value) {
-				Logger.i(TAG, "We have received a write request for one of our hosted characteristics");
-			}
-
-			@Override
-			public void onNotificationSent(BluetoothDevice device, int status) {
-				Logger.d(TAG, "onNotificationSent");
-			}
-
-			@Override
-			public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int offset,
-					BluetoothGattDescriptor descriptor) {
-				Logger.d(TAG, "Gatt server descriptor was read.");
-			}
-
-			@Override
-			public void onDescriptorWriteRequest(BluetoothDevice device, int requestId, BluetoothGattDescriptor descriptor,
-					boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
-				Logger.d(TAG, "Gatt server descriptor was written.");
-			}
-
-			@Override
-			public void onExecuteWrite(BluetoothDevice device, int requestId, boolean execute) {
-				Logger.d(TAG, "Gatt server on execute write.");
-			}
-		};
-	}
-
-	private byte[] getAdvertiseData() {
-		byte[] advertiseData = CryptoModule.getInstance(context).getCurrentEphId().getData();
-		String calibrationTestDeviceName = AppConfigManager.getInstance(context).getCalibrationTestDeviceName();
-		if (calibrationTestDeviceName != null) {
-			byte[] nameBytes = calibrationTestDeviceName.getBytes();
-			for (int i = 0; i < AppConfigManager.CALIBRATION_TEST_DEVICE_NAME_LENGTH; i++) {
-				advertiseData[i] = nameBytes[i];
-			}
-		}
-		return advertiseData;
-	}
-
-	private void setupService() {
-		BluetoothGattService oldService = mGattServer.getService(SERVICE_UUID);
-		if (oldService != null) {
-			mGattServer.removeService(oldService);
-		}
-
-		BluetoothGattCharacteristic testCharacteristic = new BluetoothGattCharacteristic(
-				TOTP_CHARACTERISTIC_UUID,
-				BluetoothGattCharacteristic.PROPERTY_READ,
-				BluetoothGattCharacteristic.PERMISSION_READ
-		);
-
-		BluetoothGattService gattService = new BluetoothGattService(SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY);
-
-		testCharacteristic.setValue(getAdvertiseData());
-
-		gattService.addCharacteristic(testCharacteristic);
-		mGattServer.addService(gattService);
-	}
-
-	public BluetoothState startAdvertising() {
 		mLeAdvertiser = mAdapter.getBluetoothLeAdvertiser();
 		if (mLeAdvertiser == null) {
 			return BluetoothState.NOT_SUPPORTED;
 		}
 
-		AdvertiseData.Builder advBuilder = new AdvertiseData.Builder().setIncludeTxPowerLevel(true);
+		AdvertiseData.Builder advBuilder = new AdvertiseData.Builder();
+		advBuilder.setIncludeTxPowerLevel(true);
 		advBuilder.addServiceUuid(new ParcelUuid(SERVICE_UUID));
+		advBuilder.addServiceData(new ParcelUuid(SERVICE_UUID), getAdvertiseData());
 		advBuilder.setIncludeDeviceName(false);
-
-		AdvertiseData scanResponse = new AdvertiseData.Builder()
-				.setIncludeDeviceName(false).setIncludeTxPowerLevel(false)
-				.addManufacturerData(MANUFACTURER_ID, getAdvertiseData())
-				.build();
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 
@@ -175,7 +94,7 @@ public class BleServer {
 		settingBuilder.setTxPowerLevel(appConfigManager.getBluetoothTxPowerLevel().getValue());
 		settingBuilder.setConnectable(true);
 
-		mLeAdvertiser.startAdvertising(settingBuilder.build(), advBuilder.build(), scanResponse, advertiseCallback);
+		mLeAdvertiser.startAdvertising(settingBuilder.build(), advBuilder.build(), advertiseCallback);
 
 		return BluetoothState.ENABLED;
 	}
@@ -188,10 +107,6 @@ public class BleServer {
 
 	public void stop() {
 		stopAdvertising();
-		if (mGattServer != null) {
-			mGattServer.close();
-			mGattServer = null;
-		}
 		mAdapter = null;
 	}
 
