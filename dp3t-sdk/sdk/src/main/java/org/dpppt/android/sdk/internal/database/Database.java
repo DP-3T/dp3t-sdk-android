@@ -27,7 +27,6 @@ import org.dpppt.android.sdk.internal.database.models.MatchedContact;
 import org.dpppt.android.sdk.internal.util.DayDate;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_IGNORE;
-import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
 public class Database {
 
@@ -42,7 +41,7 @@ public class Database {
 	public void addKnownCase(Context context, @NonNull byte[] key, long onsetDate, long bucketTime) {
 		SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 		ContentValues values = new ContentValues();
-		values.put(KnownCases.KEY, toBase64(key));
+		values.put(KnownCases.KEY, key);
 		values.put(KnownCases.ONSET, onsetDate);
 		values.put(KnownCases.BUCKET_TIME, bucketTime);
 		databaseThread.post(() -> {

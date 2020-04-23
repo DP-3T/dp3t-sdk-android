@@ -11,7 +11,7 @@ interface KnownCases {
 
 	String ID = "id";
 	String ONSET = "onset";
-	String BUCKET_TIME = "day";
+	String BUCKET_TIME = "batchTimestamp";
 	String KEY = "key";
 
 	String[] PROJECTION = {
@@ -23,7 +23,7 @@ interface KnownCases {
 
 	static String create() {
 		return "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " (" + ID + " INTEGER PRIMARY KEY NOT NULL, " + ONSET +
-				" INTEGER NOT NULL," + BUCKET_TIME + " INTEGER NOT NULL, " + KEY + " TEXT NOT NULL, "
+				" INTEGER NOT NULL," + BUCKET_TIME + " INTEGER NOT NULL, " + KEY + " BLOB NOT NULL, "
 				+ "CONSTRAINT no_duplicates UNIQUE (" + BUCKET_TIME + ", " + KEY + ") )";
 	}
 

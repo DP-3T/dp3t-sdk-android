@@ -11,7 +11,6 @@ import androidx.annotation.Nullable;
 
 import java.io.IOException;
 
-import org.dpppt.android.sdk.internal.backend.models.CachedResult;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.backend.proto.Exposed;
 
@@ -39,16 +38,17 @@ public class BackendRepository implements Repository {
 		backendService = retrofit.create(BackendService.class);
 	}
 
-	public CachedResult<Exposed.ProtoExposedList> getExposees(long batchReleaseTime) throws IOException, ResponseException {
+	public Exposed.ProtoExposedList getExposees(long batchReleaseTime) throws IOException, ResponseException {
 		if (batchReleaseTime % BATCH_LENGTH != 0) {
 			throw new IllegalArgumentException("invalid batchReleaseTime: " + batchReleaseTime);
 		}
 
 		Response<Exposed.ProtoExposedList> response = backendService.getExposees(batchReleaseTime).execute();
-		if (response.isSuccessful()) {
-			return new CachedResult<>(response.body(), response.raw().networkResponse() == null);
+		if (response.isSuccessful() && response.body() != null) {
+			return response.body();
+		} else {
+			throw new ResponseException(response.raw());
 		}
-		throw new ResponseException(response.raw());
 	}
 
 	public void addExposee(@NonNull ExposeeRequest exposeeRequest, @Nullable String authorizationHeader,
