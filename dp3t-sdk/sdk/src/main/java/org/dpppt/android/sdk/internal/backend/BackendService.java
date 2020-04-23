@@ -12,6 +12,7 @@ import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 
@@ -21,6 +22,6 @@ interface BackendService {
 	Call<ExposedList> getExposees(@Path("dayDate") String dayDate);
 
 	@POST("v1/exposed")
-	Call<Void> addExposee(@Body ExposeeRequest exposeeRequest);
+	Call<Void> addExposee(@Body ExposeeRequest exposeeRequest, @Header("Authorization") String authorizationHeader);
 
 }

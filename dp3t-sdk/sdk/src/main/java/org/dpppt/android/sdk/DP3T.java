@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.PowerManager;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
@@ -224,7 +225,7 @@ public class DP3T {
 	}
 
 	public static void sendIAmInfected(Context context, Date onset, ExposeeAuthData exposeeAuthData,
-			CallbackListener<Void> callback) {
+			@Nullable String authorizationHeader, CallbackListener<Void> callback) {
 		checkInit();
 
 		DayDate onsetDate = new DayDate(onset.getTime());
@@ -232,7 +233,7 @@ public class DP3T {
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		try {
-			appConfigManager.getBackendRepository(context).addExposee(exposeeRequest,
+			appConfigManager.getBackendRepository(context).addExposee(exposeeRequest, authorizationHeader,
 					new CallbackListener<Void>() {
 						@Override
 						public void onSuccess(Void response) {
