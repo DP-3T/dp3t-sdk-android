@@ -190,12 +190,14 @@ public class CryptoModule {
 		return getEphIdsForToday(currentDay).get(getEpochCounter(now));
 	}
 
-	public void checkContacts(byte[] sk, DayDate onsetDate, DayDate bucketDate, GetContactsCallback contactCallback,
+	public void checkContacts(byte[] sk, long onsetDate, long bucketTime, GetContactsCallback contactCallback,
 			MatchCallback matchCallback) {
-		DayDate dayToTest = onsetDate;
+		DayDate dayToTest = new DayDate(onsetDate);
 		byte[] skForDay = sk;
-		while (dayToTest.isBeforeOrEquals(bucketDate)) {
-			List<Contact> contactsOnDay = contactCallback.getContacts(dayToTest);
+		while (dayToTest.isBeforeOrEquals(bucketTime)) {
+			long contactTimeFrom = dayToTest.getStartOfDayTimestamp();
+			long contactTimeUntil = Math.min(dayToTest.getNextDay().getStartOfDayTimestamp(), bucketTime);
+			List<Contact> contactsOnDay = contactCallback.getContacts(contactTimeFrom, contactTimeUntil);
 			if (contactsOnDay.size() > 0) {
 				//generate all ephIds for day
 				HashSet<EphId> ephIdHashSet = new HashSet<>(createEphIds(skForDay, false));
@@ -244,8 +246,11 @@ public class CryptoModule {
 	}
 
 	public interface GetContactsCallback {
-
-		List<Contact> getContacts(DayDate date);
+		/**
+		 * @param timeFrom timestamp inclusive
+		 * @param timeUntil timestamp exclusive
+		 */
+		List<Contact> getContacts(long timeFrom, long timeUntil);
 
 	}
 

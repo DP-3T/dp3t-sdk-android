@@ -39,6 +39,7 @@ public class AppConfigManager {
 	private static final String PREF_APPLICATION_LIST = "applicationList";
 	private static final String PREF_ADVERTISING_ENABLED = "advertisingEnabled";
 	private static final String PREF_RECEIVING_ENABLED = "receivingEnabled";
+	private static final String PREF_LAST_LOADED_BATCH_RELEASE_TIME = "lastLoadedBatchReleaseTime";
 	private static final String PREF_LAST_SYNC_DATE = "lastSyncDate";
 	private static final String PREF_LAST_SYNC_NET_SUCCESS = "lastSyncNetSuccess";
 	private static final String PREF_I_AM_INFECTED = "IAmInfected";
@@ -121,6 +122,14 @@ public class AppConfigManager {
 
 	public boolean isReceivingEnabled() {
 		return sharedPrefs.getBoolean(PREF_RECEIVING_ENABLED, false);
+	}
+
+	public void setLastLoadedBatchReleaseTime(long lastLoadedBatchReleaseTime) {
+		sharedPrefs.edit().putLong(PREF_LAST_LOADED_BATCH_RELEASE_TIME, lastLoadedBatchReleaseTime).apply();
+	}
+
+	public long getLastLoadedBatchReleaseTime() {
+		return sharedPrefs.getLong(PREF_LAST_LOADED_BATCH_RELEASE_TIME, -1);
 	}
 
 	public void setLastSyncDate(long lastSyncDate) {

@@ -11,18 +11,19 @@ import androidx.annotation.Nullable;
 
 import java.io.IOException;
 
-import org.dpppt.android.sdk.internal.backend.models.CachedResult;
-import org.dpppt.android.sdk.internal.backend.models.ExposedList;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
-import org.dpppt.android.sdk.internal.util.DayDate;
+import org.dpppt.android.sdk.internal.backend.proto.Exposed;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.protobuf.ProtoConverterFactory;
 
 public class BackendRepository implements Repository {
+
+	public static final long BATCH_LENGTH = 2 * 60 * 60 * 1000L;
 
 	private BackendService backendService;
 
@@ -30,18 +31,24 @@ public class BackendRepository implements Repository {
 		Retrofit retrofit = new Retrofit.Builder()
 				.baseUrl(backendBaseUrl)
 				.client(getClientBuilder(context).build())
+				.addConverterFactory(ProtoConverterFactory.create())
 				.addConverterFactory(GsonConverterFactory.create())
 				.build();
 
 		backendService = retrofit.create(BackendService.class);
 	}
 
-	public CachedResult<ExposedList> getExposees(@NonNull DayDate dayDate) throws IOException, ResponseException {
-		Response<ExposedList> response = backendService.getExposees(dayDate.formatAsString()).execute();
-		if (response.isSuccessful()) {
-			return new CachedResult<>(response.body(), response.raw().networkResponse() == null);
+	public Exposed.ProtoExposedList getExposees(long batchReleaseTime) throws IOException, ResponseException {
+		if (batchReleaseTime % BATCH_LENGTH != 0) {
+			throw new IllegalArgumentException("invalid batchReleaseTime: " + batchReleaseTime);
 		}
-		throw new ResponseException(response.raw());
+
+		Response<Exposed.ProtoExposedList> response = backendService.getExposees(batchReleaseTime).execute();
+		if (response.isSuccessful() && response.body() != null) {
+			return response.body();
+		} else {
+			throw new ResponseException(response.raw());
+		}
 	}
 
 	public void addExposee(@NonNull ExposeeRequest exposeeRequest, @Nullable String authorizationHeader,

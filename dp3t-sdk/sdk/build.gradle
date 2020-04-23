@@ -8,6 +8,7 @@ plugins {
 	id 'com.android.library'
 	id 'maven-publish'
 	id 'com.jfrog.bintray'
+	id 'com.google.protobuf'
 }
 
 android {
@@ -50,11 +51,34 @@ android {
 	}
 }
 
+protobuf {
+	protoc {
+		// You still need protoc like in the non-Android case
+		artifact = 'com.google.protobuf:protoc:3.11.4'
+	}
+	plugins {
+		javalite {
+			// The codegen for lite comes as a separate artifact
+			artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
+		}
+	}
+	generateProtoTasks {
+		all().each { task ->
+			task.builtins {
+				// In most cases you don't need the full Java output if you use the lite output.
+				remove java
+			}
+			task.plugins {
+				javalite {}
+			}
+		}
+	}
+}
+
 task androidSourcesJar(type: Jar) {
 	archiveClassifier = 'sources'
 	from android.sourceSets.main.java.srcDirs
 }
-
 afterEvaluate {
 	publishing {
 		publications {
@@ -68,7 +92,6 @@ afterEvaluate {
 		}
 	}
 }
-
 Properties properties = new Properties()
 if (project.rootProject.file('local.properties').exists()) {
 	properties.load(project.rootProject.file('local.properties').newDataInputStream())
@@ -86,7 +109,6 @@ bintray {
 	}
 }
 
-
 dependencies {
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -96,6 +118,10 @@ dependencies {
 
 	implementation 'com.squareup.retrofit2:retrofit:2.6.2'
 	implementation 'com.squareup.retrofit2:converter-gson:2.6.2'
+	implementation('com.squareup.retrofit2:converter-protobuf:2.6.2') {
+		exclude group: 'com.google.protobuf', module: 'protobuf-java'
+	}
+	implementation 'com.google.protobuf:protobuf-lite:3.0.1'
 
 	testImplementation 'junit:junit:4.12'
 

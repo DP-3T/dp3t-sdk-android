@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.dpppt.android.sdk.internal.backend.BackendRepository;
 import org.dpppt.android.sdk.internal.database.models.Contact;
 import org.dpppt.android.sdk.internal.util.DayDate;
 import org.junit.Test;
@@ -97,12 +98,14 @@ public class CryptoTest {
 		EphId ephId = new EphId(fromBase64(token));
 		DayDate today = new DayDate();
 		List<Contact> contacts = new ArrayList<>();
-		contacts.add(new Contact(0, today, ephId, 0));
+		contacts.add(new Contact(0, today.getStartOfDayTimestamp(), ephId, 0));
 		byte[] keyByte = fromBase64(key);
 
 		HashSet<Contact> infectedContacts = new HashSet<>();
-		module.checkContacts(keyByte, today, today,
-				date -> contacts.stream().filter(c -> c.getDate().equals(date)).collect(Collectors.toList()),
+		module.checkContacts(keyByte, today.getStartOfDayTimestamp(),
+				today.getStartOfDayTimestamp() + BackendRepository.BATCH_LENGTH,
+				(timeFrom, timeUntil) -> contacts.stream().filter(c -> timeFrom <= c.getDate() && c.getDate() < timeUntil)
+						.collect(Collectors.toList()),
 				contact -> infectedContacts.add(contact));
 
 		assertTrue(infectedContacts.size() == expectedCount);
@@ -121,12 +124,13 @@ public class CryptoTest {
 		DayDate today = new DayDate();
 		DayDate yesterday = today.subtractDays(1);
 		List<Contact> contacts = new ArrayList<>();
-		contacts.add(new Contact(0, today, ephId, 0));
+		contacts.add(new Contact(0, today.getStartOfDayTimestamp(), ephId, 0));
 		byte[] keyByte = fromBase64(key);
 
 		HashSet<Contact> infectedContacts = new HashSet<>();
-		module.checkContacts(keyByte, yesterday, today,
-				date -> contacts.stream().filter(c -> c.getDate().equals(date)).collect(Collectors.toList()),
+		module.checkContacts(keyByte, yesterday.getStartOfDayTimestamp(), System.currentTimeMillis(),
+				(timeFrom, timeUntil) -> contacts.stream().filter(c -> timeFrom <= c.getDate() && c.getDate() < timeUntil)
+						.collect(Collectors.toList()),
 				contact -> infectedContacts.add(contact));
 
 		assertTrue(infectedContacts.size() == 1);
