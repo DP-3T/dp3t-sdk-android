@@ -41,7 +41,7 @@ public class AppConfigManager {
 	private static final String PREF_RECEIVING_ENABLED = "receivingEnabled";
 	private static final String PREF_LAST_SYNC_DATE = "lastSyncDate";
 	private static final String PREF_LAST_SYNC_NET_SUCCESS = "lastSyncNetSuccess";
-	private static final String PREF_AM_I_EXPOSED = "amIExposed";
+	private static final String PREF_I_AM_INFECTED = "IAmInfected";
 	private static final String PREF_CALIBRATION_TEST_DEVICE_NAME = "calibrationTestDeviceName";
 	private static final String PREF_SCAN_INTERVAL = "scanInterval";
 	private static final String PREF_SCAN_DURATION = "scanDuration";
@@ -94,7 +94,8 @@ public class AppConfigManager {
 	}
 
 	public ApplicationsList getLoadedApplicationsList() {
-		return Json.safeFromJson(sharedPrefs.getString(PREF_APPLICATION_LIST, "{}"), ApplicationsList.class, ApplicationsList::new);
+		return Json.safeFromJson(sharedPrefs.getString(PREF_APPLICATION_LIST, "{}"), ApplicationsList.class,
+				ApplicationsList::new);
 	}
 
 	public ApplicationInfo getAppConfig() throws IllegalStateException {
@@ -138,12 +139,12 @@ public class AppConfigManager {
 		return sharedPrefs.getBoolean(PREF_LAST_SYNC_NET_SUCCESS, true);
 	}
 
-	public boolean getAmIExposed() {
-		return sharedPrefs.getBoolean(PREF_AM_I_EXPOSED, false);
+	public boolean getIAmInfected() {
+		return sharedPrefs.getBoolean(PREF_I_AM_INFECTED, false);
 	}
 
-	public void setAmIExposed(boolean exposed) {
-		sharedPrefs.edit().putBoolean(PREF_AM_I_EXPOSED, exposed).apply();
+	public void setIAmInfected(boolean exposed) {
+		sharedPrefs.edit().putBoolean(PREF_I_AM_INFECTED, exposed).apply();
 	}
 
 	public BackendRepository getBackendRepository(Context context) throws IllegalStateException {

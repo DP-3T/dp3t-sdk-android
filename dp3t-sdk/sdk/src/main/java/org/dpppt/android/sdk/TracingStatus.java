@@ -5,28 +5,30 @@
  */
 package org.dpppt.android.sdk;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+
+import org.dpppt.android.sdk.internal.database.models.MatchedContact;
 
 public class TracingStatus {
 
 	private int numberOfContacts;
 	private boolean advertising;
 	private boolean receiving;
-	private boolean wasContactExposed;
 	private long lastSyncDate;
-	private boolean reportedAsExposed;
+	private InfectionStatus infectionStatus;
+	private List<MatchedContact> matchedContacts;
 	private Collection<ErrorState> errors;
 
-	public TracingStatus(int numberOfContacts, boolean advertising, boolean receiving, boolean wasContactExposed,
+	public TracingStatus(int numberOfContacts, boolean advertising, boolean receiving,
 			long lastSyncDate,
-			boolean reportedAsExposed, Collection<ErrorState> errors) {
+			InfectionStatus infectionStatus, List<MatchedContact> matchedContacts, Collection<ErrorState> errors) {
 		this.numberOfContacts = numberOfContacts;
 		this.advertising = advertising;
 		this.receiving = receiving;
-		this.wasContactExposed = wasContactExposed;
 		this.lastSyncDate = lastSyncDate;
-		this.reportedAsExposed = reportedAsExposed;
+		this.infectionStatus = infectionStatus;
+		this.matchedContacts = matchedContacts;
 		this.errors = errors;
 	}
 
@@ -42,16 +44,16 @@ public class TracingStatus {
 		return receiving;
 	}
 
-	public boolean wasContactExposed() {
-		return wasContactExposed;
-	}
-
 	public long getLastSyncDate() {
 		return lastSyncDate;
 	}
 
-	public boolean isReportedAsExposed() {
-		return reportedAsExposed;
+	public InfectionStatus getInfectionStatus() {
+		return infectionStatus;
+	}
+
+	public List<MatchedContact> getMatchedContacts() {
+		return matchedContacts;
 	}
 
 	public Collection<ErrorState> getErrors() {

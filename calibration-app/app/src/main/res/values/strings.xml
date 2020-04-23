@@ -24,8 +24,7 @@
 	<string name="button_tracking_stop">stop tracking</string>
 	<string name="button_advertising_start">start advertising</string>
 	<string name="button_receiving_start">start receiving</string>
-	<string name="button_report_exposed">report exposed</string>
-	<string name="button_report_healed">report healed</string>
+	<string name="button_report_infected">report infected</string>
 	<string name="button_clear_data">clear data</string>
 	<string name="status_tracking_active">TRACKING</string>
 	<string name="status_tracking_inactive">STOPPED</string>
@@ -35,7 +34,7 @@
 	<string name="status_number_handshakes">handshakes: %1$d</string>
 	<string name="status_number_contacts">contacts: %1$d</string>
 	<string name="status_been_exposed">has been exposed: %1$b</string>
-	<string name="status_self_exposed">self exposed: %1$b</string>
+	<string name="status_self_infected">self infected: %1$b</string>
 	<string name="dialog_clear_data_title">Clear local data</string>
 	<string name="dialog_confirm_message">Do you really want to continue?</string>
 	<string name="dialog_confirm_positive_button">Continue</string>
