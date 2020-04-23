@@ -33,11 +33,13 @@ public class BleServer {
 		@Override
 		public void onStartFailure(int errorCode) {
 			Logger.e(TAG, "advertise onStartFailure: " + errorCode);
+			BluetoothServiceStatus.getInstance(context).updateAdvertiseStatus(errorCode);
 		}
 
 		@Override
 		public void onStartSuccess(AdvertiseSettings settingsInEffect) {
 			Logger.i(TAG, "advertise onStartSuccess: " + settingsInEffect.toString());
+			BluetoothServiceStatus.getInstance(context).updateAdvertiseStatus(BluetoothServiceStatus.ADVERTISE_OK);
 		}
 	};
 	private BluetoothAdapter mAdapter;
@@ -66,14 +68,18 @@ public class BleServer {
 		return advertiseData;
 	}
 
-	public void startAdvertising() {
+	public BluetoothState startAdvertising() {
 		BluetoothManager mManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
 
-		if (mManager == null || !context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))
-			throw new UnsupportedOperationException("whea's mah bluetooth?");
+		if (mManager == null || !context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+			return BluetoothState.NOT_SUPPORTED;
+		}
 
 		mAdapter = mManager.getAdapter();
 		mLeAdvertiser = mAdapter.getBluetoothLeAdvertiser();
+		if (mLeAdvertiser == null) {
+			return BluetoothState.NOT_SUPPORTED;
+		}
 
 		AdvertiseData.Builder advBuilder = new AdvertiseData.Builder();
 		advBuilder.setIncludeTxPowerLevel(true);
@@ -89,6 +95,8 @@ public class BleServer {
 		settingBuilder.setConnectable(true);
 
 		mLeAdvertiser.startAdvertising(settingBuilder.build(), advBuilder.build(), advertiseCallback);
+
+		return BluetoothState.ENABLED;
 	}
 
 	public void stopAdvertising() {

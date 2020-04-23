@@ -41,13 +41,16 @@ public class BleClient {
 		gattConnectionThread.start();
 	}
 
-	public void start() {
+	public BluetoothState start() {
 		final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
-			BroadcastHelper.sendUpdateBroadcast(context);
-			return;
+			BroadcastHelper.sendErrorUpdateBroadcast(context);
+			return bluetoothAdapter == null ? BluetoothState.NOT_SUPPORTED : BluetoothState.DISABLED;
 		}
 		bleScanner = bluetoothAdapter.getBluetoothLeScanner();
+		if (bleScanner == null) {
+			return BluetoothState.NOT_SUPPORTED;
+		}
 
 		List<ScanFilter> scanFilters = new ArrayList<>();
 		scanFilters.add(new ScanFilter.Builder()
@@ -66,10 +69,13 @@ public class BleClient {
 				.setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
 				.build();
 
+		BluetoothServiceStatus bluetoothServiceStatus = BluetoothServiceStatus.getInstance(context);
+
 		bleScanCallback = new ScanCallback() {
 			private static final String TAG = "ScanCallback";
 
 			public void onScanResult(int callbackType, ScanResult result) {
+				bluetoothServiceStatus.updateScanStatus(BluetoothServiceStatus.SCAN_OK);
 				if (result.getScanRecord() != null) {
 					onDeviceFound(result);
 				}
@@ -77,6 +83,7 @@ public class BleClient {
 
 			@Override
 			public void onBatchScanResults(List<ScanResult> results) {
+				bluetoothServiceStatus.updateScanStatus(BluetoothServiceStatus.SCAN_OK);
 				Logger.d(TAG, "Batch size " + results.size());
 				for (ScanResult result : results) {
 					onScanResult(0, result);
@@ -84,12 +91,15 @@ public class BleClient {
 			}
 
 			public void onScanFailed(int errorCode) {
+				bluetoothServiceStatus.updateScanStatus(errorCode);
 				Logger.e(TAG, "error: " + errorCode);
 			}
 		};
 
 		Logger.i(TAG, "starting BLE scanner");
 		bleScanner.startScan(scanFilters, scanSettings, bleScanCallback);
+
+		return BluetoothState.ENABLED;
 	}
 
 	public void onDeviceFound(ScanResult scanResult) {
@@ -122,15 +132,14 @@ public class BleClient {
 		final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
 			bleScanner = null;
-			BroadcastHelper.sendUpdateBroadcast(context);
+			BroadcastHelper.sendErrorUpdateBroadcast(context);
 			return;
 		}
-		if (bleScanner == null) {
-			bleScanner = bluetoothAdapter.getBluetoothLeScanner();
+		if (bleScanner != null) {
+			Logger.i(TAG, "stopping BLE scanner");
+			bleScanner.stopScan(bleScanCallback);
+			bleScanner = null;
 		}
-		Logger.i(TAG, "stopping BLE scanner");
-		bleScanner.stopScan(bleScanCallback);
-		bleScanner = null;
 	}
 
 	public synchronized void stop() {

@@ -46,6 +46,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -396,7 +397,7 @@ public class ControlsFragment extends Fragment {
 				.append(getString(R.string.status_number_contacts, status.getNumberOfContacts())).append("\n")
 				.append(getString(R.string.status_number_handshakes, new Database(getContext()).getHandshakes().size()));
 
-		ArrayList<TracingStatus.ErrorState> errors = status.getErrors();
+		Collection<TracingStatus.ErrorState> errors = status.getErrors();
 		if (errors != null && errors.size() > 0) {
 			int start = builder.length();
 			builder.append("\n");
