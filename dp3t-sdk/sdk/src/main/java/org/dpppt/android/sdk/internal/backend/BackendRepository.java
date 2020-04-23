@@ -7,12 +7,13 @@ package org.dpppt.android.sdk.internal.backend;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import java.io.IOException;
 
 import org.dpppt.android.sdk.internal.backend.models.CachedResult;
 import org.dpppt.android.sdk.internal.backend.models.ExposedList;
+import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthMethod;
+import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthMethodAuthorization;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.util.DayDate;
 
@@ -44,8 +45,11 @@ public class BackendRepository implements Repository {
 		throw new ResponseException(response.raw());
 	}
 
-	public void addExposee(@NonNull ExposeeRequest exposeeRequest, @Nullable String authorizationHeader,
+	public void addExposee(@NonNull ExposeeRequest exposeeRequest, ExposeeAuthMethod exposeeAuthMethod,
 			@NonNull CallbackListener<Void> callbackListener) {
+		String authorizationHeader =
+				exposeeAuthMethod instanceof ExposeeAuthMethodAuthorization ? ((ExposeeAuthMethodAuthorization) exposeeAuthMethod)
+						.getAuthorization() : null;
 		backendService.addExposee(exposeeRequest, authorizationHeader).enqueue(new Callback<Void>() {
 			@Override
 			public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {

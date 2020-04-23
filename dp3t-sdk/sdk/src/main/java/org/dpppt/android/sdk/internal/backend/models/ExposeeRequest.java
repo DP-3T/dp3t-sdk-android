@@ -12,9 +12,9 @@ public class ExposeeRequest {
 
 	private String key;
 	private DayDate onset;
-	private ExposeeAuthData authData;
+	private ExposeeAuthMethodJSON authData;
 
-	public ExposeeRequest(String key, DayDate onset, ExposeeAuthData authData) {
+	public ExposeeRequest(String key, DayDate onset, ExposeeAuthMethodJSON authData) {
 		this.key = key;
 		this.onset = onset;
 		this.authData = authData;
@@ -28,7 +28,7 @@ public class ExposeeRequest {
 		return onset;
 	}
 
-	public ExposeeAuthData getAuthData() {
+	public ExposeeAuthMethodJSON getAuthData() {
 		return authData;
 	}
 

@@ -14,7 +14,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.PowerManager;
-import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
@@ -31,7 +30,7 @@ import org.dpppt.android.sdk.internal.TracingService;
 import org.dpppt.android.sdk.internal.backend.CallbackListener;
 import org.dpppt.android.sdk.internal.backend.ResponseException;
 import org.dpppt.android.sdk.internal.backend.models.ApplicationInfo;
-import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthData;
+import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.database.Database;
@@ -224,16 +223,16 @@ public class DP3T {
 		return errors;
 	}
 
-	public static void sendIAmInfected(Context context, Date onset, ExposeeAuthData exposeeAuthData,
-			@Nullable String authorizationHeader, CallbackListener<Void> callback) {
+	public static void sendIAmInfected(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod,
+			CallbackListener<Void> callback) {
 		checkInit();
 
 		DayDate onsetDate = new DayDate(onset.getTime());
-		ExposeeRequest exposeeRequest = CryptoModule.getInstance(context).getSecretKeyForPublishing(onsetDate, exposeeAuthData);
+		ExposeeRequest exposeeRequest = CryptoModule.getInstance(context).getSecretKeyForPublishing(onsetDate, exposeeAuthMethod);
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		try {
-			appConfigManager.getBackendRepository(context).addExposee(exposeeRequest, authorizationHeader,
+			appConfigManager.getBackendRepository(context).addExposee(exposeeRequest, exposeeAuthMethod,
 					new CallbackListener<Void>() {
 						@Override
 						public void onSuccess(Void response) {
