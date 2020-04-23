@@ -151,7 +151,8 @@ public class Database {
 						new String[] { "" + currentEpochStart });
 			}
 			DayDate lastDayToKeep = new DayDate().subtractDays(CryptoModule.NUMBER_OF_DAYS_TO_KEEP_DATA);
-			db.delete(Contacts.TABLE_NAME, Contacts.DATE + " < ?", new String[] { "" + lastDayToKeep.getStartOfDayTimestamp() });
+			db.delete(Contacts.TABLE_NAME, Contacts.DATE + " < ?",
+					new String[] { Long.toString(lastDayToKeep.getStartOfDayTimestamp()) });
 		});
 	}
 
@@ -159,7 +160,7 @@ public class Database {
 		SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 		ContentValues values = new ContentValues();
 		values.put(Contacts.EPHID, contact.getEphId().getData());
-		values.put(Contacts.DATE, contact.getDate().getStartOfDayTimestamp());
+		values.put(Contacts.DATE, contact.getDate());
 		db.insertWithOnConflict(Contacts.TABLE_NAME, null, values, CONFLICT_IGNORE);
 	}
 
@@ -170,11 +171,10 @@ public class Database {
 		return getContactsFromCursor(cursor);
 	}
 
-	public List<Contact> getContacts(DayDate dayDate) {
+	public List<Contact> getContacts(long timeFrom, long timeUntil) {
 		SQLiteDatabase db = databaseOpenHelper.getReadableDatabase();
-		Cursor cursor = db
-				.query(Contacts.TABLE_NAME, Contacts.PROJECTION, Contacts.DATE + "=?",
-						new String[] { "" + dayDate.getStartOfDayTimestamp() }, null, null, Contacts.ID);
+		Cursor cursor = db.query(Contacts.TABLE_NAME, Contacts.PROJECTION, Contacts.DATE + ">=? AND "+ Contacts.DATE + "<?",
+						new String[] { Long.toString(timeFrom), Long.toString(timeUntil) }, null, null, Contacts.ID);
 		return getContactsFromCursor(cursor);
 	}
 
@@ -182,7 +182,7 @@ public class Database {
 		List<Contact> contacts = new ArrayList<>();
 		while (cursor.moveToNext()) {
 			int id = cursor.getInt(cursor.getColumnIndexOrThrow(Contacts.ID));
-			DayDate date = new DayDate(cursor.getLong(cursor.getColumnIndexOrThrow(Contacts.DATE)));
+			long date = cursor.getLong(cursor.getColumnIndexOrThrow(Contacts.DATE));
 			EphId ephid = new EphId(cursor.getBlob(cursor.getColumnIndexOrThrow(Contacts.EPHID)));
 			int associatedKnownCase = cursor.getInt(cursor.getColumnIndexOrThrow(Contacts.ASSOCIATED_KNOWN_CASE));
 			Contact contact = new Contact(id, date, ephid, associatedKnownCase);

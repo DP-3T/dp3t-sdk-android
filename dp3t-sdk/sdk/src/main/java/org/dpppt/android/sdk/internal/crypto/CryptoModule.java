@@ -195,7 +195,9 @@ public class CryptoModule {
 		DayDate dayToTest = new DayDate(onsetDate);
 		byte[] skForDay = sk;
 		while (dayToTest.isBeforeOrEquals(bucketTime)) {
-			List<Contact> contactsOnDay = contactCallback.getContacts(dayToTest);
+			long contactTimeFrom = dayToTest.getStartOfDayTimestamp();
+			long contactTimeUntil = Math.min(dayToTest.getNextDay().getStartOfDayTimestamp(), bucketTime);
+			List<Contact> contactsOnDay = contactCallback.getContacts(contactTimeFrom, contactTimeUntil);
 			if (contactsOnDay.size() > 0) {
 				//generate all ephIds for day
 				HashSet<EphId> ephIdHashSet = new HashSet<>(createEphIds(skForDay, false));
@@ -244,8 +246,11 @@ public class CryptoModule {
 	}
 
 	public interface GetContactsCallback {
-
-		List<Contact> getContacts(DayDate date);
+		/**
+		 * @param timeFrom timestamp inclusive
+		 * @param timeUntil timestamp exclusive
+		 */
+		List<Contact> getContacts(long timeFrom, long timeUntil);
 
 	}
 
