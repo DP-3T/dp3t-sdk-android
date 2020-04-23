@@ -18,11 +18,10 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.dpppt.android.sdk.internal.AppConfigManager;
@@ -36,6 +35,7 @@ import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthData;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.database.Database;
+import org.dpppt.android.sdk.internal.database.models.MatchedContact;
 import org.dpppt.android.sdk.internal.gatt.BluetoothServiceStatus;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.DayDate;
@@ -135,13 +135,22 @@ public class DP3T {
 		Database database = new Database(context);
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		Collection<TracingStatus.ErrorState> errorStates = checkTracingStatus(context);
+		List<MatchedContact> matchedContacts = database.getMatchedContacts();
+		InfectionStatus infectionStatus;
+		if (appConfigManager.getIAmInfected()) {
+			infectionStatus = InfectionStatus.INFECTED;
+		} else if (matchedContacts.size() > 0) {
+			infectionStatus = InfectionStatus.EXPOSED;
+		} else {
+			infectionStatus = InfectionStatus.HEALTHY;
+		}
 		return new TracingStatus(
 				database.getContacts().size(),
 				appConfigManager.isAdvertisingEnabled(),
 				appConfigManager.isReceivingEnabled(),
-				database.wasContactExposed(),
 				appConfigManager.getLastSyncDate(),
-				appConfigManager.getAmIExposed(),
+				infectionStatus,
+				matchedContacts,
 				errorStates
 		);
 	}
@@ -215,7 +224,7 @@ public class DP3T {
 		return errors;
 	}
 
-	public static void sendIWasExposed(Context context, Date onset, ExposeeAuthData exposeeAuthData,
+	public static void sendIAmInfected(Context context, Date onset, ExposeeAuthData exposeeAuthData,
 			@Nullable String authorizationHeader, CallbackListener<Void> callback) {
 		checkInit();
 
@@ -228,7 +237,7 @@ public class DP3T {
 					new CallbackListener<Void>() {
 						@Override
 						public void onSuccess(Void response) {
-							appConfigManager.setAmIExposed(true);
+							appConfigManager.setIAmInfected(true);
 							CryptoModule.getInstance(context).reset();
 							callback.onSuccess(response);
 						}

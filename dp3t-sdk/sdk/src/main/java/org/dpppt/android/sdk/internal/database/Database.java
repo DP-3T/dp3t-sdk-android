@@ -23,6 +23,7 @@ import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.crypto.EphId;
 import org.dpppt.android.sdk.internal.database.models.Contact;
 import org.dpppt.android.sdk.internal.database.models.Handshake;
+import org.dpppt.android.sdk.internal.database.models.MatchedContact;
 import org.dpppt.android.sdk.internal.util.DayDate;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_IGNORE;
@@ -58,6 +59,10 @@ public class Database {
 				ContentValues updateValues = new ContentValues();
 				updateValues.put(Contacts.ASSOCIATED_KNOWN_CASE, idOfAddedCase);
 				db.update(Contacts.TABLE_NAME, updateValues, Contacts.ID + "=" + contact.getId(), null);
+				ContentValues insertValues = new ContentValues();
+				insertValues.put(MatchedContacts.REPORT_DATE, bucketDate.getStartOfDayTimestamp());
+				insertValues.put(MatchedContacts.ASSOCIATED_KNOWN_CASE, idOfAddedCase);
+				db.insert(MatchedContacts.TABLE_NAME, null, insertValues);
 				BroadcastHelper.sendUpdateBroadcast(context);
 			});
 		});
@@ -68,7 +73,11 @@ public class Database {
 			SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 			DayDate lastDayToKeep = new DayDate().subtractDays(CryptoModule.NUMBER_OF_DAYS_TO_KEEP_DATA);
 			db.delete(KnownCases.TABLE_NAME, KnownCases.BUCKET_DAY + " < ?",
-					new String[] { "" + lastDayToKeep.getStartOfDayTimestamp() });
+					new String[] { Long.toString(lastDayToKeep.getStartOfDayTimestamp()) });
+			DayDate lastDayToKeepMatchedContacts =
+					new DayDate().subtractDays(CryptoModule.NUMBER_OF_DAYS_TO_KEEP_MATCHED_CONTACTS);
+			db.delete(MatchedContacts.TABLE_NAME, MatchedContacts.REPORT_DATE + " < ?",
+					new String[] { Long.toString(lastDayToKeepMatchedContacts.getStartOfDayTimestamp()) });
 		});
 	}
 
@@ -186,13 +195,19 @@ public class Database {
 		return contacts;
 	}
 
-	public boolean wasContactExposed() {
-		for (Contact contact : getContacts()) {
-			if (contact.getAssociatedKnownCase() != 0) {
-				return true;
-			}
+	public List<MatchedContact> getMatchedContacts() {
+		List<MatchedContact> matchedContacts = new ArrayList<>();
+		SQLiteDatabase db = databaseOpenHelper.getReadableDatabase();
+		Cursor cursor =
+				db.query(MatchedContacts.TABLE_NAME, MatchedContacts.PROJECTION, null, null, null, null, MatchedContacts.ID);
+		while (cursor.moveToNext()) {
+			int id = cursor.getInt(cursor.getColumnIndexOrThrow(MatchedContacts.ID));
+			long reportDate = cursor.getLong(cursor.getColumnIndexOrThrow(MatchedContacts.REPORT_DATE));
+			MatchedContact contact = new MatchedContact(id, reportDate);
+			matchedContacts.add(contact);
 		}
-		return false;
+		cursor.close();
+		return matchedContacts;
 	}
 
 	public void recreateTables(ResultListener<Void> listener) {

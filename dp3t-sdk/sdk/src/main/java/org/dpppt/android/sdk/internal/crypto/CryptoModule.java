@@ -39,6 +39,7 @@ public class CryptoModule {
 	public static final int KEY_LENGTH = 16;
 
 	public static final int NUMBER_OF_DAYS_TO_KEEP_DATA = 21;
+	public static final int NUMBER_OF_DAYS_TO_KEEP_MATCHED_CONTACTS = 10;
 	private static final int NUMBER_OF_EPOCHS_PER_DAY = 24 * 4;
 	public static final int MILLISECONDS_PER_EPOCH = 24 * 60 * 60 * 1000 / NUMBER_OF_EPOCHS_PER_DAY;
 	public static final int CONTACT_THRESHOLD = 1;
