@@ -8,14 +8,9 @@ package org.dpppt.android.sdk.internal.backend;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
-import java.io.IOException;
-
-import org.dpppt.android.sdk.internal.backend.models.CachedResult;
-import org.dpppt.android.sdk.internal.backend.models.ExposedList;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthMethodAuthorization;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
-import org.dpppt.android.sdk.internal.util.DayDate;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -28,7 +23,6 @@ public class BackendReportRepository implements Repository {
 	private ReportService reportService;
 
 	public BackendReportRepository(@NonNull Context context, String reportBaseUrl) {
-
 		Retrofit reportRetrofit = new Retrofit.Builder()
 				.baseUrl(reportBaseUrl)
 				.client(getClientBuilder(context).build())
@@ -40,9 +34,9 @@ public class BackendReportRepository implements Repository {
 
 	public void addExposee(@NonNull ExposeeRequest exposeeRequest, ExposeeAuthMethod exposeeAuthMethod,
 			@NonNull CallbackListener<Void> callbackListener) {
-		String authorizationHeader =
-				exposeeAuthMethod instanceof ExposeeAuthMethodAuthorization ? ((ExposeeAuthMethodAuthorization) exposeeAuthMethod)
-						.getAuthorization() : null;
+		String authorizationHeader = exposeeAuthMethod instanceof ExposeeAuthMethodAuthorization
+									 ? ((ExposeeAuthMethodAuthorization) exposeeAuthMethod).getAuthorization()
+									 : null;
 		reportService.addExposee(exposeeRequest, authorizationHeader).enqueue(new Callback<Void>() {
 			@Override
 			public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {

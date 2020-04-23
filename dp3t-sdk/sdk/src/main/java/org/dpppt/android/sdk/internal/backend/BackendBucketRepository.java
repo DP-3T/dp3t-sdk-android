@@ -10,15 +10,15 @@ import androidx.annotation.NonNull;
 
 import java.io.IOException;
 
-import org.dpppt.android.sdk.internal.backend.models.CachedResult;
-import org.dpppt.android.sdk.internal.backend.models.ExposedList;
-import org.dpppt.android.sdk.internal.util.DayDate;
+import org.dpppt.android.sdk.internal.backend.proto.Exposed;
 
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.protobuf.ProtoConverterFactory;
 
 public class BackendBucketRepository implements Repository {
+
+	public static final long BATCH_LENGTH = 2 * 60 * 60 * 1000L;
 
 	private BucketService bucketService;
 
@@ -26,18 +26,19 @@ public class BackendBucketRepository implements Repository {
 		Retrofit bucketRetrofit = new Retrofit.Builder()
 				.baseUrl(bucketBaseUrl)
 				.client(getClientBuilder(context).build())
-				.addConverterFactory(GsonConverterFactory.create())
+				.addConverterFactory(ProtoConverterFactory.create())
 				.build();
 
 		bucketService = bucketRetrofit.create(BucketService.class);
 	}
 
-	public CachedResult<ExposedList> getExposees(@NonNull DayDate dayDate) throws IOException, ResponseException {
-		Response<ExposedList> response = bucketService.getExposees(dayDate.formatAsString()).execute();
-		if (response.isSuccessful()) {
-			return new CachedResult<>(response.body(), response.raw().networkResponse() == null);
+	public Exposed.ProtoExposedList getExposees(long batchReleaseTime) throws IOException, ResponseException {
+		Response<Exposed.ProtoExposedList> response = bucketService.getExposees(batchReleaseTime).execute();
+		if (response.isSuccessful() && response.body() != null) {
+			return response.body();
+		} else {
+			throw new ResponseException(response.raw());
 		}
-		throw new ResponseException(response.raw());
 	}
 
 }
