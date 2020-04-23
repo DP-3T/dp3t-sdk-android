@@ -3,7 +3,6 @@
  * https://www.ubique.ch
  * Copyright (c) 2020. All rights reserved.
  */
-
 package org.dpppt.android.calibration.parameters;
 
 import android.app.Activity;
@@ -22,14 +21,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import org.dpppt.android.calibration.R;
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BluetoothAdvertiseMode;
 import org.dpppt.android.sdk.internal.BluetoothTxPowerLevel;
-import org.dpppt.android.calibration.R;
 
 public class ParametersFragment extends Fragment {
 
-	private static final int MIN_INTERVAL_SCANNING_SECONDS = 60;
+	private static final int MIN_INTERVAL_SCANNING_SECONDS = 30;
 	private static final int MAX_INTERVAL_SCANNING_SECONDS = 900;
 	private static final int MIN_DURATION_SCANNING_SECONDS = 10;
 	private Spinner spinnerAdvertisingMode;
