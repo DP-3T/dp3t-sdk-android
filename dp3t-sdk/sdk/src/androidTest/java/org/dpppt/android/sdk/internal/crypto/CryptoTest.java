@@ -101,7 +101,7 @@ public class CryptoTest {
 		byte[] keyByte = fromBase64(key);
 
 		HashSet<Contact> infectedContacts = new HashSet<>();
-		module.checkContacts(keyByte, today, today,
+		module.checkContacts(keyByte, today, today.getStartOfDayTimestamp(),
 				date -> contacts.stream().filter(c -> c.getDate().equals(date)).collect(Collectors.toList()),
 				contact -> infectedContacts.add(contact));
 
@@ -125,7 +125,7 @@ public class CryptoTest {
 		byte[] keyByte = fromBase64(key);
 
 		HashSet<Contact> infectedContacts = new HashSet<>();
-		module.checkContacts(keyByte, yesterday, today,
+		module.checkContacts(keyByte, yesterday, System.currentTimeMillis(),
 				date -> contacts.stream().filter(c -> c.getDate().equals(date)).collect(Collectors.toList()),
 				contact -> infectedContacts.add(contact));
 
