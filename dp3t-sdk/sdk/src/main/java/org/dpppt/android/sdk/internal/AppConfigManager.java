@@ -32,7 +32,7 @@ public class AppConfigManager {
 
 	public static final long DEFAULT_SCAN_INTERVAL = 2 * 60 * 1000L;
 	public static final long DEFAULT_SCAN_DURATION = 30 * 1000L;
-	private static final int DEFAULT_BLUETOOTH_POWER_LEVEL = BluetoothTxPowerLevel.ADVERTISE_TX_POWER_LOW.getValue();
+	private static final int DEFAULT_BLUETOOTH_POWER_LEVEL = BluetoothTxPowerLevel.ADVERTISE_TX_POWER_ULTRA_LOW.getValue();
 	private static final int DEFAULT_BLUETOOTH_ADVERTISE_MODE = BluetoothAdvertiseMode.ADVERTISE_MODE_LOW_POWER.getValue();
 
 	private static final String PREFS_NAME = "dp3t_sdk_preferences";
