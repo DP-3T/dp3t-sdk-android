@@ -190,9 +190,9 @@ public class CryptoModule {
 		return getEphIdsForToday(currentDay).get(getEpochCounter(now));
 	}
 
-	public void checkContacts(byte[] sk, DayDate onsetDate, long bucketTime, GetContactsCallback contactCallback,
+	public void checkContacts(byte[] sk, long onsetDate, long bucketTime, GetContactsCallback contactCallback,
 			MatchCallback matchCallback) {
-		DayDate dayToTest = onsetDate;
+		DayDate dayToTest = new DayDate(onsetDate);
 		byte[] skForDay = sk;
 		while (dayToTest.isBeforeOrEquals(bucketTime)) {
 			List<Contact> contactsOnDay = contactCallback.getContacts(dayToTest);

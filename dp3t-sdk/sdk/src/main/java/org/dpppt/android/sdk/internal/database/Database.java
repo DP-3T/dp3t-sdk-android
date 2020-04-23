@@ -27,7 +27,7 @@ import org.dpppt.android.sdk.internal.database.models.MatchedContact;
 import org.dpppt.android.sdk.internal.util.DayDate;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_IGNORE;
-import static org.dpppt.android.sdk.internal.util.Base64Util.fromBase64;
+import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
 public class Database {
 
@@ -39,11 +39,11 @@ public class Database {
 		databaseThread = DatabaseThread.getInstance(context);
 	}
 
-	public void addKnownCase(Context context, @NonNull String key, @NonNull DayDate onsetDate, long bucketTime) {
+	public void addKnownCase(Context context, @NonNull byte[] key, long onsetDate, long bucketTime) {
 		SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 		ContentValues values = new ContentValues();
-		values.put(KnownCases.KEY, key);
-		values.put(KnownCases.ONSET, onsetDate.getStartOfDayTimestamp());
+		values.put(KnownCases.KEY, toBase64(key));
+		values.put(KnownCases.ONSET, onsetDate);
 		values.put(KnownCases.BUCKET_TIME, bucketTime);
 		databaseThread.post(() -> {
 			long idOfAddedCase = db.insertWithOnConflict(KnownCases.TABLE_NAME, null, values, CONFLICT_IGNORE);
@@ -53,7 +53,7 @@ public class Database {
 			}
 
 			CryptoModule cryptoModule = CryptoModule.getInstance(context);
-			cryptoModule.checkContacts(fromBase64(key), onsetDate, bucketTime, this::getContacts, (contact) -> {
+			cryptoModule.checkContacts(key, onsetDate, bucketTime, this::getContacts, (contact) -> {
 				ContentValues updateValues = new ContentValues();
 				updateValues.put(Contacts.ASSOCIATED_KNOWN_CASE, idOfAddedCase);
 				db.update(Contacts.TABLE_NAME, updateValues, Contacts.ID + "=" + contact.getId(), null);

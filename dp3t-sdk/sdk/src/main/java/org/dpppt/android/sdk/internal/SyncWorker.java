@@ -16,8 +16,7 @@ import org.dpppt.android.sdk.internal.backend.BackendRepository;
 import org.dpppt.android.sdk.internal.backend.ResponseException;
 import org.dpppt.android.sdk.internal.backend.models.ApplicationInfo;
 import org.dpppt.android.sdk.internal.backend.models.CachedResult;
-import org.dpppt.android.sdk.internal.backend.models.ExposedList;
-import org.dpppt.android.sdk.internal.backend.models.Exposee;
+import org.dpppt.android.sdk.internal.backend.proto.Exposed;
 import org.dpppt.android.sdk.internal.database.Database;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
@@ -95,17 +94,18 @@ public class SyncWorker extends Worker {
 			 batchReleaseTime < System.currentTimeMillis();
 			 batchReleaseTime += BATCH_LENGTH) {
 
-			CachedResult<ExposedList> result = backendRepository.getExposees(batchReleaseTime);
+			CachedResult<Exposed.ProtoExposedList> result = backendRepository.getExposees(batchReleaseTime);
 			if (result.isFromCache()) {
 				//ignore if result comes from cache, we already added it to database
 				continue;
 			}
-			for (Exposee exposee : result.getData().getExposed()) {
+			long batchReleaseServerTime = result.getData().getBatchReleaseTime();
+			for (Exposed.ProtoExposeeOrBuilder exposee : result.getData().getExposedOrBuilderList()) {
 				database.addKnownCase(
 						context,
-						exposee.getKey(),
-						exposee.getOnset(),
-						batchReleaseTime
+						exposee.getKey().toByteArray(),
+						exposee.getKeyDate(),
+						batchReleaseServerTime
 				);
 			}
 

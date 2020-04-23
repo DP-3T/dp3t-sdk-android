@@ -12,15 +12,15 @@ import androidx.annotation.Nullable;
 import java.io.IOException;
 
 import org.dpppt.android.sdk.internal.backend.models.CachedResult;
-import org.dpppt.android.sdk.internal.backend.models.ExposedList;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
-import org.dpppt.android.sdk.internal.util.DayDate;
+import org.dpppt.android.sdk.internal.backend.proto.Exposed;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.protobuf.ProtoConverterFactory;
 
 public class BackendRepository implements Repository {
 
@@ -32,18 +32,19 @@ public class BackendRepository implements Repository {
 		Retrofit retrofit = new Retrofit.Builder()
 				.baseUrl(backendBaseUrl)
 				.client(getClientBuilder(context).build())
+				.addConverterFactory(ProtoConverterFactory.create())
 				.addConverterFactory(GsonConverterFactory.create())
 				.build();
 
 		backendService = retrofit.create(BackendService.class);
 	}
 
-	public CachedResult<ExposedList> getExposees(long batchReleaseTime) throws IOException, ResponseException {
+	public CachedResult<Exposed.ProtoExposedList> getExposees(long batchReleaseTime) throws IOException, ResponseException {
 		if (batchReleaseTime % BATCH_LENGTH != 0) {
 			throw new IllegalArgumentException("invalid batchReleaseTime: " + batchReleaseTime);
 		}
 
-		Response<ExposedList> response = backendService.getExposees(batchReleaseTime).execute();
+		Response<Exposed.ProtoExposedList> response = backendService.getExposees(batchReleaseTime).execute();
 		if (response.isSuccessful()) {
 			return new CachedResult<>(response.body(), response.raw().networkResponse() == null);
 		}
