@@ -19,11 +19,14 @@ import org.dpppt.android.sdk.internal.backend.models.CachedResult;
 import org.dpppt.android.sdk.internal.backend.models.ExposedList;
 import org.dpppt.android.sdk.internal.backend.models.Exposee;
 import org.dpppt.android.sdk.internal.database.Database;
-import org.dpppt.android.sdk.internal.util.DayDate;
+import org.dpppt.android.sdk.internal.logger.Logger;
+
+import static org.dpppt.android.sdk.internal.backend.BackendRepository.BATCH_LENGTH;
 
 public class SyncWorker extends Worker {
 
-	private static final String TAG = "org.dpppt.android.sdk.internal.SyncWorker";
+	private static final String TAG = "SyncWorker";
+	private static final String WORK_TAG = "org.dpppt.android.sdk.internal.SyncWorker";
 
 	public static void startSyncWorker(Context context) {
 		Constraints constraints = new Constraints.Builder()
@@ -35,12 +38,12 @@ public class SyncWorker extends Worker {
 				.build();
 
 		WorkManager workManager = WorkManager.getInstance(context);
-		workManager.enqueueUniquePeriodicWork(TAG, ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest);
+		workManager.enqueueUniquePeriodicWork(WORK_TAG, ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest);
 	}
 
 	public static void stopSyncWorker(Context context) {
 		WorkManager workManager = WorkManager.getInstance(context);
-		workManager.cancelAllWorkByTag(TAG);
+		workManager.cancelAllWorkByTag(WORK_TAG);
 	}
 
 	public SyncWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
@@ -58,8 +61,10 @@ public class SyncWorker extends Worker {
 
 		try {
 			doSync(context);
+			Logger.i(TAG, "synced");
 			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
 		} catch (IOException | ResponseException e) {
+			Logger.e(TAG, e);
 			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(false);
 			return Result.retry();
 		}
@@ -75,15 +80,22 @@ public class SyncWorker extends Worker {
 		Database database = new Database(context);
 		database.generateContactsFromHandshakes(context);
 
-		BackendRepository backendRepository =
-				new BackendRepository(context, appConfig.getBackendBaseUrl());
+		long lastLoadedBatchReleaseTime = appConfigManager.getLastLoadedBatchReleaseTime();
+		long nextBatchReleaseTime;
+		if (lastLoadedBatchReleaseTime <= 0 || lastLoadedBatchReleaseTime % BATCH_LENGTH != 0) {
+			long now = System.currentTimeMillis();
+			nextBatchReleaseTime = now - (now % BATCH_LENGTH);
+		} else {
+			nextBatchReleaseTime = lastLoadedBatchReleaseTime + BATCH_LENGTH;
+		}
 
-		DayDate dateToLoad = new DayDate();
-		dateToLoad = dateToLoad.subtractDays(14);
+		BackendRepository backendRepository = new BackendRepository(context, appConfig.getBackendBaseUrl());
 
-		for (int i = 0; i <= 14; i++) {
+		for (long batchReleaseTime = nextBatchReleaseTime;
+			 batchReleaseTime < System.currentTimeMillis();
+			 batchReleaseTime += BATCH_LENGTH) {
 
-			CachedResult<ExposedList> result = backendRepository.getExposees(dateToLoad);
+			CachedResult<ExposedList> result = backendRepository.getExposees(batchReleaseTime);
 			if (result.isFromCache()) {
 				//ignore if result comes from cache, we already added it to database
 				continue;
@@ -93,11 +105,11 @@ public class SyncWorker extends Worker {
 						context,
 						exposee.getKey(),
 						exposee.getOnset(),
-						dateToLoad
+						batchReleaseTime
 				);
 			}
 
-			dateToLoad = dateToLoad.getNextDay();
+			appConfigManager.setLastLoadedBatchReleaseTime(batchReleaseTime);
 		}
 
 		database.removeOldKnownCases();

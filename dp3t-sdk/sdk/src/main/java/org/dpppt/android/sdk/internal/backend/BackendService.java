@@ -18,8 +18,8 @@ import retrofit2.http.Path;
 
 interface BackendService {
 
-	@GET("v1/exposed/{dayDate}")
-	Call<ExposedList> getExposees(@Path("dayDate") String dayDate);
+	@GET("v1/exposed/{batchReleaseTime}")
+	Call<ExposedList> getExposees(@Path("batchReleaseTime") long batchReleaseTime);
 
 	@POST("v1/exposed")
 	Call<Void> addExposee(@Body ExposeeRequest exposeeRequest, @Header("Authorization") String authorizationHeader);

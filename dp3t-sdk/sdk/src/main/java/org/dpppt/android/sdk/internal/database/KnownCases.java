@@ -11,20 +11,20 @@ interface KnownCases {
 
 	String ID = "id";
 	String ONSET = "onset";
-	String BUCKET_DAY = "day";
+	String BUCKET_TIME = "day";
 	String KEY = "key";
 
 	String[] PROJECTION = {
 			ID,
 			ONSET,
-			BUCKET_DAY,
+			BUCKET_TIME,
 			KEY
 	};
 
 	static String create() {
 		return "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " (" + ID + " INTEGER PRIMARY KEY NOT NULL, " + ONSET +
-				" INTEGER NOT NULL," + BUCKET_DAY + " INTEGER NOT NULL, " + KEY + " TEXT NOT NULL, "
-				+ "CONSTRAINT no_duplicates UNIQUE (" + BUCKET_DAY + ", " + KEY + ") )";
+				" INTEGER NOT NULL," + BUCKET_TIME + " INTEGER NOT NULL, " + KEY + " TEXT NOT NULL, "
+				+ "CONSTRAINT no_duplicates UNIQUE (" + BUCKET_TIME + ", " + KEY + ") )";
 	}
 
 	static String drop() {

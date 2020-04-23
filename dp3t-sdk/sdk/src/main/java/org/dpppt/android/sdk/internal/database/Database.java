@@ -39,28 +39,26 @@ public class Database {
 		databaseThread = DatabaseThread.getInstance(context);
 	}
 
-	public void addKnownCase(Context context, @NonNull String key, @NonNull DayDate onsetDate, @NonNull DayDate bucketDate) {
+	public void addKnownCase(Context context, @NonNull String key, @NonNull DayDate onsetDate, long bucketTime) {
 		SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 		ContentValues values = new ContentValues();
 		values.put(KnownCases.KEY, key);
 		values.put(KnownCases.ONSET, onsetDate.getStartOfDayTimestamp());
-		values.put(KnownCases.BUCKET_DAY, bucketDate.getStartOfDayTimestamp());
+		values.put(KnownCases.BUCKET_TIME, bucketTime);
 		databaseThread.post(() -> {
-
 			long idOfAddedCase = db.insertWithOnConflict(KnownCases.TABLE_NAME, null, values, CONFLICT_IGNORE);
-
 			if (idOfAddedCase == -1) {
 				//key was already in the database, so we can ignore it
 				return;
 			}
 
 			CryptoModule cryptoModule = CryptoModule.getInstance(context);
-			cryptoModule.checkContacts(fromBase64(key), onsetDate, bucketDate, (date) -> getContacts(date), (contact) -> {
+			cryptoModule.checkContacts(fromBase64(key), onsetDate, bucketTime, this::getContacts, (contact) -> {
 				ContentValues updateValues = new ContentValues();
 				updateValues.put(Contacts.ASSOCIATED_KNOWN_CASE, idOfAddedCase);
 				db.update(Contacts.TABLE_NAME, updateValues, Contacts.ID + "=" + contact.getId(), null);
 				ContentValues insertValues = new ContentValues();
-				insertValues.put(MatchedContacts.REPORT_DATE, bucketDate.getStartOfDayTimestamp());
+				insertValues.put(MatchedContacts.REPORT_DATE, bucketTime);
 				insertValues.put(MatchedContacts.ASSOCIATED_KNOWN_CASE, idOfAddedCase);
 				db.insert(MatchedContacts.TABLE_NAME, null, insertValues);
 				BroadcastHelper.sendUpdateBroadcast(context);
@@ -72,7 +70,7 @@ public class Database {
 		databaseThread.post(() -> {
 			SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 			DayDate lastDayToKeep = new DayDate().subtractDays(CryptoModule.NUMBER_OF_DAYS_TO_KEEP_DATA);
-			db.delete(KnownCases.TABLE_NAME, KnownCases.BUCKET_DAY + " < ?",
+			db.delete(KnownCases.TABLE_NAME, KnownCases.BUCKET_TIME + " < ?",
 					new String[] { Long.toString(lastDayToKeep.getStartOfDayTimestamp()) });
 			DayDate lastDayToKeepMatchedContacts =
 					new DayDate().subtractDays(CryptoModule.NUMBER_OF_DAYS_TO_KEEP_MATCHED_CONTACTS);

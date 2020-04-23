@@ -24,6 +24,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class BackendRepository implements Repository {
 
+	public static final long BATCH_LENGTH = 2 * 60 * 60 * 1000L;
+
 	private BackendService backendService;
 
 	public BackendRepository(@NonNull Context context, @NonNull String backendBaseUrl) {
@@ -36,8 +38,12 @@ public class BackendRepository implements Repository {
 		backendService = retrofit.create(BackendService.class);
 	}
 
-	public CachedResult<ExposedList> getExposees(@NonNull DayDate dayDate) throws IOException, ResponseException {
-		Response<ExposedList> response = backendService.getExposees(dayDate.formatAsString()).execute();
+	public CachedResult<ExposedList> getExposees(long batchReleaseTime) throws IOException, ResponseException {
+		if (batchReleaseTime % BATCH_LENGTH != 0) {
+			throw new IllegalArgumentException("invalid batchReleaseTime: " + batchReleaseTime);
+		}
+
+		Response<ExposedList> response = backendService.getExposees(batchReleaseTime).execute();
 		if (response.isSuccessful()) {
 			return new CachedResult<>(response.body(), response.raw().networkResponse() == null);
 		}
