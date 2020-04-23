@@ -86,7 +86,7 @@ public class CryptoModule {
 		return false;
 	}
 
-	private SKList getSKList() {
+	protected SKList getSKList() {
 		String skListJson = esp.getString(KEY_SK_LIST_JSON, null);
 		return Json.safeFromJson(skListJson, SKList.class, SKList::new);
 	}

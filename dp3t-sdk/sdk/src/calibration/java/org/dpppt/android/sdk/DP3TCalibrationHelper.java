@@ -5,8 +5,9 @@ import android.content.Context;
 import java.io.OutputStream;
 
 import org.dpppt.android.sdk.internal.AppConfigManager;
+import org.dpppt.android.sdk.internal.crypto.CryptoDatabaseHelper;
 import org.dpppt.android.sdk.internal.database.Database;
-import org.dpppt.android.sdk.internal.database.LogDatabaseHelper;
+import org.dpppt.android.sdk.internal.logger.LogDatabaseHelper;
 
 public class DP3TCalibrationHelper {
 
@@ -24,6 +25,7 @@ public class DP3TCalibrationHelper {
 
 	public static void exportDb(Context context, OutputStream targetOut, Runnable onExportedListener) {
 		new Thread(() -> {
+			CryptoDatabaseHelper.copySKsToDatabase(context);
 			LogDatabaseHelper.copyLogDatabase(context);
 			Database db = new Database(context);
 			db.exportTo(context, targetOut, response -> onExportedListener.run());
