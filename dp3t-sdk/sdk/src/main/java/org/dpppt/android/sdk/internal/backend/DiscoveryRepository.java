@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 
 import java.io.IOException;
 
+import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.backend.models.ApplicationsList;
 
 import retrofit2.Call;
@@ -33,7 +34,7 @@ public class DiscoveryRepository implements Repository {
 		discoveryService = retrofit.create(DiscoveryService.class);
 	}
 
-	public void getDiscovery(@NonNull CallbackListener<ApplicationsList> callbackListener, boolean dev) {
+	public void getDiscovery(@NonNull ResponseCallback<ApplicationsList> responseCallback, boolean dev) {
 		//TODO caching for no network connection
 
 		Call<ApplicationsList> call = dev ? discoveryService.getDiscoveryDev() : discoveryService.getDiscovery();
@@ -42,7 +43,7 @@ public class DiscoveryRepository implements Repository {
 			@Override
 			public void onResponse(@NonNull Call<ApplicationsList> call, @NonNull Response<ApplicationsList> response) {
 				if (response.isSuccessful()) {
-					callbackListener.onSuccess(response.body());
+					responseCallback.onSuccess(response.body());
 				} else {
 					onFailure(call, new ResponseException(response.raw()));
 				}
@@ -50,7 +51,7 @@ public class DiscoveryRepository implements Repository {
 
 			@Override
 			public void onFailure(@NonNull Call<ApplicationsList> call, @NonNull Throwable throwable) {
-				callbackListener.onError(throwable);
+				responseCallback.onError(throwable);
 			}
 		});
 	}

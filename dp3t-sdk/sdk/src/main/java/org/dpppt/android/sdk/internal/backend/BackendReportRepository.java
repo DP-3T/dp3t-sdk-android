@@ -8,8 +8,9 @@ package org.dpppt.android.sdk.internal.backend;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
-import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthMethod;
-import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthMethodAuthorization;
+import org.dpppt.android.sdk.backend.ResponseCallback;
+import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
+import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodAuthorization;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 
 import retrofit2.Call;
@@ -33,7 +34,7 @@ public class BackendReportRepository implements Repository {
 	}
 
 	public void addExposee(@NonNull ExposeeRequest exposeeRequest, ExposeeAuthMethod exposeeAuthMethod,
-			@NonNull CallbackListener<Void> callbackListener) {
+			@NonNull ResponseCallback<Void> responseCallback) {
 		String authorizationHeader = exposeeAuthMethod instanceof ExposeeAuthMethodAuthorization
 									 ? ((ExposeeAuthMethodAuthorization) exposeeAuthMethod).getAuthorization()
 									 : null;
@@ -41,7 +42,7 @@ public class BackendReportRepository implements Repository {
 			@Override
 			public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
 				if (response.isSuccessful()) {
-					callbackListener.onSuccess(null);
+					responseCallback.onSuccess(null);
 				} else {
 					onFailure(call, new ResponseException(response.raw()));
 				}
@@ -49,7 +50,7 @@ public class BackendReportRepository implements Repository {
 
 			@Override
 			public void onFailure(@NonNull Call<Void> call, @NonNull Throwable throwable) {
-				callbackListener.onError(throwable);
+				responseCallback.onError(throwable);
 			}
 		});
 	}

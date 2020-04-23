@@ -27,10 +27,10 @@ import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.SyncWorker;
 import org.dpppt.android.sdk.internal.TracingService;
-import org.dpppt.android.sdk.internal.backend.CallbackListener;
+import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.backend.ResponseException;
-import org.dpppt.android.sdk.internal.backend.models.ApplicationInfo;
-import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthMethod;
+import org.dpppt.android.sdk.backend.models.ApplicationInfo;
+import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.database.Database;
@@ -224,7 +224,7 @@ public class DP3T {
 	}
 
 	public static void sendIAmInfected(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod,
-			CallbackListener<Void> callback) {
+			ResponseCallback<Void> callback) {
 		checkInit();
 
 		DayDate onsetDate = new DayDate(onset.getTime());
@@ -233,7 +233,7 @@ public class DP3T {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		try {
 			appConfigManager.getBackendReportRepository(context).addExposee(exposeeRequest, exposeeAuthMethod,
-					new CallbackListener<Void>() {
+					new ResponseCallback<Void>() {
 						@Override
 						public void onSuccess(Void response) {
 							appConfigManager.setIAmInfected(true);

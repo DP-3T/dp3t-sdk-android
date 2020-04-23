@@ -26,8 +26,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthMethod;
-import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthMethodJSON;
+import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
+import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodJson;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.database.models.Contact;
 import org.dpppt.android.sdk.internal.util.DayDate;
@@ -219,8 +219,8 @@ public class CryptoModule {
 
 	public ExposeeRequest getSecretKeyForPublishing(DayDate date, ExposeeAuthMethod exposeeAuthMethod) {
 		SKList skList = getSKList();
-		ExposeeAuthMethodJSON jsonAuth =
-				exposeeAuthMethod instanceof ExposeeAuthMethodJSON ? (ExposeeAuthMethodJSON) exposeeAuthMethod : null;
+		ExposeeAuthMethodJson jsonAuth =
+				exposeeAuthMethod instanceof ExposeeAuthMethodJson ? (ExposeeAuthMethodJson) exposeeAuthMethod : null;
 		for (Pair<DayDate, byte[]> daySKPair : skList) {
 			if (daySKPair.first.equals(date)) {
 				return new ExposeeRequest(

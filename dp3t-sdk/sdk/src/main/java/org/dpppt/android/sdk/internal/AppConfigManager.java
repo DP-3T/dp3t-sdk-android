@@ -11,9 +11,9 @@ import android.content.SharedPreferences;
 import java.io.IOException;
 
 import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
-import org.dpppt.android.sdk.internal.backend.CallbackListener;
+import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.backend.DiscoveryRepository;
-import org.dpppt.android.sdk.internal.backend.models.ApplicationInfo;
+import org.dpppt.android.sdk.backend.models.ApplicationInfo;
 import org.dpppt.android.sdk.internal.backend.models.ApplicationsList;
 import org.dpppt.android.sdk.internal.util.Json;
 
@@ -66,7 +66,7 @@ public class AppConfigManager {
 
 	public void triggerLoad() {
 		useDiscovery = true;
-		discoveryRepository.getDiscovery(new CallbackListener<ApplicationsList>() {
+		discoveryRepository.getDiscovery(new ResponseCallback<ApplicationsList>() {
 			@Override
 			public void onSuccess(ApplicationsList response) {
 				sharedPrefs.edit().putString(PREF_APPLICATION_LIST, Json.toJson(response)).apply();
