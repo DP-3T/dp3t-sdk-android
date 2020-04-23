@@ -11,7 +11,7 @@ interface Contacts {
 
 	String ID = "id";
 	String DATE = "date";
-	String EPHID = "ephid";
+	String EPHID = "ephID";
 	String ASSOCIATED_KNOWN_CASE = "associated_known_case";
 
 	String[] PROJECTION = {
