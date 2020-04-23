@@ -72,7 +72,11 @@ public class Database {
 			SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 			DayDate lastDayToKeep = new DayDate().subtractDays(CryptoModule.NUMBER_OF_DAYS_TO_KEEP_DATA);
 			db.delete(KnownCases.TABLE_NAME, KnownCases.BUCKET_DAY + " < ?",
-					new String[] { "" + lastDayToKeep.getStartOfDayTimestamp() });
+					new String[] { Long.toString(lastDayToKeep.getStartOfDayTimestamp()) });
+			DayDate lastDayToKeepMatchedContacts =
+					new DayDate().subtractDays(CryptoModule.NUMBER_OF_DAYS_TO_KEEP_MATCHED_CONTACTS);
+			db.delete(MatchedContacts.TABLE_NAME, MatchedContacts.REPORT_DATE + " < ?",
+					new String[] { Long.toString(lastDayToKeepMatchedContacts.getStartOfDayTimestamp()) });
 		});
 	}
 
