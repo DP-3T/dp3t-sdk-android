@@ -42,7 +42,6 @@ public class CryptoModule {
 	public static final int NUMBER_OF_DAYS_TO_KEEP_MATCHED_CONTACTS = 10;
 	private static final int NUMBER_OF_EPOCHS_PER_DAY = 24 * 4;
 	public static final int MILLISECONDS_PER_EPOCH = 24 * 60 * 60 * 1000 / NUMBER_OF_EPOCHS_PER_DAY;
-	public static final int CONTACT_THRESHOLD = 1;
 	private static final byte[] BROADCAST_KEY = "broadcast key".getBytes();
 
 	private static final String KEY_SK_LIST_JSON = "SK_LIST_JSON";
@@ -152,15 +151,19 @@ public class CryptoModule {
 		}
 	}
 
-	private int getEpochCounter(long time) {
+	private static int getEpochCounter(long time) {
 		DayDate day = new DayDate(time);
 		return (int) (time - day.getStartOfDayTimestamp()) / MILLISECONDS_PER_EPOCH;
 	}
 
 	public long getCurrentEpochStart() {
 		long now = System.currentTimeMillis();
-		DayDate currentDay = new DayDate(now);
-		return currentDay.getStartOfDayTimestamp() + getEpochCounter(now) * MILLISECONDS_PER_EPOCH;
+		return getEpochStart(now);
+	}
+
+	public static long getEpochStart(long time) {
+		DayDate currentDay = new DayDate(time);
+		return currentDay.getStartOfDayTimestamp() + getEpochCounter(time) * MILLISECONDS_PER_EPOCH;
 	}
 
 	private EphIdsForDay getStoredEphIdsForToday() {

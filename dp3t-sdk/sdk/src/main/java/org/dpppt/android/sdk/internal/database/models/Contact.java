@@ -13,12 +13,14 @@ public class Contact {
 	private int id;
 	private DayDate date;
 	private EphId ephId;
+	private int windowCount;
 	private int associatedKnownCase;
 
-	public Contact(int id, DayDate date, EphId ephId, int associatedKnownCase) {
+	public Contact(int id, DayDate date, EphId ephId, int windowCount, int associatedKnownCase) {
 		this.id = id;
 		this.date = date;
 		this.ephId = ephId;
+		this.windowCount = windowCount;
 		this.associatedKnownCase = associatedKnownCase;
 	}
 
@@ -28,6 +30,10 @@ public class Contact {
 
 	public DayDate getDate() {
 		return date;
+	}
+
+	public double getWindowCount() {
+		return windowCount;
 	}
 
 	public int getAssociatedKnownCase() {

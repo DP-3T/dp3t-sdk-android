@@ -54,17 +54,22 @@ public class Database {
 				return;
 			}
 
+			int[] windowCount = new int[] { 0 };
 			CryptoModule cryptoModule = CryptoModule.getInstance(context);
 			cryptoModule.checkContacts(fromBase64(key), onsetDate, bucketDate, (date) -> getContacts(date), (contact) -> {
 				ContentValues updateValues = new ContentValues();
 				updateValues.put(Contacts.ASSOCIATED_KNOWN_CASE, idOfAddedCase);
 				db.update(Contacts.TABLE_NAME, updateValues, Contacts.ID + "=" + contact.getId(), null);
+				windowCount[0] += contact.getWindowCount();
+			});
+
+			if (windowCount[0] > ContactsFactory.NUMBER_OF_WINDOWS_FOR_EXPOSURE) {
 				ContentValues insertValues = new ContentValues();
 				insertValues.put(MatchedContacts.REPORT_DATE, bucketDate.getStartOfDayTimestamp());
 				insertValues.put(MatchedContacts.ASSOCIATED_KNOWN_CASE, idOfAddedCase);
 				db.insert(MatchedContacts.TABLE_NAME, null, insertValues);
 				BroadcastHelper.sendUpdateBroadcast(context);
-			});
+			}
 		});
 	}
 
@@ -163,6 +168,7 @@ public class Database {
 		ContentValues values = new ContentValues();
 		values.put(Contacts.EPHID, contact.getEphId().getData());
 		values.put(Contacts.DATE, contact.getDate().getStartOfDayTimestamp());
+		values.put(Contacts.WINDOW_COUNT, contact.getWindowCount());
 		db.insertWithOnConflict(Contacts.TABLE_NAME, null, values, CONFLICT_IGNORE);
 	}
 
@@ -187,8 +193,9 @@ public class Database {
 			int id = cursor.getInt(cursor.getColumnIndexOrThrow(Contacts.ID));
 			DayDate date = new DayDate(cursor.getLong(cursor.getColumnIndexOrThrow(Contacts.DATE)));
 			EphId ephid = new EphId(cursor.getBlob(cursor.getColumnIndexOrThrow(Contacts.EPHID)));
+			int windowCount = cursor.getInt(cursor.getColumnIndexOrThrow(Contacts.WINDOW_COUNT));
 			int associatedKnownCase = cursor.getInt(cursor.getColumnIndexOrThrow(Contacts.ASSOCIATED_KNOWN_CASE));
-			Contact contact = new Contact(id, date, ephid, associatedKnownCase);
+			Contact contact = new Contact(id, date, ephid, windowCount, associatedKnownCase);
 			contacts.add(contact);
 		}
 		cursor.close();
