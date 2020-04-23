@@ -42,10 +42,11 @@ public class CryptoBenchmark {
 				module.checkContacts(key.getBytes(),
 						new DayDate().subtractDays(NUMBER_OF_DAYS_TO_TEST).getStartOfDayTimestamp(),
 						System.currentTimeMillis(),
-						date -> {
+						(timeFrom, timeUntil) -> {
 							ArrayList<Contact> contacts = new ArrayList<>();
 							for (int x = 0; x < NUMBER_OF_CONTACTS_PER_DAY; x++) {
-								contacts.add(new Contact(0, new DayDate(), new EphId(new byte[CryptoModule.KEY_LENGTH]), 0));
+								contacts.add(new Contact(0, new DayDate().getStartOfDayTimestamp(),
+										new EphId(new byte[CryptoModule.KEY_LENGTH]), 0));
 							}
 							return contacts;
 						},
