@@ -98,7 +98,7 @@ public class CryptoTest {
 		EphId ephId = new EphId(fromBase64(token));
 		DayDate today = new DayDate();
 		List<Contact> contacts = new ArrayList<>();
-		contacts.add(new Contact(0, today.getStartOfDayTimestamp(), ephId, 0));
+		contacts.add(new Contact(0, today.getStartOfDayTimestamp(), ephId, 0, 0));
 		byte[] keyByte = fromBase64(key);
 
 		HashSet<Contact> infectedContacts = new HashSet<>();
@@ -124,7 +124,7 @@ public class CryptoTest {
 		DayDate today = new DayDate();
 		DayDate yesterday = today.subtractDays(1);
 		List<Contact> contacts = new ArrayList<>();
-		contacts.add(new Contact(0, today.getStartOfDayTimestamp(), ephId, 0));
+		contacts.add(new Contact(0, today.getStartOfDayTimestamp(), ephId, 0, 0));
 		byte[] keyByte = fromBase64(key);
 
 		HashSet<Contact> infectedContacts = new HashSet<>();
