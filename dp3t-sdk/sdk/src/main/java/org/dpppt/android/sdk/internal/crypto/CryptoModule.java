@@ -37,7 +37,7 @@ import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
 public class CryptoModule {
 
-	public static final int KEY_LENGTH = 16;
+	public static final int EPHID_LENGTH = 16;
 
 	public static final int NUMBER_OF_DAYS_TO_KEEP_DATA = 21;
 	public static final int NUMBER_OF_DAYS_TO_KEEP_MATCHED_CONTACTS = 10;
@@ -140,7 +140,7 @@ public class CryptoModule {
 			byte[] counter = new byte[16];
 			cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(counter));
 			ArrayList<EphId> ephIds = new ArrayList<>();
-			byte[] emptyArray = new byte[KEY_LENGTH];
+			byte[] emptyArray = new byte[EPHID_LENGTH];
 			for (int i = 0; i < NUMBER_OF_EPOCHS_PER_DAY; i++) {
 				ephIds.add(new EphId(cipher.update(emptyArray)));
 			}

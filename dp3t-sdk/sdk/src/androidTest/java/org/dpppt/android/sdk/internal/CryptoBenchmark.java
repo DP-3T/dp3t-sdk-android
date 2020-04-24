@@ -46,7 +46,7 @@ public class CryptoBenchmark {
 							ArrayList<Contact> contacts = new ArrayList<>();
 							for (int x = 0; x < NUMBER_OF_CONTACTS_PER_DAY; x++) {
 								contacts.add(new Contact(0, new DayDate().getStartOfDayTimestamp(),
-										new EphId(new byte[CryptoModule.KEY_LENGTH]), 0));
+										new EphId(new byte[CryptoModule.EPHID_LENGTH]), 0));
 							}
 							return contacts;
 						},
