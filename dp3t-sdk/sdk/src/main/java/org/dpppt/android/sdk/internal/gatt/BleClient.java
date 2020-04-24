@@ -59,9 +59,9 @@ public class BleClient {
 		}
 
 		List<ScanFilter> scanFilters = new ArrayList<>();
-		/*scanFilters.add(new ScanFilter.Builder()
+		scanFilters.add(new ScanFilter.Builder()
 				.setServiceUuid(new ParcelUuid(SERVICE_UUID))
-				.build());*/
+				.build());
 
 		// Scan for Apple devices as iOS does not advertise service uuid when in background,
 		// but instead pushes it to the "overflow" area (manufacturer data). For now let's
