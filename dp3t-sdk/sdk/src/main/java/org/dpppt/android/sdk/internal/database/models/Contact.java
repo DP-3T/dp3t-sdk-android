@@ -6,17 +6,16 @@
 package org.dpppt.android.sdk.internal.database.models;
 
 import org.dpppt.android.sdk.internal.crypto.EphId;
-import org.dpppt.android.sdk.internal.util.DayDate;
 
 public class Contact {
 
 	private int id;
-	private DayDate date;
+	private long date;
 	private EphId ephId;
 	private int windowCount;
 	private int associatedKnownCase;
 
-	public Contact(int id, DayDate date, EphId ephId, int windowCount, int associatedKnownCase) {
+	public Contact(int id, long date, EphId ephId, int windowCount, int associatedKnownCase) {
 		this.id = id;
 		this.date = date;
 		this.ephId = ephId;
@@ -28,7 +27,7 @@ public class Contact {
 		return ephId;
 	}
 
-	public DayDate getDate() {
+	public long getDate() {
 		return date;
 	}
 

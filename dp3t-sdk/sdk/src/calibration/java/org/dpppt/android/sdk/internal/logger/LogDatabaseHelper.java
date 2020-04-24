@@ -1,16 +1,14 @@
-package org.dpppt.android.sdk.internal.database;
+package org.dpppt.android.sdk.internal.logger;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
-import org.dpppt.android.sdk.internal.logger.LogDatabase;
-import org.dpppt.android.sdk.internal.logger.LogEntry;
-import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.internal.database.DatabaseHelper;
 
 public class LogDatabaseHelper {
 
 	public static void copyLogDatabase(Context context) {
-		SQLiteDatabase database = DatabaseOpenHelper.getInstance(context).getWritableDatabase();
+		SQLiteDatabase database = DatabaseHelper.getWritableDatabase(context);
 		database.beginTransaction();
 		database.execSQL("drop table if exists " + LogDatabase.LogSpec.TABLE_NAME);
 		LogDatabase.LogDatabaseHelper.executeCreate(database);

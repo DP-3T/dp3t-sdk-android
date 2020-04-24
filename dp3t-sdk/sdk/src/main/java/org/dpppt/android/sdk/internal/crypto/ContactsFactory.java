@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.dpppt.android.sdk.internal.backend.BackendBucketRepository;
 import org.dpppt.android.sdk.internal.database.models.Contact;
 import org.dpppt.android.sdk.internal.database.models.Handshake;
-import org.dpppt.android.sdk.internal.util.DayDate;
 
 public class ContactsFactory {
 
@@ -61,7 +61,7 @@ public class ContactsFactory {
 			}
 
 			contacts.add(
-					new Contact(-1, new DayDate(handshakeList.get(0).getTimestamp()), handshakeList.get(0).getEphId(),
+					new Contact(-1, floorTimestampToBucket(handshakeList.get(0).getTimestamp()), handshakeList.get(0).getEphId(),
 							contactCounter,
 							0));
 		}
@@ -91,6 +91,10 @@ public class ContactsFactory {
 	private interface Condition {
 		boolean test(Handshake handshake);
 
+	}
+
+	private static long floorTimestampToBucket(long timestamp) {
+		return timestamp - (timestamp % BackendBucketRepository.BATCH_LENGTH);
 	}
 
 }

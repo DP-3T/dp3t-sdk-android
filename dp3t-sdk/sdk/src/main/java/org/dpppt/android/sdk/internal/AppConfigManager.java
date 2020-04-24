@@ -10,7 +10,7 @@ import android.content.SharedPreferences;
 
 import java.io.IOException;
 
-import org.dpppt.android.sdk.internal.backend.BackendRepository;
+import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
 import org.dpppt.android.sdk.internal.backend.CallbackListener;
 import org.dpppt.android.sdk.internal.backend.DiscoveryRepository;
 import org.dpppt.android.sdk.internal.backend.models.ApplicationInfo;
@@ -39,6 +39,7 @@ public class AppConfigManager {
 	private static final String PREF_APPLICATION_LIST = "applicationList";
 	private static final String PREF_ADVERTISING_ENABLED = "advertisingEnabled";
 	private static final String PREF_RECEIVING_ENABLED = "receivingEnabled";
+	private static final String PREF_LAST_LOADED_BATCH_RELEASE_TIME = "lastLoadedBatchReleaseTime";
 	private static final String PREF_LAST_SYNC_DATE = "lastSyncDate";
 	private static final String PREF_LAST_SYNC_NET_SUCCESS = "lastSyncNetSuccess";
 	private static final String PREF_I_AM_INFECTED = "IAmInfected";
@@ -123,6 +124,14 @@ public class AppConfigManager {
 		return sharedPrefs.getBoolean(PREF_RECEIVING_ENABLED, false);
 	}
 
+	public void setLastLoadedBatchReleaseTime(long lastLoadedBatchReleaseTime) {
+		sharedPrefs.edit().putLong(PREF_LAST_LOADED_BATCH_RELEASE_TIME, lastLoadedBatchReleaseTime).apply();
+	}
+
+	public long getLastLoadedBatchReleaseTime() {
+		return sharedPrefs.getLong(PREF_LAST_LOADED_BATCH_RELEASE_TIME, -1);
+	}
+
 	public void setLastSyncDate(long lastSyncDate) {
 		sharedPrefs.edit().putLong(PREF_LAST_SYNC_DATE, lastSyncDate).apply();
 	}
@@ -147,9 +156,9 @@ public class AppConfigManager {
 		sharedPrefs.edit().putBoolean(PREF_I_AM_INFECTED, exposed).apply();
 	}
 
-	public BackendRepository getBackendRepository(Context context) throws IllegalStateException {
+	public BackendReportRepository getBackendReportRepository(Context context) throws IllegalStateException {
 		ApplicationInfo appConfig = getAppConfig();
-		return new BackendRepository(context, appConfig.getBackendBaseUrl());
+		return new BackendReportRepository(context, appConfig.getReportBaseUrl());
 	}
 
 	public void setDevDiscoveryModeEnabled(boolean enable) {

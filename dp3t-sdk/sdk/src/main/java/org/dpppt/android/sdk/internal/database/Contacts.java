@@ -11,7 +11,7 @@ interface Contacts {
 
 	String ID = "id";
 	String DATE = "date";
-	String EPHID = "ephid";
+	String EPHID = "ephID";
 	String WINDOW_COUNT = "windowCount";
 	String ASSOCIATED_KNOWN_CASE = "associated_known_case";
 

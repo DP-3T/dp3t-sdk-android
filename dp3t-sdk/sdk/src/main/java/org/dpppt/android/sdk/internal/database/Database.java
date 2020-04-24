@@ -27,7 +27,6 @@ import org.dpppt.android.sdk.internal.database.models.MatchedContact;
 import org.dpppt.android.sdk.internal.util.DayDate;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_IGNORE;
-import static org.dpppt.android.sdk.internal.util.Base64Util.fromBase64;
 
 public class Database {
 
@@ -39,16 +38,14 @@ public class Database {
 		databaseThread = DatabaseThread.getInstance(context);
 	}
 
-	public void addKnownCase(Context context, @NonNull String key, @NonNull DayDate onsetDate, @NonNull DayDate bucketDate) {
+	public void addKnownCase(Context context, @NonNull byte[] key, long onsetDate, long bucketTime) {
 		SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 		ContentValues values = new ContentValues();
 		values.put(KnownCases.KEY, key);
-		values.put(KnownCases.ONSET, onsetDate.getStartOfDayTimestamp());
-		values.put(KnownCases.BUCKET_DAY, bucketDate.getStartOfDayTimestamp());
+		values.put(KnownCases.ONSET, onsetDate);
+		values.put(KnownCases.BUCKET_TIME, bucketTime);
 		databaseThread.post(() -> {
-
 			long idOfAddedCase = db.insertWithOnConflict(KnownCases.TABLE_NAME, null, values, CONFLICT_IGNORE);
-
 			if (idOfAddedCase == -1) {
 				//key was already in the database, so we can ignore it
 				return;
@@ -56,7 +53,7 @@ public class Database {
 
 			int[] windowCount = new int[] { 0 };
 			CryptoModule cryptoModule = CryptoModule.getInstance(context);
-			cryptoModule.checkContacts(fromBase64(key), onsetDate, bucketDate, (date) -> getContacts(date), (contact) -> {
+			cryptoModule.checkContacts(key, onsetDate, bucketTime, this::getContacts, (contact) -> {
 				ContentValues updateValues = new ContentValues();
 				updateValues.put(Contacts.ASSOCIATED_KNOWN_CASE, idOfAddedCase);
 				db.update(Contacts.TABLE_NAME, updateValues, Contacts.ID + "=" + contact.getId(), null);
@@ -65,7 +62,7 @@ public class Database {
 
 			if (windowCount[0] > ContactsFactory.NUMBER_OF_WINDOWS_FOR_EXPOSURE) {
 				ContentValues insertValues = new ContentValues();
-				insertValues.put(MatchedContacts.REPORT_DATE, bucketDate.getStartOfDayTimestamp());
+				insertValues.put(MatchedContacts.REPORT_DATE, bucketTime);
 				insertValues.put(MatchedContacts.ASSOCIATED_KNOWN_CASE, idOfAddedCase);
 				db.insert(MatchedContacts.TABLE_NAME, null, insertValues);
 				BroadcastHelper.sendUpdateBroadcast(context);
@@ -77,7 +74,7 @@ public class Database {
 		databaseThread.post(() -> {
 			SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 			DayDate lastDayToKeep = new DayDate().subtractDays(CryptoModule.NUMBER_OF_DAYS_TO_KEEP_DATA);
-			db.delete(KnownCases.TABLE_NAME, KnownCases.BUCKET_DAY + " < ?",
+			db.delete(KnownCases.TABLE_NAME, KnownCases.BUCKET_TIME + " < ?",
 					new String[] { Long.toString(lastDayToKeep.getStartOfDayTimestamp()) });
 			DayDate lastDayToKeepMatchedContacts =
 					new DayDate().subtractDays(CryptoModule.NUMBER_OF_DAYS_TO_KEEP_MATCHED_CONTACTS);
@@ -159,7 +156,8 @@ public class Database {
 						new String[] { "" + currentEpochStart });
 			}
 			DayDate lastDayToKeep = new DayDate().subtractDays(CryptoModule.NUMBER_OF_DAYS_TO_KEEP_DATA);
-			db.delete(Contacts.TABLE_NAME, Contacts.DATE + " < ?", new String[] { "" + lastDayToKeep.getStartOfDayTimestamp() });
+			db.delete(Contacts.TABLE_NAME, Contacts.DATE + " < ?",
+					new String[] { Long.toString(lastDayToKeep.getStartOfDayTimestamp()) });
 		});
 	}
 
@@ -167,7 +165,7 @@ public class Database {
 		SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
 		ContentValues values = new ContentValues();
 		values.put(Contacts.EPHID, contact.getEphId().getData());
-		values.put(Contacts.DATE, contact.getDate().getStartOfDayTimestamp());
+		values.put(Contacts.DATE, contact.getDate());
 		values.put(Contacts.WINDOW_COUNT, contact.getWindowCount());
 		db.insertWithOnConflict(Contacts.TABLE_NAME, null, values, CONFLICT_IGNORE);
 	}
@@ -179,11 +177,10 @@ public class Database {
 		return getContactsFromCursor(cursor);
 	}
 
-	public List<Contact> getContacts(DayDate dayDate) {
+	public List<Contact> getContacts(long timeFrom, long timeUntil) {
 		SQLiteDatabase db = databaseOpenHelper.getReadableDatabase();
-		Cursor cursor = db
-				.query(Contacts.TABLE_NAME, Contacts.PROJECTION, Contacts.DATE + "=?",
-						new String[] { "" + dayDate.getStartOfDayTimestamp() }, null, null, Contacts.ID);
+		Cursor cursor = db.query(Contacts.TABLE_NAME, Contacts.PROJECTION, Contacts.DATE + ">=? AND "+ Contacts.DATE + "<?",
+						new String[] { Long.toString(timeFrom), Long.toString(timeUntil) }, null, null, Contacts.ID);
 		return getContactsFromCursor(cursor);
 	}
 
@@ -191,7 +188,7 @@ public class Database {
 		List<Contact> contacts = new ArrayList<>();
 		while (cursor.moveToNext()) {
 			int id = cursor.getInt(cursor.getColumnIndexOrThrow(Contacts.ID));
-			DayDate date = new DayDate(cursor.getLong(cursor.getColumnIndexOrThrow(Contacts.DATE)));
+			long date = cursor.getLong(cursor.getColumnIndexOrThrow(Contacts.DATE));
 			EphId ephid = new EphId(cursor.getBlob(cursor.getColumnIndexOrThrow(Contacts.EPHID)));
 			int windowCount = cursor.getInt(cursor.getColumnIndexOrThrow(Contacts.WINDOW_COUNT));
 			int associatedKnownCase = cursor.getInt(cursor.getColumnIndexOrThrow(Contacts.ASSOCIATED_KNOWN_CASE));
