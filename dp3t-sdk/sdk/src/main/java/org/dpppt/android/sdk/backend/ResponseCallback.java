@@ -4,9 +4,9 @@
  * Copyright (c) 2020. All rights reserved.
  */
 
-package org.dpppt.android.sdk.internal.backend;
+package org.dpppt.android.sdk.backend;
 
-public interface CallbackListener<T> {
+public interface ResponseCallback<T> {
 
 	void onSuccess(T response);
 

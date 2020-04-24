@@ -5,15 +5,13 @@
  */
 package org.dpppt.android.sdk.internal.database.models;
 
-import static org.dpppt.android.sdk.internal.util.Base64Util.fromBase64;
-
 public class KnownCase {
 
 	private int id;
 	private String day;
-	private String key;
+	private byte[] key;
 
-	public KnownCase(int id, String day, String key) {
+	public KnownCase(int id, String day, byte[] key) {
 		this.id = id;
 		this.day = day;
 		this.key = key;
@@ -27,12 +25,8 @@ public class KnownCase {
 		return day;
 	}
 
-	public String getKey() {
+	public byte[] getKey() {
 		return key;
-	}
-
-	public byte[] getParsedKey() {
-		return fromBase64(key);
 	}
 
 }
