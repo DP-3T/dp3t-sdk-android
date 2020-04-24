@@ -15,12 +15,21 @@ public class Handshake {
 	private int txPowerLevel;
 	private int rssi;
 
-	public Handshake(int id, long timstamp, EphId ephId, int txPowerLevel, int rssi) {
+	private String primaryPhy;
+	private String secondaryPhy;
+	private long timestampNanos;
+
+	public Handshake(int id, long timstamp, EphId ephId, int txPowerLevel, int rssi, String primaryPhy, String secondaryPhy,
+			long timestampNanos) {
 		this.id = id;
 		this.timestamp = timstamp;
 		this.ephId = ephId;
 		this.txPowerLevel = txPowerLevel;
 		this.rssi = rssi;
+
+		this.primaryPhy = primaryPhy;
+		this.secondaryPhy = secondaryPhy;
+		this.timestampNanos = timestampNanos;
 	}
 
 	public EphId getEphId() {
@@ -41,6 +50,18 @@ public class Handshake {
 
 	public int getRssi() {
 		return rssi;
+	}
+
+	public String getPrimaryPhy() {
+		return primaryPhy;
+	}
+
+	public String getSecondaryPhy() {
+		return secondaryPhy;
+	}
+
+	public long getTimestampNanos() {
+		return timestampNanos;
 	}
 
 }

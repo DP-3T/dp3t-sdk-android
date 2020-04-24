@@ -129,7 +129,8 @@ public class BleClient {
 				// if Android, optimize (meaning: send/read payload directly in the advertisement
 				Logger.d(TAG, "read ephid payload from servicedata data");
 				scanResultMap.get(scanResult.getDevice().getAddress())
-						.add(new Handshake(-1, System.currentTimeMillis(), new EphId(payload), power, scanResult.getRssi()));
+						.add(new Handshake(-1, System.currentTimeMillis(), new EphId(payload), power, scanResult.getRssi(), BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
+								scanResult.getTimestampNanos()));
 			} else {
 				if (scanResultMap.get(scanResult.getDevice().getAddress()).size() == 0) {
 					gattConnectionThread.addTask(new GattConnectionTask(context, bluetoothDevice, scanResult,
@@ -138,7 +139,8 @@ public class BleClient {
 							}));
 				}
 				scanResultMap.get(scanResult.getDevice().getAddress())
-						.add(new Handshake(-1, System.currentTimeMillis(), null, power, scanResult.getRssi()));
+						.add(new Handshake(-1, System.currentTimeMillis(), null, power, scanResult.getRssi(), BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
+								scanResult.getTimestampNanos()));
 			}
 		} catch (Throwable t) {
 			Logger.e(TAG, t);

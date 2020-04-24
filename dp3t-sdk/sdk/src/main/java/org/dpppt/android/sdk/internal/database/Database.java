@@ -85,6 +85,9 @@ public class Database {
 		values.put(Handshakes.TIMESTAMP, handshake.getTimestamp());
 		values.put(Handshakes.TX_POWER_LEVEL, handshake.getTxPowerLevel());
 		values.put(Handshakes.RSSI, handshake.getRssi());
+		values.put(Handshakes.PHY_PRIMARY, handshake.getPrimaryPhy());
+		values.put(Handshakes.PHY_SECONDARY, handshake.getSecondaryPhy());
+		values.put(Handshakes.TIMESTAMP_NANOS, handshake.getTimestampNanos());
 		databaseThread.post(() -> {
 			db.insert(Handshakes.TABLE_NAME, null, values);
 			BroadcastHelper.sendUpdateBroadcast(context);
@@ -126,7 +129,11 @@ public class Database {
 			EphId ephId = new EphId(cursor.getBlob(cursor.getColumnIndexOrThrow(Handshakes.EPHID)));
 			int txPowerLevel = cursor.getInt(cursor.getColumnIndexOrThrow(Handshakes.TX_POWER_LEVEL));
 			int rssi = cursor.getInt(cursor.getColumnIndexOrThrow(Handshakes.RSSI));
-			Handshake handShake = new Handshake(id, timestamp, ephId, txPowerLevel, rssi);
+			String primaryPhy = cursor.getString(cursor.getColumnIndexOrThrow(Handshakes.PHY_PRIMARY));
+			String secondaryPhy = cursor.getString(cursor.getColumnIndexOrThrow(Handshakes.PHY_SECONDARY));
+			long timestampNanos = cursor.getLong(cursor.getColumnIndexOrThrow(Handshakes.TIMESTAMP_NANOS));
+			Handshake handShake = new Handshake(id, timestamp, ephId, txPowerLevel, rssi, primaryPhy, secondaryPhy,
+					timestampNanos);
 			handshakes.add(handShake);
 		}
 		cursor.close();
@@ -173,8 +180,8 @@ public class Database {
 
 	public List<Contact> getContacts(long timeFrom, long timeUntil) {
 		SQLiteDatabase db = databaseOpenHelper.getReadableDatabase();
-		Cursor cursor = db.query(Contacts.TABLE_NAME, Contacts.PROJECTION, Contacts.DATE + ">=? AND "+ Contacts.DATE + "<?",
-						new String[] { Long.toString(timeFrom), Long.toString(timeUntil) }, null, null, Contacts.ID);
+		Cursor cursor = db.query(Contacts.TABLE_NAME, Contacts.PROJECTION, Contacts.DATE + ">=? AND " + Contacts.DATE + "<?",
+				new String[] { Long.toString(timeFrom), Long.toString(timeUntil) }, null, null, Contacts.ID);
 		return getContactsFromCursor(cursor);
 	}
 
