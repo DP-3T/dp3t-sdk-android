@@ -23,14 +23,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.dpppt.android.sdk.backend.ResponseCallback;
+import org.dpppt.android.sdk.backend.models.ApplicationInfo;
+import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.SyncWorker;
 import org.dpppt.android.sdk.internal.TracingService;
-import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.backend.ResponseException;
-import org.dpppt.android.sdk.backend.models.ApplicationInfo;
-import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.database.Database;
@@ -38,6 +38,7 @@ import org.dpppt.android.sdk.internal.database.models.MatchedContact;
 import org.dpppt.android.sdk.internal.gatt.BluetoothServiceStatus;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.DayDate;
+import org.dpppt.android.sdk.internal.util.LocationServiceUtil;
 import org.dpppt.android.sdk.internal.util.ProcessUtil;
 
 public class DP3T {
@@ -177,6 +178,10 @@ public class DP3T {
 				PackageManager.PERMISSION_GRANTED;
 		if (!locationPermissionGranted) {
 			errors.add(TracingStatus.ErrorState.MISSING_LOCATION_PERMISSION);
+		}
+
+		if (!LocationServiceUtil.isLocationEnabled(context)) {
+			errors.add(TracingStatus.ErrorState.LOCATION_SERVICE_DISABLED);
 		}
 
 		if (!AppConfigManager.getInstance(context).getLastSyncNetworkSuccess()) {

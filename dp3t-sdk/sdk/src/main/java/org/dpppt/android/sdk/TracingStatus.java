@@ -63,6 +63,7 @@ public class TracingStatus {
 	public enum ErrorState {
 		NETWORK_ERROR_WHILE_SYNCING(R.string.dp3t_sdk_service_notification_error_network_sync),
 		MISSING_LOCATION_PERMISSION(R.string.dp3t_sdk_service_notification_error_location_permission),
+		LOCATION_SERVICE_DISABLED(R.string.dp3t_sdk_service_notification_error_location_service),
 		BLE_DISABLED(R.string.dp3t_sdk_service_notification_error_bluetooth_disabled),
 		BLE_NOT_SUPPORTED(R.string.dp3t_sdk_service_notification_error_bluetooth_not_supported),
 		BLE_INTERNAL_ERROR(R.string.dp3t_sdk_service_notification_error_bluetooth_internal_error),
