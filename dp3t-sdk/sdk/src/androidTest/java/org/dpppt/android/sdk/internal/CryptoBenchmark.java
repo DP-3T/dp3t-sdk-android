@@ -37,15 +37,20 @@ public class CryptoBenchmark {
 		if (module.init()) {
 			int i = 0;
 			while (state.keepRunning()) {
-				String key = "much longer key which is used for the hash functino but this should not have an influence" +
+				String key = "much longer key which is used for the hash function but this should not have an influence" +
 						Integer.toHexString(i);
-				module.checkContacts(key.getBytes(), new DayDate().subtractDays(NUMBER_OF_DAYS_TO_TEST), new DayDate(), (date -> {
-					ArrayList<Contact> contacts = new ArrayList<>();
-					for (int x = 0; x < NUMBER_OF_CONTACTS_PER_DAY; x++) {
-						contacts.add(new Contact(0, new DayDate(), new EphId(new byte[CryptoModule.KEY_LENGTH]), 0));
-					}
-					return contacts;
-				}), (contact -> {}));
+				module.checkContacts(key.getBytes(),
+						new DayDate().subtractDays(NUMBER_OF_DAYS_TO_TEST).getStartOfDayTimestamp(),
+						System.currentTimeMillis(),
+						(timeFrom, timeUntil) -> {
+							ArrayList<Contact> contacts = new ArrayList<>();
+							for (int x = 0; x < NUMBER_OF_CONTACTS_PER_DAY; x++) {
+								contacts.add(new Contact(0, new DayDate().getStartOfDayTimestamp(),
+										new EphId(new byte[CryptoModule.EPHID_LENGTH]), 0));
+							}
+							return contacts;
+						},
+						contact -> {});
 				i += 1;
 			}
 		}

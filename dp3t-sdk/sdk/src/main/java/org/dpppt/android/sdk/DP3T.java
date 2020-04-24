@@ -7,6 +7,8 @@ package org.dpppt.android.sdk;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.ScanCallback;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -15,21 +17,25 @@ import android.os.PowerManager;
 import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.SyncWorker;
 import org.dpppt.android.sdk.internal.TracingService;
-import org.dpppt.android.sdk.internal.backend.CallbackListener;
+import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.backend.ResponseException;
-import org.dpppt.android.sdk.internal.backend.models.ApplicationInfo;
-import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthData;
+import org.dpppt.android.sdk.backend.models.ApplicationInfo;
+import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.database.Database;
+import org.dpppt.android.sdk.internal.database.models.MatchedContact;
+import org.dpppt.android.sdk.internal.gatt.BluetoothServiceStatus;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.DayDate;
 import org.dpppt.android.sdk.internal.util.ProcessUtil;
@@ -127,28 +133,42 @@ public class DP3T {
 		checkInit();
 		Database database = new Database(context);
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		ArrayList<TracingStatus.ErrorState> errorStates = checkTracingStatus(context);
+		Collection<TracingStatus.ErrorState> errorStates = checkTracingStatus(context);
+		List<MatchedContact> matchedContacts = database.getMatchedContacts();
+		InfectionStatus infectionStatus;
+		if (appConfigManager.getIAmInfected()) {
+			infectionStatus = InfectionStatus.INFECTED;
+		} else if (matchedContacts.size() > 0) {
+			infectionStatus = InfectionStatus.EXPOSED;
+		} else {
+			infectionStatus = InfectionStatus.HEALTHY;
+		}
 		return new TracingStatus(
 				database.getContacts().size(),
 				appConfigManager.isAdvertisingEnabled(),
 				appConfigManager.isReceivingEnabled(),
-				database.wasContactExposed(),
 				appConfigManager.getLastSyncDate(),
-				appConfigManager.getAmIExposed(),
+				infectionStatus,
+				matchedContacts,
 				errorStates
 		);
 	}
 
-	private static ArrayList<TracingStatus.ErrorState> checkTracingStatus(Context context) {
-		ArrayList<TracingStatus.ErrorState> errors = new ArrayList<>();
+	private static Collection<TracingStatus.ErrorState> checkTracingStatus(Context context) {
+		Set<TracingStatus.ErrorState> errors = new HashSet<>();
 
-		final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
-			errors.add(TracingStatus.ErrorState.BLE_DISABLED);
+		if (!context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+			errors.add(TracingStatus.ErrorState.BLE_NOT_SUPPORTED);
+		} else {
+			final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+			if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+				errors.add(TracingStatus.ErrorState.BLE_DISABLED);
+			}
 		}
 
 		PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-		boolean batteryOptimizationsDeactivated = powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
+		boolean batteryOptimizationsDeactivated =
+				powerManager == null || powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
 		if (!batteryOptimizationsDeactivated) {
 			errors.add(TracingStatus.ErrorState.BATTERY_OPTIMIZER_ENABLED);
 		}
@@ -163,23 +183,60 @@ public class DP3T {
 			errors.add(TracingStatus.ErrorState.NETWORK_ERROR_WHILE_SYNCING);
 		}
 
+		if (!errors.contains(TracingStatus.ErrorState.BLE_DISABLED)) {
+			BluetoothServiceStatus bluetoothServiceStatus = BluetoothServiceStatus.getInstance(context);
+			switch (bluetoothServiceStatus.getAdvertiseStatus()) {
+				case BluetoothServiceStatus.ADVERTISE_OK:
+					// ok
+					break;
+				case AdvertiseCallback.ADVERTISE_FAILED_INTERNAL_ERROR:
+				case AdvertiseCallback.ADVERTISE_FAILED_TOO_MANY_ADVERTISERS:
+					errors.add(TracingStatus.ErrorState.BLE_INTERNAL_ERROR);
+					break;
+				case AdvertiseCallback.ADVERTISE_FAILED_FEATURE_UNSUPPORTED:
+					errors.add(TracingStatus.ErrorState.BLE_NOT_SUPPORTED);
+					break;
+				case AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED:
+				case AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE:
+				default:
+					errors.add(TracingStatus.ErrorState.BLE_ADVERTISING_ERROR);
+					break;
+			}
+			switch (bluetoothServiceStatus.getScanStatus()) {
+				case BluetoothServiceStatus.SCAN_OK:
+					// ok
+					break;
+				case ScanCallback.SCAN_FAILED_INTERNAL_ERROR:
+					errors.add(TracingStatus.ErrorState.BLE_INTERNAL_ERROR);
+					break;
+				case ScanCallback.SCAN_FAILED_FEATURE_UNSUPPORTED:
+					errors.add(TracingStatus.ErrorState.BLE_NOT_SUPPORTED);
+					break;
+				case ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED:
+				case ScanCallback.SCAN_FAILED_ALREADY_STARTED:
+				default:
+					errors.add(TracingStatus.ErrorState.BLE_SCANNER_ERROR);
+					break;
+			}
+		}
+
 		return errors;
 	}
 
-	public static void sendIWasExposed(Context context, Date onset, ExposeeAuthData exposeeAuthData,
-			CallbackListener<Void> callback) {
+	public static void sendIAmInfected(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod,
+			ResponseCallback<Void> callback) {
 		checkInit();
 
 		DayDate onsetDate = new DayDate(onset.getTime());
-		ExposeeRequest exposeeRequest = CryptoModule.getInstance(context).getSecretKeyForPublishing(onsetDate, exposeeAuthData);
+		ExposeeRequest exposeeRequest = CryptoModule.getInstance(context).getSecretKeyForPublishing(onsetDate, exposeeAuthMethod);
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		try {
-			appConfigManager.getBackendRepository(context).addExposee(exposeeRequest,
-					new CallbackListener<Void>() {
+			appConfigManager.getBackendReportRepository(context).addExposee(exposeeRequest, exposeeAuthMethod,
+					new ResponseCallback<Void>() {
 						@Override
 						public void onSuccess(Void response) {
-							appConfigManager.setAmIExposed(true);
+							appConfigManager.setIAmInfected(true);
 							CryptoModule.getInstance(context).reset();
 							callback.onSuccess(response);
 						}

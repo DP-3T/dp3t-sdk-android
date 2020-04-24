@@ -1,4 +1,6 @@
+-keep class org.dpppt.android.sdk.backend.models.** { *; }
 -keep class org.dpppt.android.sdk.internal.backend.models.** { *; }
+-keep class org.dpppt.android.sdk.internal.backend.proto.** { *; }
 -keep class org.dpppt.android.sdk.internal.database.models.** { *; }
 
 # Prevent proguard from stripping interface information from TypeAdapter, TypeAdapterFactory,

@@ -18,7 +18,6 @@ import okhttp3.Request;
 interface Repository {
 
 	default OkHttpClient.Builder getClientBuilder(@NonNull Context context) {
-
 		String versionName;
 		PackageManager manager = context.getPackageManager();
 		try {

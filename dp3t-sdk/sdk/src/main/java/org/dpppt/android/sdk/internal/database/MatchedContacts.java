@@ -5,27 +5,24 @@
  */
 package org.dpppt.android.sdk.internal.database;
 
-interface Contacts {
+interface MatchedContacts {
 
-	String TABLE_NAME = "contacts";
+	String TABLE_NAME = "matched_contacts";
 
 	String ID = "id";
-	String DATE = "date";
-	String EPHID = "ephID";
-	String ASSOCIATED_KNOWN_CASE = "associated_known_case";
+	String REPORT_DATE = "report_date";
+	String ASSOCIATED_KNOWN_CASE = "known_case_id";
 
 	String[] PROJECTION = {
 			ID,
-			DATE,
-			EPHID,
+			REPORT_DATE,
 			ASSOCIATED_KNOWN_CASE
 	};
 
 	static String create() {
 		return "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " (" + ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
-				DATE + " INTEGER NOT NULL, " + EPHID + " BLOB NOT NULL, " +
+				REPORT_DATE + " INTEGER NOT NULL, " +
 				ASSOCIATED_KNOWN_CASE + " INTEGER, " +
-				"CONSTRAINT no_duplicates UNIQUE (" + DATE + ", " + EPHID + "), " +
 				"FOREIGN KEY (" + ASSOCIATED_KNOWN_CASE + ") REFERENCES " +
 				KnownCases.TABLE_NAME + " (" + KnownCases.ID + ") ON DELETE SET NULL)";
 	}

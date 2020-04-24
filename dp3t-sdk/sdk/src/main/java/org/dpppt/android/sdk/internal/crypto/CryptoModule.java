@@ -26,7 +26,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.dpppt.android.sdk.internal.backend.models.ExposeeAuthData;
+import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
+import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodJson;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.database.models.Contact;
 import org.dpppt.android.sdk.internal.util.DayDate;
@@ -36,9 +37,10 @@ import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
 public class CryptoModule {
 
-	public static final int KEY_LENGTH = 16;
+	public static final int EPHID_LENGTH = 16;
 
 	public static final int NUMBER_OF_DAYS_TO_KEEP_DATA = 21;
+	public static final int NUMBER_OF_DAYS_TO_KEEP_MATCHED_CONTACTS = 10;
 	private static final int NUMBER_OF_EPOCHS_PER_DAY = 24 * 4;
 	public static final int MILLISECONDS_PER_EPOCH = 24 * 60 * 60 * 1000 / NUMBER_OF_EPOCHS_PER_DAY;
 	public static final int CONTACT_THRESHOLD = 1;
@@ -85,7 +87,7 @@ public class CryptoModule {
 		return false;
 	}
 
-	private SKList getSKList() {
+	protected SKList getSKList() {
 		String skListJson = esp.getString(KEY_SK_LIST_JSON, null);
 		return Json.safeFromJson(skListJson, SKList.class, SKList::new);
 	}
@@ -138,7 +140,7 @@ public class CryptoModule {
 			byte[] counter = new byte[16];
 			cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(counter));
 			ArrayList<EphId> ephIds = new ArrayList<>();
-			byte[] emptyArray = new byte[KEY_LENGTH];
+			byte[] emptyArray = new byte[EPHID_LENGTH];
 			for (int i = 0; i < NUMBER_OF_EPOCHS_PER_DAY; i++) {
 				ephIds.add(new EphId(cipher.update(emptyArray)));
 			}
@@ -189,12 +191,14 @@ public class CryptoModule {
 		return getEphIdsForToday(currentDay).get(getEpochCounter(now));
 	}
 
-	public void checkContacts(byte[] sk, DayDate onsetDate, DayDate bucketDate, GetContactsCallback contactCallback,
+	public void checkContacts(byte[] sk, long onsetDate, long bucketTime, GetContactsCallback contactCallback,
 			MatchCallback matchCallback) {
-		DayDate dayToTest = onsetDate;
+		DayDate dayToTest = new DayDate(onsetDate);
 		byte[] skForDay = sk;
-		while (dayToTest.isBeforeOrEquals(bucketDate)) {
-			List<Contact> contactsOnDay = contactCallback.getContacts(dayToTest);
+		while (dayToTest.isBeforeOrEquals(bucketTime)) {
+			long contactTimeFrom = dayToTest.getStartOfDayTimestamp();
+			long contactTimeUntil = Math.min(dayToTest.getNextDay().getStartOfDayTimestamp(), bucketTime);
+			List<Contact> contactsOnDay = contactCallback.getContacts(contactTimeFrom, contactTimeUntil);
 			if (contactsOnDay.size() > 0) {
 				//generate all ephIds for day
 				HashSet<EphId> ephIdHashSet = new HashSet<>(createEphIds(skForDay, false));
@@ -213,21 +217,23 @@ public class CryptoModule {
 		}
 	}
 
-	public ExposeeRequest getSecretKeyForPublishing(DayDate date, ExposeeAuthData exposeeAuthData) {
+	public ExposeeRequest getSecretKeyForPublishing(DayDate date, ExposeeAuthMethod exposeeAuthMethod) {
 		SKList skList = getSKList();
+		ExposeeAuthMethodJson jsonAuth =
+				exposeeAuthMethod instanceof ExposeeAuthMethodJson ? (ExposeeAuthMethodJson) exposeeAuthMethod : null;
 		for (Pair<DayDate, byte[]> daySKPair : skList) {
 			if (daySKPair.first.equals(date)) {
 				return new ExposeeRequest(
 						toBase64(daySKPair.second),
 						daySKPair.first,
-						exposeeAuthData);
+						jsonAuth);
 			}
 		}
 		if (date.isBefore(skList.get(skList.size() - 1).first)) {
 			return new ExposeeRequest(
 					toBase64(skList.get(skList.size() - 1).second),
 					skList.get(skList.size() - 1).first,
-					exposeeAuthData);
+					jsonAuth);
 		}
 		return null;
 	}
@@ -243,8 +249,11 @@ public class CryptoModule {
 	}
 
 	public interface GetContactsCallback {
-
-		List<Contact> getContacts(DayDate date);
+		/**
+		 * @param timeFrom timestamp inclusive
+		 * @param timeUntil timestamp exclusive
+		 */
+		List<Contact> getContacts(long timeFrom, long timeUntil);
 
 	}
 

@@ -8,18 +8,14 @@ package org.dpppt.android.sdk.internal.util;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Objects;
-import java.util.TimeZone;
+import java.util.*;
 
 import com.google.gson.annotations.JsonAdapter;
 
 @JsonAdapter(DayDateJsonAdapter.class)
 public class DayDate {
 
-	private static SimpleDateFormat dayDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	private static final SimpleDateFormat dayDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
 
 	static {
 		dayDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -64,6 +60,10 @@ public class DayDate {
 
 	public boolean isBeforeOrEquals(DayDate other) {
 		return timestampRepresentation <= other.timestampRepresentation;
+	}
+
+	public boolean isBeforeOrEquals(long timestamp) {
+		return timestampRepresentation <= timestamp;
 	}
 
 	private long convertToDay(long time) {

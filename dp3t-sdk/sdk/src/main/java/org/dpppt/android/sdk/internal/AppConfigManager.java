@@ -10,10 +10,10 @@ import android.content.SharedPreferences;
 
 import java.io.IOException;
 
-import org.dpppt.android.sdk.internal.backend.BackendRepository;
-import org.dpppt.android.sdk.internal.backend.CallbackListener;
+import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
+import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.backend.DiscoveryRepository;
-import org.dpppt.android.sdk.internal.backend.models.ApplicationInfo;
+import org.dpppt.android.sdk.backend.models.ApplicationInfo;
 import org.dpppt.android.sdk.internal.backend.models.ApplicationsList;
 import org.dpppt.android.sdk.internal.util.Json;
 
@@ -32,16 +32,17 @@ public class AppConfigManager {
 
 	public static final long DEFAULT_SCAN_INTERVAL = 2 * 60 * 1000L;
 	public static final long DEFAULT_SCAN_DURATION = 30 * 1000L;
-	private static final int DEFAULT_BLUETOOTH_POWER_LEVEL = BluetoothTxPowerLevel.ADVERTISE_TX_POWER_LOW.getValue();
+	private static final int DEFAULT_BLUETOOTH_POWER_LEVEL = BluetoothTxPowerLevel.ADVERTISE_TX_POWER_ULTRA_LOW.getValue();
 	private static final int DEFAULT_BLUETOOTH_ADVERTISE_MODE = BluetoothAdvertiseMode.ADVERTISE_MODE_LOW_POWER.getValue();
 
 	private static final String PREFS_NAME = "dp3t_sdk_preferences";
 	private static final String PREF_APPLICATION_LIST = "applicationList";
 	private static final String PREF_ADVERTISING_ENABLED = "advertisingEnabled";
 	private static final String PREF_RECEIVING_ENABLED = "receivingEnabled";
+	private static final String PREF_LAST_LOADED_BATCH_RELEASE_TIME = "lastLoadedBatchReleaseTime";
 	private static final String PREF_LAST_SYNC_DATE = "lastSyncDate";
 	private static final String PREF_LAST_SYNC_NET_SUCCESS = "lastSyncNetSuccess";
-	private static final String PREF_AM_I_EXPOSED = "amIExposed";
+	private static final String PREF_I_AM_INFECTED = "IAmInfected";
 	private static final String PREF_CALIBRATION_TEST_DEVICE_NAME = "calibrationTestDeviceName";
 	private static final String PREF_SCAN_INTERVAL = "scanInterval";
 	private static final String PREF_SCAN_DURATION = "scanDuration";
@@ -65,7 +66,7 @@ public class AppConfigManager {
 
 	public void triggerLoad() {
 		useDiscovery = true;
-		discoveryRepository.getDiscovery(new CallbackListener<ApplicationsList>() {
+		discoveryRepository.getDiscovery(new ResponseCallback<ApplicationsList>() {
 			@Override
 			public void onSuccess(ApplicationsList response) {
 				sharedPrefs.edit().putString(PREF_APPLICATION_LIST, Json.toJson(response)).apply();
@@ -94,7 +95,8 @@ public class AppConfigManager {
 	}
 
 	public ApplicationsList getLoadedApplicationsList() {
-		return Json.safeFromJson(sharedPrefs.getString(PREF_APPLICATION_LIST, "{}"), ApplicationsList.class, ApplicationsList::new);
+		return Json.safeFromJson(sharedPrefs.getString(PREF_APPLICATION_LIST, "{}"), ApplicationsList.class,
+				ApplicationsList::new);
 	}
 
 	public ApplicationInfo getAppConfig() throws IllegalStateException {
@@ -122,6 +124,14 @@ public class AppConfigManager {
 		return sharedPrefs.getBoolean(PREF_RECEIVING_ENABLED, false);
 	}
 
+	public void setLastLoadedBatchReleaseTime(long lastLoadedBatchReleaseTime) {
+		sharedPrefs.edit().putLong(PREF_LAST_LOADED_BATCH_RELEASE_TIME, lastLoadedBatchReleaseTime).apply();
+	}
+
+	public long getLastLoadedBatchReleaseTime() {
+		return sharedPrefs.getLong(PREF_LAST_LOADED_BATCH_RELEASE_TIME, -1);
+	}
+
 	public void setLastSyncDate(long lastSyncDate) {
 		sharedPrefs.edit().putLong(PREF_LAST_SYNC_DATE, lastSyncDate).apply();
 	}
@@ -138,17 +148,17 @@ public class AppConfigManager {
 		return sharedPrefs.getBoolean(PREF_LAST_SYNC_NET_SUCCESS, true);
 	}
 
-	public boolean getAmIExposed() {
-		return sharedPrefs.getBoolean(PREF_AM_I_EXPOSED, false);
+	public boolean getIAmInfected() {
+		return sharedPrefs.getBoolean(PREF_I_AM_INFECTED, false);
 	}
 
-	public void setAmIExposed(boolean exposed) {
-		sharedPrefs.edit().putBoolean(PREF_AM_I_EXPOSED, exposed).apply();
+	public void setIAmInfected(boolean exposed) {
+		sharedPrefs.edit().putBoolean(PREF_I_AM_INFECTED, exposed).apply();
 	}
 
-	public BackendRepository getBackendRepository(Context context) throws IllegalStateException {
+	public BackendReportRepository getBackendReportRepository(Context context) throws IllegalStateException {
 		ApplicationInfo appConfig = getAppConfig();
-		return new BackendRepository(context, appConfig.getBackendBaseUrl());
+		return new BackendReportRepository(context, appConfig.getReportBaseUrl());
 	}
 
 	public void setDevDiscoveryModeEnabled(boolean enable) {

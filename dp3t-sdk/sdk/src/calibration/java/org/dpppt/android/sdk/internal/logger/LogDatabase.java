@@ -30,7 +30,7 @@ public class LogDatabase {
 		insert(db, level, tag, message, time);
 	}
 
-	public static void insert(SQLiteDatabase db, String level, String tag, String message, long time) {
+	protected static void insert(SQLiteDatabase db, String level, String tag, String message, long time) {
 		ContentValues values = new ContentValues();
 		values.put(LogSpec.COLUMN_NAME_VERSION, BuildConfig.VERSION_CODE);
 		values.put(LogSpec.COLUMN_NAME_BUILD_TIME, BuildConfig.BUILD_TIME);
@@ -133,7 +133,7 @@ public class LogDatabase {
 	}
 
 
-	public static class LogDatabaseHelper extends SQLiteOpenHelper {
+	protected static class LogDatabaseHelper extends SQLiteOpenHelper {
 
 		public static final int DATABASE_VERSION = 2;
 		private static final String DATABASE_NAME = "dp3t_sdk_log.db";
@@ -170,7 +170,7 @@ public class LogDatabase {
 			executeCreate(db);
 		}
 
-		public static void executeCreate(SQLiteDatabase db) {
+		protected static void executeCreate(SQLiteDatabase db) {
 			db.execSQL(SQL_CREATE_ENTRIES);
 			db.execSQL(SQL_CREATE_INDEX_LEVEL);
 			db.execSQL(SQL_CREATE_INDEX_TAG);

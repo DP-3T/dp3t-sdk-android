@@ -6,15 +6,16 @@
 
 package org.dpppt.android.sdk.internal.backend.models;
 
+import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodJson;
 import org.dpppt.android.sdk.internal.util.DayDate;
 
 public class ExposeeRequest {
 
 	private String key;
 	private DayDate onset;
-	private ExposeeAuthData authData;
+	private ExposeeAuthMethodJson authData;
 
-	public ExposeeRequest(String key, DayDate onset, ExposeeAuthData authData) {
+	public ExposeeRequest(String key, DayDate onset, ExposeeAuthMethodJson authData) {
 		this.key = key;
 		this.onset = onset;
 		this.authData = authData;
@@ -28,7 +29,7 @@ public class ExposeeRequest {
 		return onset;
 	}
 
-	public ExposeeAuthData getAuthData() {
+	public ExposeeAuthMethodJson getAuthData() {
 		return authData;
 	}
 

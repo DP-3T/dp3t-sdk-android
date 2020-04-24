@@ -19,7 +19,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
-import java.util.ArrayList;
+import java.util.Collection;
 
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.R;
@@ -27,6 +27,8 @@ import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.gatt.BleClient;
 import org.dpppt.android.sdk.internal.gatt.BleServer;
+import org.dpppt.android.sdk.internal.gatt.BluetoothServiceStatus;
+import org.dpppt.android.sdk.internal.gatt.BluetoothState;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
 import static org.dpppt.android.sdk.internal.AppConfigManager.DEFAULT_SCAN_DURATION;
@@ -61,16 +63,28 @@ public class TracingService extends Service {
 			if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())) {
 				int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
 				if (state == BluetoothAdapter.STATE_OFF || state == BluetoothAdapter.STATE_ON) {
-					invalidateForegroundNotification();
+					BluetoothServiceStatus.resetInstance();
+					BroadcastHelper.sendErrorUpdateBroadcast(context);
 				}
 			}
 		}
 	};
 
+	private final BroadcastReceiver errorsUpdateReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (BroadcastHelper.ACTION_UPDATE_ERRORS.equals(intent.getAction())) {
+				invalidateForegroundNotification();
+			}
+		}
+	};
+
 	private boolean startAdvertising;
-	private boolean startReceiveing;
+	private boolean startReceiving;
 	private long scanInterval;
 	private long scanDuration;
+
+	private boolean isFinishing;
 
 	public TracingService() { }
 
@@ -78,8 +92,13 @@ public class TracingService extends Service {
 	public void onCreate() {
 		super.onCreate();
 
+		isFinishing = false;
+
 		IntentFilter bluetoothFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
 		registerReceiver(bluetoothStateChangeReceiver, bluetoothFilter);
+
+		IntentFilter errorsUpdateFilter = new IntentFilter(BroadcastHelper.ACTION_UPDATE_ERRORS);
+		registerReceiver(errorsUpdateReceiver, errorsUpdateFilter);
 	}
 
 	@Override
@@ -102,7 +121,7 @@ public class TracingService extends Service {
 		scanDuration = intent.getLongExtra(EXTRA_SCAN_DURATION, DEFAULT_SCAN_DURATION);
 
 		startAdvertising = intent.getBooleanExtra(EXTRA_ADVERTISE, true);
-		startReceiveing = intent.getBooleanExtra(EXTRA_RECEIVE, true);
+		startReceiving = intent.getBooleanExtra(EXTRA_RECEIVE, true);
 
 		if (ACTION_START.equals(intent.getAction())) {
 			startForeground(NOTIFICATION_ID, createForegroundNotification());
@@ -158,7 +177,7 @@ public class TracingService extends Service {
 		return builder.build();
 	}
 
-	private String getNotificationErrorText(ArrayList<TracingStatus.ErrorState> errors) {
+	private String getNotificationErrorText(Collection<TracingStatus.ErrorState> errors) {
 		StringBuilder sb = new StringBuilder(getString(R.string.dp3t_sdk_service_notification_errors)).append("\n");
 		String sep = "";
 		for (TracingStatus.ErrorState error : errors) {
@@ -179,6 +198,10 @@ public class TracingService extends Service {
 	}
 
 	private void invalidateForegroundNotification() {
+		if (isFinishing) {
+			return;
+		}
+
 		Notification notification = createForegroundNotification();
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		mNotificationManager.notify(NOTIFICATION_ID, notification);
@@ -206,11 +229,10 @@ public class TracingService extends Service {
 		//also restart server here to generate a new mac-address so we get rediscovered by apple devices
 		startServer();
 
-		try {
-			startClient();
-		} catch (Throwable t) {
-			t.printStackTrace();
-			Logger.e(TAG, t);
+		BluetoothState bluetoothState = startClient();
+		if (bluetoothState == BluetoothState.NOT_SUPPORTED) {
+			Logger.e(TAG, "bluetooth not supported");
+			return;
 		}
 
 		handler.postDelayed(() -> {
@@ -220,7 +242,12 @@ public class TracingService extends Service {
 	}
 
 	private void restartServer() {
-		startServer();
+		BluetoothState bluetoothState = startServer();
+		if (bluetoothState == BluetoothState.NOT_SUPPORTED) {
+			Logger.e(TAG, "bluetooth not supported");
+			return;
+		}
+
 		scheduleNextServerRestart(this);
 	}
 
@@ -250,37 +277,25 @@ public class TracingService extends Service {
 	}
 
 	private void stopForegroundService() {
+		isFinishing = true;
 		stopClient();
 		stopServer();
+		BluetoothServiceStatus.resetInstance();
 		stopForeground(true);
 		wl.release();
 		stopSelf();
 	}
 
-	@Override
-	public void onDestroy() {
-		Logger.i(TAG, "onDestroy()");
-
-		unregisterReceiver(bluetoothStateChangeReceiver);
-
-		if (handler != null) {
-			handler.removeCallbacksAndMessages(null);
-		}
-	}
-
-	@Nullable
-	@Override
-	public IBinder onBind(Intent intent) {
-		return null;
-	}
-
-	private void startServer() {
+	private BluetoothState startServer() {
 		stopServer();
 		if (startAdvertising) {
 			bleServer = new BleServer(this);
-			bleServer.startAdvertising();
+
 			Logger.d(TAG, "startAdvertising");
+			BluetoothState advertiserState = bleServer.startAdvertising();
+			return advertiserState;
 		}
+		return null;
 	}
 
 	private void stopServer() {
@@ -290,13 +305,14 @@ public class TracingService extends Service {
 		}
 	}
 
-	private void startClient() {
+	private BluetoothState startClient() {
 		stopClient();
-		if (startReceiveing) {
+		if (startReceiving) {
 			bleClient = new BleClient(this);
-			bleClient.start();
-			Logger.d(TAG, "startScanning");
+			BluetoothState clientState = bleClient.start();
+			return clientState;
 		}
+		return null;
 	}
 
 	private void stopScanning() {
@@ -309,6 +325,24 @@ public class TracingService extends Service {
 		if (bleClient != null) {
 			bleClient.stop();
 			bleClient = null;
+		}
+	}
+
+	@Nullable
+	@Override
+	public IBinder onBind(Intent intent) {
+		return null;
+	}
+
+	@Override
+	public void onDestroy() {
+		Logger.i(TAG, "onDestroy()");
+
+		unregisterReceiver(errorsUpdateReceiver);
+		unregisterReceiver(bluetoothStateChangeReceiver);
+
+		if (handler != null) {
+			handler.removeCallbacksAndMessages(null);
 		}
 	}
 

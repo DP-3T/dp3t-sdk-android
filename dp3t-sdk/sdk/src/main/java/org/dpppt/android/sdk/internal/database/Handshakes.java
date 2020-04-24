@@ -11,7 +11,7 @@ interface Handshakes {
 
 	String ID = "id";
 	String TIMESTAMP = "timestamp";
-	String EPHID = "ephid";
+	String EPHID = "ephID";
 	String TX_POWER_LEVEL = "tx_power_level";
 	String RSSI = "rssi";
 	String PHY_PRIMARY = "phy_primary";

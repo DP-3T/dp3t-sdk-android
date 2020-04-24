@@ -3,7 +3,7 @@
  * https://www.ubique.ch
  * Copyright (c) 2020. All rights reserved.
  */
-package org.dpppt.android.calibration.util.backend;
+package org.dpppt.android.sdk.util;
 
 import okhttp3.MultipartBody;
 import retrofit2.Call;

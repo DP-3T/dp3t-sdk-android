@@ -3,47 +3,45 @@
  * https://www.ubique.ch
  * Copyright (c) 2020. All rights reserved.
  */
-
 package org.dpppt.android.sdk.internal.gatt;
 
 import android.bluetooth.*;
 import android.bluetooth.le.ScanResult;
-import android.content.ContentValues;
 import android.content.Context;
 import android.os.Build;
-import android.util.Log;
 
 import java.util.Arrays;
 
-import org.dpppt.android.sdk.internal.database.Database;
+import org.dpppt.android.sdk.internal.crypto.EphId;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
-import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
+import static org.dpppt.android.sdk.internal.crypto.CryptoModule.EPHID_LENGTH;
 
 public class GattConnectionTask {
 
-	private static final String TAG = "BleClient";
+	private static final String TAG = "GattConnectionTask";
 
 	private static final long GATT_READ_TIMEOUT = 10 * 1000L;
 
 	private Context context;
 	private BluetoothDevice bluetoothDevice;
 	private ScanResult scanResult;
+	private Callback callback;
 
 	private BluetoothGatt bluetoothGatt;
 	private long startTime;
 
-	public GattConnectionTask(Context context, BluetoothDevice bluetoothDevice, ScanResult scanResult) {
+	public GattConnectionTask(Context context, BluetoothDevice bluetoothDevice, ScanResult scanResult, Callback callback) {
 		this.context = context;
 		this.bluetoothDevice = bluetoothDevice;
 		this.scanResult = scanResult;
+		this.callback = callback;
 	}
 
 	public void execute() {
 		Logger.d(TAG, "Connecting GATT to: " + bluetoothDevice.getAddress());
 
 		final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
-			private static final String TAG = "BluetoothGattCallback";
 
 			@Override
 			public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -95,13 +93,14 @@ public class GattConnectionTask {
 
 				if (characteristic.getUuid().equals(BleServer.TOTP_CHARACTERISTIC_UUID)) {
 					if (status == BluetoothGatt.GATT_SUCCESS) {
-						addHandshakeToDatabase(characteristic.getValue(), gatt.getDevice().getAddress(),
-								scanResult.getScanRecord().getTxPowerLevel(), scanResult.getRssi(),
-								BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
-								scanResult.getTimestampNanos());
+						if (characteristic.getValue().length == EPHID_LENGTH) {
+							callback.onEphIdRead(new EphId(characteristic.getValue()), gatt.getDevice());
+							scanResult.getRssi();
+						} else {
+							Logger.e(TAG, "got wrong sized ephid " + characteristic.getValue().length);
+						}
 					} else {
-						Logger.e(TAG, "Failed to read characteristic. Status: " + status);
-
+						Logger.w(TAG, "Failed to read characteristic. Status: " + status);
 						// TODO error
 					}
 				}
@@ -119,22 +118,9 @@ public class GattConnectionTask {
 		startTime = System.currentTimeMillis();
 	}
 
-	public void addHandshakeToDatabase(byte[] starValue, String macAddress, int rxPowerLevel, int rssi, String phyPrimary,
-			String phySecondary, long timestampNanos) {
-		try {
-			String base64String = toBase64(starValue);
-			ContentValues handshakeData = new Database(context)
-					.addHandshake(context, starValue, rxPowerLevel, rssi, System.currentTimeMillis(),
-							phyPrimary, phySecondary, timestampNanos);
-			Logger.d(TAG, "received " + base64String);
-			Logger.i(TAG, "saved handshake: " + handshakeData.toString());
-		} catch (Exception e) {
-			Logger.e(TAG, e);
-		}
-	}
-
 	public void checkForTimeout() {
 		if (System.currentTimeMillis() - startTime > GATT_READ_TIMEOUT) {
+			Logger.d(TAG, "timeout");
 			finish();
 		}
 	}
@@ -143,7 +129,7 @@ public class GattConnectionTask {
 		return bluetoothGatt == null;
 	}
 
-	public void finish() {
+	public synchronized void finish() {
 		if (bluetoothGatt != null) {
 			Logger.d(TAG, "disconnect() and close(): " + bluetoothGatt.getDevice().getAddress());
 			// Order matters! Call disconnect() before close() as the latter de-registers our client
@@ -153,6 +139,13 @@ public class GattConnectionTask {
 			bluetoothGatt = null;
 		}
 		Logger.d(TAG, "Reset and wait for next BLE device");
+	}
+
+
+	public interface Callback {
+
+		void onEphIdRead(EphId ephId, BluetoothDevice device);
+
 	}
 
 }

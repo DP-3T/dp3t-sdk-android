@@ -3,14 +3,13 @@
  * https://www.ubique.ch
  * Copyright (c) 2020. All rights reserved.
  */
+package org.dpppt.android.sdk.backend.models;
 
-package org.dpppt.android.sdk.internal.backend.models;
-
-public class ExposeeAuthData {
+public class ExposeeAuthMethodJson implements ExposeeAuthMethod {
 
 	private String value;
 
-	public ExposeeAuthData(String value) {
+	public ExposeeAuthMethodJson(String value) {
 		this.value = value;
 	}
 
