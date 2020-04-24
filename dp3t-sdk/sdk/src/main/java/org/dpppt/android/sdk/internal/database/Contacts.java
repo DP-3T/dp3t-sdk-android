@@ -12,19 +12,21 @@ interface Contacts {
 	String ID = "id";
 	String DATE = "date";
 	String EPHID = "ephID";
+	String WINDOW_COUNT = "windowCount";
 	String ASSOCIATED_KNOWN_CASE = "associated_known_case";
 
 	String[] PROJECTION = {
 			ID,
 			DATE,
 			EPHID,
+			WINDOW_COUNT,
 			ASSOCIATED_KNOWN_CASE
 	};
 
 	static String create() {
 		return "CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " (" + ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
 				DATE + " INTEGER NOT NULL, " + EPHID + " BLOB NOT NULL, " +
-				ASSOCIATED_KNOWN_CASE + " INTEGER, " +
+				WINDOW_COUNT + " INTEGER NOT NULL, " + ASSOCIATED_KNOWN_CASE + " INTEGER, " +
 				"CONSTRAINT no_duplicates UNIQUE (" + DATE + ", " + EPHID + "), " +
 				"FOREIGN KEY (" + ASSOCIATED_KNOWN_CASE + ") REFERENCES " +
 				KnownCases.TABLE_NAME + " (" + KnownCases.ID + ") ON DELETE SET NULL)";
