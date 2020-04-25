@@ -81,20 +81,34 @@ public class BleServer {
 			return BluetoothState.NOT_SUPPORTED;
 		}
 
-		AdvertiseData.Builder advBuilder = new AdvertiseData.Builder();
-		advBuilder.setIncludeTxPowerLevel(true);
-		advBuilder.addServiceUuid(new ParcelUuid(SERVICE_UUID));
-		advBuilder.addServiceData(new ParcelUuid(SERVICE_UUID), getAdvertiseData());
-		advBuilder.setIncludeDeviceName(false);
-
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 
 		AdvertiseSettings.Builder settingBuilder = new AdvertiseSettings.Builder();
-		settingBuilder.setAdvertiseMode(appConfigManager.getBluetoothAdvertiseMode().getValue());
-		settingBuilder.setTxPowerLevel(appConfigManager.getBluetoothTxPowerLevel().getValue());
+		settingBuilder.setAdvertiseMode(appConfigManager.getBluetoothAdvertiseMode().getSystemValue());
+		settingBuilder.setTxPowerLevel(appConfigManager.getBluetoothTxPowerLevel().getSystemValue());
 		settingBuilder.setConnectable(true);
+		settingBuilder.setTimeout(0);
+		AdvertiseSettings settings = settingBuilder.build();
 
-		mLeAdvertiser.startAdvertising(settingBuilder.build(), advBuilder.build(), advertiseCallback);
+		AdvertiseData.Builder advBuilder = new AdvertiseData.Builder();
+		advBuilder.setIncludeTxPowerLevel(true);
+		advBuilder.setIncludeDeviceName(false);
+		advBuilder.addServiceUuid(new ParcelUuid(SERVICE_UUID));
+
+		if (appConfigManager.isScanResponseEnabled()) {
+			AdvertiseData.Builder scanResponse = new AdvertiseData.Builder();
+			scanResponse.setIncludeTxPowerLevel(false);
+			scanResponse.setIncludeDeviceName(false);
+			scanResponse.addServiceData(new ParcelUuid(SERVICE_UUID), getAdvertiseData());
+			mLeAdvertiser.startAdvertising(settings, advBuilder.build(), scanResponse.build(), advertiseCallback);
+			Logger.d(TAG, "started advertising (with scanResponse), advertiseMode " + settings.getMode() + " powerLevel " +
+					settings.getTxPowerLevel());
+		} else {
+			advBuilder.addServiceData(new ParcelUuid(SERVICE_UUID), getAdvertiseData());
+			mLeAdvertiser.startAdvertising(settings, advBuilder.build(), advertiseCallback);
+			Logger.d(TAG, "started advertising (only advertiseData), advertiseMode " + settings.getMode() + " powerLevel " +
+					settings.getTxPowerLevel());
+		}
 
 		return BluetoothState.ENABLED;
 	}

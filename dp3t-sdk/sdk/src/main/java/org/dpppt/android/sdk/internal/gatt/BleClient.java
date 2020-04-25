@@ -13,6 +13,7 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
+import android.os.Build;
 import android.os.ParcelUuid;
 
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.crypto.EphId;
@@ -71,9 +73,18 @@ public class BleClient {
 				.setManufacturerData(0x004c, new byte[0])
 				.build());
 
-		ScanSettings scanSettings = new ScanSettings.Builder()
-				.setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
-				.build();
+		ScanSettings.Builder settingsBuilder = new ScanSettings.Builder()
+				.setScanMode(AppConfigManager.getInstance(context).getBluetoothScanMode().getSystemValue())
+				.setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
+				.setReportDelay(0)
+				.setNumOfMatches(ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT)
+				.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			settingsBuilder
+					.setPhy(ScanSettings.PHY_LE_ALL_SUPPORTED)
+					.setLegacy(true);
+		}
+		ScanSettings scanSettings = settingsBuilder.build();
 
 		BluetoothServiceStatus bluetoothServiceStatus = BluetoothServiceStatus.getInstance(context);
 
@@ -102,8 +113,8 @@ public class BleClient {
 			}
 		};
 
-		Logger.i(TAG, "starting BLE scanner");
 		bleScanner.startScan(scanFilters, scanSettings, bleScanCallback);
+		Logger.i(TAG, "started BLE scanner, scanMode: " + scanSettings.getScanMode() + " scanFilters: " + scanFilters.size());
 
 		return BluetoothState.ENABLED;
 	}
@@ -129,7 +140,8 @@ public class BleClient {
 				// if Android, optimize (meaning: send/read payload directly in the advertisement
 				Logger.d(TAG, "read ephid payload from servicedata data");
 				scanResultMap.get(scanResult.getDevice().getAddress())
-						.add(new Handshake(-1, System.currentTimeMillis(), new EphId(payload), power, scanResult.getRssi(), BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
+						.add(new Handshake(-1, System.currentTimeMillis(), new EphId(payload), power, scanResult.getRssi(),
+								BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
 								scanResult.getTimestampNanos()));
 			} else {
 				if (scanResultMap.get(scanResult.getDevice().getAddress()).size() == 0) {
@@ -139,7 +151,8 @@ public class BleClient {
 							}));
 				}
 				scanResultMap.get(scanResult.getDevice().getAddress())
-						.add(new Handshake(-1, System.currentTimeMillis(), null, power, scanResult.getRssi(), BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
+						.add(new Handshake(-1, System.currentTimeMillis(), null, power, scanResult.getRssi(),
+								BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
 								scanResult.getTimestampNanos()));
 			}
 		} catch (Throwable t) {

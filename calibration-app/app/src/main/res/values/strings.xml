@@ -61,4 +61,7 @@
 	<string name="parameter_advertisement_power_level">Power level of advertising</string>
 	<string name="logs_filter_tags">tag filter (comma separated)</string>
 	<string name="parameter_advertisement_mode">Advertising mode</string>
+	<string name="parameter_scan_mode">Scan Mode</string>
+	<string name="parameter_use_scan_response">Use scan response (active scanning)</string>
+	<string name="version_info">SDK Version Info</string>
 </resources>

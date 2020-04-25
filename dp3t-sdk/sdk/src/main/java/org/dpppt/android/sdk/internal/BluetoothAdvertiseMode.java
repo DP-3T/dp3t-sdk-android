@@ -13,13 +13,13 @@ public enum BluetoothAdvertiseMode {
 	ADVERTISE_MODE_BALANCED(AdvertiseSettings.ADVERTISE_MODE_BALANCED),
 	ADVERTISE_MODE_LOW_LATENCY(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY);
 
-	private final int value;
+	private final int systemValue;
 
-	BluetoothAdvertiseMode(final int value) {
-		this.value = value;
+	BluetoothAdvertiseMode(final int systemValue) {
+		this.systemValue = systemValue;
 	}
 
-	public int getValue() {
-		return value;
+	public int getSystemValue() {
+		return systemValue;
 	}
 }

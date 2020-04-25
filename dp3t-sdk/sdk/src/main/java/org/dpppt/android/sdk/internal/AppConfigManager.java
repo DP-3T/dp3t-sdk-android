@@ -10,10 +10,10 @@ import android.content.SharedPreferences;
 
 import java.io.IOException;
 
-import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
 import org.dpppt.android.sdk.backend.ResponseCallback;
-import org.dpppt.android.sdk.internal.backend.DiscoveryRepository;
 import org.dpppt.android.sdk.backend.models.ApplicationInfo;
+import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
+import org.dpppt.android.sdk.internal.backend.DiscoveryRepository;
 import org.dpppt.android.sdk.internal.backend.models.ApplicationsList;
 import org.dpppt.android.sdk.internal.util.Json;
 
@@ -32,8 +32,10 @@ public class AppConfigManager {
 
 	public static final long DEFAULT_SCAN_INTERVAL = 1 * 60 * 1000L;
 	public static final long DEFAULT_SCAN_DURATION = 20 * 1000L;
-	private static final int DEFAULT_BLUETOOTH_POWER_LEVEL = BluetoothTxPowerLevel.ADVERTISE_TX_POWER_ULTRA_LOW.getValue();
-	private static final int DEFAULT_BLUETOOTH_ADVERTISE_MODE = BluetoothAdvertiseMode.ADVERTISE_MODE_LOW_POWER.getValue();
+	private static final BluetoothScanMode DEFAULT_BLUETOOTH_SCAN_MODE = BluetoothScanMode.SCAN_MODE_LOW_POWER;
+	private static final BluetoothTxPowerLevel DEFAULT_BLUETOOTH_POWER_LEVEL = BluetoothTxPowerLevel.ADVERTISE_TX_POWER_ULTRA_LOW;
+	private static final BluetoothAdvertiseMode DEFAULT_BLUETOOTH_ADVERTISE_MODE = BluetoothAdvertiseMode.ADVERTISE_MODE_LOW_POWER;
+	private static final boolean DEFAULT_BLUETOOTH_USE_SCAN_RESPONSE_ENABLED = false;
 
 	private static final String PREFS_NAME = "dp3t_sdk_preferences";
 	private static final String PREF_APPLICATION_LIST = "applicationList";
@@ -46,8 +48,10 @@ public class AppConfigManager {
 	private static final String PREF_CALIBRATION_TEST_DEVICE_NAME = "calibrationTestDeviceName";
 	private static final String PREF_SCAN_INTERVAL = "scanInterval";
 	private static final String PREF_SCAN_DURATION = "scanDuration";
+	private static final String PREF_BLUETOOTH_SCAN_MODE = "scanMode";
 	private static final String PREF_ADVERTISEMENT_POWER_LEVEL = "advertisementPowerLevel";
 	private static final String PREF_ADVERTISEMENT_MODE = "advertisementMode";
+	private static final String PREF_BLUETOOTH_USE_SCAN_RESPONSE = "scanResponseEnabled";
 
 	private String appId;
 	private boolean useDiscovery;
@@ -199,7 +203,16 @@ public class AppConfigManager {
 	}
 
 	public BluetoothTxPowerLevel getBluetoothTxPowerLevel() {
-		return BluetoothTxPowerLevel.values()[sharedPrefs.getInt(PREF_ADVERTISEMENT_POWER_LEVEL, DEFAULT_BLUETOOTH_POWER_LEVEL)];
+		return BluetoothTxPowerLevel.values()[sharedPrefs
+				.getInt(PREF_ADVERTISEMENT_POWER_LEVEL, DEFAULT_BLUETOOTH_POWER_LEVEL.ordinal())];
+	}
+
+	public BluetoothScanMode getBluetoothScanMode() {
+		return BluetoothScanMode.values()[sharedPrefs.getInt(PREF_BLUETOOTH_SCAN_MODE, DEFAULT_BLUETOOTH_SCAN_MODE.ordinal())];
+	}
+
+	public void setBluetoothScanMode(BluetoothScanMode scanMode) {
+		sharedPrefs.edit().putInt(PREF_BLUETOOTH_SCAN_MODE, scanMode.ordinal()).apply();
 	}
 
 	public void setBluetoothAdvertiseMode(BluetoothAdvertiseMode advertiseMode) {
@@ -207,7 +220,16 @@ public class AppConfigManager {
 	}
 
 	public BluetoothAdvertiseMode getBluetoothAdvertiseMode() {
-		return BluetoothAdvertiseMode.values()[sharedPrefs.getInt(PREF_ADVERTISEMENT_MODE, DEFAULT_BLUETOOTH_ADVERTISE_MODE)];
+		return BluetoothAdvertiseMode.values()[sharedPrefs
+				.getInt(PREF_ADVERTISEMENT_MODE, DEFAULT_BLUETOOTH_ADVERTISE_MODE.ordinal())];
+	}
+
+	public boolean isScanResponseEnabled() {
+		return sharedPrefs.getBoolean(PREF_BLUETOOTH_USE_SCAN_RESPONSE, DEFAULT_BLUETOOTH_USE_SCAN_RESPONSE_ENABLED);
+	}
+
+	public void setUseScanResponse(boolean useScanResponse) {
+		sharedPrefs.edit().putBoolean(PREF_BLUETOOTH_USE_SCAN_RESPONSE, useScanResponse).apply();
 	}
 
 	public void clearPreferences() {

@@ -12,18 +12,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.SeekBar;
-import android.widget.Spinner;
+import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
+
 import org.dpppt.android.calibration.R;
+import org.dpppt.android.sdk.BuildConfig;
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BluetoothAdvertiseMode;
+import org.dpppt.android.sdk.internal.BluetoothScanMode;
 import org.dpppt.android.sdk.internal.BluetoothTxPowerLevel;
 
 public class ParametersFragment extends Fragment {
@@ -31,6 +32,8 @@ public class ParametersFragment extends Fragment {
 	private static final int MIN_INTERVAL_SCANNING_SECONDS = 30;
 	private static final int MAX_INTERVAL_SCANNING_SECONDS = 900;
 	private static final int MIN_DURATION_SCANNING_SECONDS = 10;
+	private Spinner spinnerScanMode;
+	private Spinner spinnerUseScanResponse;
 	private Spinner spinnerAdvertisingMode;
 	private Spinner spinnerPowerLevel;
 	private SeekBar seekBarScanInterval;
@@ -57,6 +60,20 @@ public class ParametersFragment extends Fragment {
 		inputScanInterval = view.findViewById(R.id.parameter_input_scan_interval);
 		seekBarScanDuration = view.findViewById(R.id.parameter_seekbar_scan_duration);
 		inputScanDuration = view.findViewById(R.id.parameter_input_scan_duration);
+
+		spinnerScanMode = view.findViewById(R.id.parameter_spinner_scan_mode);
+		ArrayAdapter<BluetoothScanMode> scanModeAdapter =
+				new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, BluetoothScanMode.values());
+		spinnerScanMode.setAdapter(scanModeAdapter);
+		spinnerScanMode.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+				setScanMode(BluetoothScanMode.values()[position]);
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) { }
+		});
 
 		seekBarScanInterval.setMax(MAX_INTERVAL_SCANNING_SECONDS - MIN_INTERVAL_SCANNING_SECONDS);
 		seekBarScanInterval.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -131,6 +148,20 @@ public class ParametersFragment extends Fragment {
 			return false;
 		});
 
+		spinnerUseScanResponse = view.findViewById(R.id.parameter_spinner_use_scan_response);
+		ArrayAdapter<Boolean> useScanResponseAdapter =
+				new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, new Boolean[] { false, true });
+		spinnerUseScanResponse.setAdapter(useScanResponseAdapter);
+		spinnerUseScanResponse.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+				setUseScanResponse(position == 1);
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) { }
+		});
+
 		spinnerAdvertisingMode = view.findViewById(R.id.parameter_spinner_advertising_mode);
 		ArrayAdapter<BluetoothAdvertiseMode> advertisingModeAdapter =
 				new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, BluetoothAdvertiseMode.values());
@@ -158,6 +189,13 @@ public class ParametersFragment extends Fragment {
 			@Override
 			public void onNothingSelected(AdapterView<?> parent) { }
 		});
+
+		TextView version_info = view.findViewById(R.id.version_info);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		sdf.setTimeZone(TimeZone.getTimeZone("Europe/Zurich"));
+		version_info.setText(
+				BuildConfig.VERSION_NAME + " / " + sdf.format(BuildConfig.BUILD_TIME) + " / " + BuildConfig.FLAVOR + " / " +
+						BuildConfig.BUILD_TYPE);
 	}
 
 	private void adjustNewDurationMaximum(int durationProgressMaximum) {
@@ -173,16 +211,27 @@ public class ParametersFragment extends Fragment {
 		super.onResume();
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(getContext());
+
+		BluetoothScanMode scanMode = appConfigManager.getBluetoothScanMode();
+		spinnerScanMode.setSelection(scanMode.ordinal());
+
 		int interval = (int) (appConfigManager.getScanInterval() / 1000);
 		seekBarScanInterval.setProgress(interval - MIN_INTERVAL_SCANNING_SECONDS);
 		int duration = (int) (appConfigManager.getScanDuration() / 1000);
 		seekBarScanDuration.setProgress(duration - MIN_DURATION_SCANNING_SECONDS);
+
+		boolean useScanResponse = appConfigManager.isScanResponseEnabled();
+		spinnerUseScanResponse.setSelection(useScanResponse ? 1 : 0);
 
 		BluetoothAdvertiseMode selectedMode = appConfigManager.getBluetoothAdvertiseMode();
 		spinnerAdvertisingMode.setSelection(selectedMode.ordinal());
 
 		BluetoothTxPowerLevel selectedLevel = appConfigManager.getBluetoothTxPowerLevel();
 		spinnerPowerLevel.setSelection(selectedLevel.ordinal());
+	}
+
+	private void setScanMode(BluetoothScanMode mode) {
+		AppConfigManager.getInstance(getContext()).setBluetoothScanMode(mode);
 	}
 
 	private int getScanInterval() {
@@ -203,6 +252,10 @@ public class ParametersFragment extends Fragment {
 
 	private void setAdvertisingMode(BluetoothAdvertiseMode mode) {
 		AppConfigManager.getInstance(getContext()).setBluetoothAdvertiseMode(mode);
+	}
+
+	private void setUseScanResponse(boolean useScanResponse) {
+		AppConfigManager.getInstance(getContext()).setUseScanResponse(useScanResponse);
 	}
 
 	private void hideKeyboard(View view) {
