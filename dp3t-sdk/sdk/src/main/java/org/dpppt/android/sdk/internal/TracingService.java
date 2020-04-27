@@ -11,6 +11,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -63,9 +64,20 @@ public class TracingService extends Service {
 			if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())) {
 				int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
 				if (state == BluetoothAdapter.STATE_OFF || state == BluetoothAdapter.STATE_ON) {
+					Logger.w(TAG, BluetoothAdapter.ACTION_STATE_CHANGED);
 					BluetoothServiceStatus.resetInstance();
 					BroadcastHelper.sendErrorUpdateBroadcast(context);
 				}
+			}
+		}
+	};
+
+	private final BroadcastReceiver locationServiceStateChangeReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (LocationManager.MODE_CHANGED_ACTION.equals(intent.getAction())) {
+				Logger.w(TAG, LocationManager.MODE_CHANGED_ACTION);
+				BroadcastHelper.sendErrorUpdateBroadcast(context);
 			}
 		}
 	};
@@ -96,6 +108,9 @@ public class TracingService extends Service {
 
 		IntentFilter bluetoothFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
 		registerReceiver(bluetoothStateChangeReceiver, bluetoothFilter);
+
+		IntentFilter locationServiceFilter = new IntentFilter(LocationManager.MODE_CHANGED_ACTION);
+		registerReceiver(locationServiceStateChangeReceiver, locationServiceFilter);
 
 		IntentFilter errorsUpdateFilter = new IntentFilter(BroadcastHelper.ACTION_UPDATE_ERRORS);
 		registerReceiver(errorsUpdateReceiver, errorsUpdateFilter);
@@ -340,6 +355,7 @@ public class TracingService extends Service {
 
 		unregisterReceiver(errorsUpdateReceiver);
 		unregisterReceiver(bluetoothStateChangeReceiver);
+		unregisterReceiver(locationServiceStateChangeReceiver);
 
 		if (handler != null) {
 			handler.removeCallbacksAndMessages(null);

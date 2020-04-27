@@ -228,14 +228,14 @@ public class CryptoModule {
 			if (daySKPair.first.equals(date)) {
 				return new ExposeeRequest(
 						toBase64(daySKPair.second),
-						daySKPair.first,
+						daySKPair.first.getStartOfDayTimestamp(),
 						jsonAuth);
 			}
 		}
 		if (date.isBefore(skList.get(skList.size() - 1).first)) {
 			return new ExposeeRequest(
 					toBase64(skList.get(skList.size() - 1).second),
-					skList.get(skList.size() - 1).first,
+					skList.get(skList.size() - 1).first.getStartOfDayTimestamp(),
 					jsonAuth);
 		}
 		return null;

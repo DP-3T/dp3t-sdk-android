@@ -119,45 +119,50 @@ public class BleClient {
 		return BluetoothState.ENABLED;
 	}
 
-	public void onDeviceFound(ScanResult scanResult) {
+	private void onDeviceFound(ScanResult scanResult) {
 		try {
 			BluetoothDevice bluetoothDevice = scanResult.getDevice();
+			final String deviceAddr = bluetoothDevice.getAddress();
 
 			int power = scanResult.getScanRecord().getTxPowerLevel();
 			if (power == Integer.MIN_VALUE) {
-				Logger.d(TAG, "No power levels found for (" + scanResult.getDevice().getAddress() + "), use default of 12dbm");
+				Logger.d(TAG, "No power levels found for " + deviceAddr + ", use default of 12dbm");
 				power = 12;
 			}
 
-			if (!scanResultMap.containsKey(scanResult.getDevice().getAddress())) {
-				scanResultMap.put(scanResult.getDevice().getAddress(), new ArrayList<>());
+			List<Handshake> handshakesForDevice = scanResultMap.get(deviceAddr);
+			if (handshakesForDevice == null) {
+				handshakesForDevice = new ArrayList<>();
+				scanResultMap.put(deviceAddr, handshakesForDevice);
 			}
+
 			byte[] payload = scanResult.getScanRecord().getServiceData(new ParcelUuid(SERVICE_UUID));
 			boolean correctPayload = payload != null && payload.length == CryptoModule.EPHID_LENGTH;
-			Logger.d(TAG, "found " + bluetoothDevice.getAddress() + " power: " + power + " rssi: " + scanResult.getRssi() +
-					" payload:" + " " + correctPayload);
+			Logger.d(TAG, "found " + deviceAddr + "; power: " + power + "; rssi: " + scanResult.getRssi() +
+					"; haspayload: " + correctPayload);
 			if (correctPayload) {
 				// if Android, optimize (meaning: send/read payload directly in the advertisement
-				Logger.d(TAG, "read ephid payload from servicedata data");
-				scanResultMap.get(scanResult.getDevice().getAddress())
-						.add(new Handshake(-1, System.currentTimeMillis(), new EphId(payload), power, scanResult.getRssi(),
-								BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
-								scanResult.getTimestampNanos()));
+				Logger.i(TAG, "handshake with " + deviceAddr + " (servicedata payload)");
+				handshakesForDevice.add(createHandshake(new EphId(payload), scanResult, power));
 			} else {
-				if (scanResultMap.get(scanResult.getDevice().getAddress()).size() == 0) {
+				if (handshakesForDevice.isEmpty()) {
 					gattConnectionThread.addTask(new GattConnectionTask(context, bluetoothDevice, scanResult,
 							(ephId, device) -> {
 								connectedEphIdMap.put(device.getAddress(), ephId);
+								Logger.i(TAG, "handshake with " + device.getAddress() + " (gatt connection)");
 							}));
 				}
-				scanResultMap.get(scanResult.getDevice().getAddress())
-						.add(new Handshake(-1, System.currentTimeMillis(), null, power, scanResult.getRssi(),
-								BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
-								scanResult.getTimestampNanos()));
+				handshakesForDevice.add(createHandshake(null, scanResult, power));
 			}
-		} catch (Throwable t) {
-			Logger.e(TAG, t);
+		} catch (Exception e) {
+			Logger.e(TAG, e);
 		}
+	}
+
+	private Handshake createHandshake(EphId ephId, ScanResult scanResult, int power) {
+		return new Handshake(-1, System.currentTimeMillis(), ephId, power, scanResult.getRssi(),
+				BleCompat.getPrimaryPhy(scanResult), BleCompat.getSecondaryPhy(scanResult),
+				scanResult.getTimestampNanos());
 	}
 
 	public synchronized void stopScan() {
@@ -180,13 +185,16 @@ public class BleClient {
 
 		Database database = new Database(context);
 		for (Map.Entry<String, List<Handshake>> entry : scanResultMap.entrySet()) {
-			if (connectedEphIdMap.containsKey(entry.getKey())) {
-				for (Handshake handshake : scanResultMap.get(entry.getKey())) {
-					handshake.setEphId(connectedEphIdMap.get(entry.getKey()));
+			String device = entry.getKey();
+			List<Handshake> handshakes = scanResultMap.get(device);
+			if (connectedEphIdMap.containsKey(device)) {
+				EphId ephId = connectedEphIdMap.get(device);
+				for (Handshake handshake : handshakes) {
+					handshake.setEphId(ephId);
 					database.addHandshake(context, handshake);
 				}
 			} else {
-				for (Handshake handshake : scanResultMap.get(entry.getKey())) {
+				for (Handshake handshake : handshakes) {
 					if (handshake.getEphId() != null) {
 						database.addHandshake(context, handshake);
 					}
