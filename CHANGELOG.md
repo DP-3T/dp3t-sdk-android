@@ -1,6 +1,6 @@
 # Changelog for DP3T-SDK Android
 
-## Latest changes
+## Version 0.1.9 (27.4.2020)
 
 - add log entry for every handshake (ephId) received
 - use timestamp instead of DayDate to report key to backend
