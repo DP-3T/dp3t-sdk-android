@@ -14,15 +14,14 @@ public class Handshake {
 	private EphId ephId;
 	private int txPowerLevel;
 	private int rssi;
-
 	private String primaryPhy;
 	private String secondaryPhy;
 	private long timestampNanos;
 
-	public Handshake(int id, long timstamp, EphId ephId, int txPowerLevel, int rssi, String primaryPhy, String secondaryPhy,
+	public Handshake(int id, long timestamp, EphId ephId, int txPowerLevel, int rssi, String primaryPhy, String secondaryPhy,
 			long timestampNanos) {
 		this.id = id;
-		this.timestamp = timstamp;
+		this.timestamp = timestamp;
 		this.ephId = ephId;
 		this.txPowerLevel = txPowerLevel;
 		this.rssi = rssi;
