@@ -59,7 +59,7 @@ public class DP3T {
 			appConfigManager.setDevDiscoveryModeEnabled(enableDevDiscoveryMode);
 			appConfigManager.triggerLoad();
 
-			executeInit(context);
+			executeInit(context, signaturePublicKey);
 		}
 	}
 
@@ -69,14 +69,16 @@ public class DP3T {
 			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 			appConfigManager.setManualApplicationInfo(applicationInfo);
 
-			executeInit(context);
+			executeInit(context, signaturePublicKey);
 		}
 	}
 
-	private static void executeInit(Context context) {
+	private static void executeInit(Context context, PublicKey signaturePublicKey) {
 		CryptoModule.getInstance(context).init();
 
 		new Database(context).removeOldData();
+
+		SyncWorker.setBucketSignaturePublicKey(signaturePublicKey);
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		boolean advertising = appConfigManager.isAdvertisingEnabled();
