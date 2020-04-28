@@ -6,15 +6,21 @@
 package org.dpppt.android.sdk.internal;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteException;
 import androidx.annotation.NonNull;
 import androidx.work.*;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import org.dpppt.android.sdk.internal.backend.BackendBucketRepository;
-import org.dpppt.android.sdk.internal.backend.ResponseException;
+import com.google.protobuf.InvalidProtocolBufferException;
+
+import org.dpppt.android.sdk.TracingStatus.ErrorState;
 import org.dpppt.android.sdk.backend.models.ApplicationInfo;
+import org.dpppt.android.sdk.internal.backend.BackendBucketRepository;
+import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
+import org.dpppt.android.sdk.internal.backend.StatusCodeException;
+import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.backend.proto.Exposed;
 import org.dpppt.android.sdk.internal.database.Database;
 import org.dpppt.android.sdk.internal.logger.Logger;
@@ -59,18 +65,40 @@ public class SyncWorker extends Worker {
 
 		try {
 			doSync(context);
-			Logger.i(TAG, "synced");
-			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
-		} catch (IOException | ResponseException e) {
-			Logger.e(TAG, e);
-			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(false);
+		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SQLiteException e) {
 			return Result.retry();
 		}
 
 		return Result.success();
 	}
 
-	public static void doSync(Context context) throws IOException, ResponseException {
+	public static void doSync(Context context) throws IOException, StatusCodeException, ServerTimeOffsetException, SQLiteException {
+		try {
+			doSyncInternal(context);
+			Logger.i(TAG, "synced");
+			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
+			SyncErrorState.getInstance().setSyncError(null);
+			BroadcastHelper.sendErrorUpdateBroadcast(context);
+		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SQLiteException e) {
+			Logger.e(TAG, e);
+			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(false);
+			ErrorState syncError;
+			if (e instanceof ServerTimeOffsetException) {
+				syncError = ErrorState.SYNC_ERROR_TIMING;
+			} else if (e instanceof StatusCodeException || e instanceof InvalidProtocolBufferException) {
+				syncError = ErrorState.SYNC_ERROR_SERVER;
+			} else if (e instanceof SQLiteException) {
+				syncError = ErrorState.SYNC_ERROR_DATABASE;
+			} else {
+				syncError = ErrorState.SYNC_ERROR_NETWORK;
+			}
+			SyncErrorState.getInstance().setSyncError(syncError);
+			BroadcastHelper.sendErrorUpdateBroadcast(context);
+			throw e;
+		}
+	}
+
+	private static void doSyncInternal(Context context) throws IOException, StatusCodeException, ServerTimeOffsetException {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.updateFromDiscoverySynchronous();
 		ApplicationInfo appConfig = appConfigManager.getAppConfig();
@@ -111,8 +139,6 @@ public class SyncWorker extends Worker {
 		database.removeOldKnownCases();
 
 		appConfigManager.setLastSyncDate(System.currentTimeMillis());
-
-		BroadcastHelper.sendUpdateBroadcast(context);
 	}
 
 }

@@ -1,3 +1,8 @@
+/*
+ * Created by Ubique Innovation AG
+ * https://www.ubique.ch
+ * Copyright (c) 2020. All rights reserved.
+ */
 package org.dpppt.android.sdk.internal;
 
 import android.Manifest;
@@ -14,10 +19,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
+import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.gatt.BluetoothServiceStatus;
+import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.LocationServiceUtil;
 
 public class ErrorHelper {
+
+	private static final String TAG = "ErrorHelper";
 
 	public static Collection<ErrorState> checkTracingErrorStatus(Context context) {
 		Set<ErrorState> errors = new HashSet<>();
@@ -49,7 +58,12 @@ public class ErrorHelper {
 		}
 
 		if (!AppConfigManager.getInstance(context).getLastSyncNetworkSuccess()) {
-			errors.add(ErrorState.NETWORK_ERROR_WHILE_SYNCING);
+			ErrorState syncError = SyncErrorState.getInstance().getSyncError();
+			if (syncError == null) {
+				Logger.w(TAG, "lost sync error state");
+				syncError = ErrorState.SYNC_ERROR_NETWORK;
+			}
+			errors.add(syncError);
 		}
 
 		if (!errors.contains(ErrorState.BLE_DISABLED)) {
