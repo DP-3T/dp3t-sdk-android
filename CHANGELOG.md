@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Latest
+
+- Change exposure logic to count all exposure windows per day (breaking database change, needs reinstall)
+
 ## Version 0.1.10 (28.4.2020)
 
 - improved error handling for sync requests

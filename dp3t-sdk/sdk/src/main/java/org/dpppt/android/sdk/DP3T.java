@@ -29,7 +29,7 @@ import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.database.Database;
-import org.dpppt.android.sdk.internal.database.models.MatchedContact;
+import org.dpppt.android.sdk.internal.database.models.ExposureDay;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.DayDate;
 import org.dpppt.android.sdk.internal.util.ProcessUtil;
@@ -126,11 +126,11 @@ public class DP3T {
 		Database database = new Database(context);
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		Collection<TracingStatus.ErrorState> errorStates = ErrorHelper.checkTracingErrorStatus(context);
-		List<MatchedContact> matchedContacts = database.getMatchedContacts();
+		List<ExposureDay> exposureDays = database.getExposureDays();
 		InfectionStatus infectionStatus;
 		if (appConfigManager.getIAmInfected()) {
 			infectionStatus = InfectionStatus.INFECTED;
-		} else if (matchedContacts.size() > 0) {
+		} else if (exposureDays.size() > 0) {
 			infectionStatus = InfectionStatus.EXPOSED;
 		} else {
 			infectionStatus = InfectionStatus.HEALTHY;
@@ -141,7 +141,7 @@ public class DP3T {
 				appConfigManager.isReceivingEnabled(),
 				appConfigManager.getLastSyncDate(),
 				infectionStatus,
-				matchedContacts,
+				exposureDays,
 				errorStates
 		);
 	}

@@ -1,5 +1,7 @@
 package org.dpppt.android.sdk.internal.crypto;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,7 +12,7 @@ import org.dpppt.android.sdk.internal.database.models.Handshake;
 
 public class ContactsFactory {
 
-	public static final int NUMBER_OF_WINDOWS_FOR_EXPOSURE = 10;
+	public static final int TRIGGER_THRESHOLD = 15;
 
 	private static final long WINDOW_DURATION = 60 * 1000l;
 
@@ -42,18 +44,18 @@ public class ContactsFactory {
 				}
 			}
 
-			Double epochMean = mean(handshakes, (h) -> true);
+			Double epochMean = mean(handshakeList, (h) -> true);
 			if (epochMean == null) {
 				continue;
 			}
 
 			int contactCounter = 0;
 
-			long epochStartTime = CryptoModule.getEpochStart(handshakeList.get(0).getTimestamp());
+			long startTime = min(handshakeList, (h) -> h.getTimestamp());
 			for (long offset = 0; offset < CryptoModule.MILLISECONDS_PER_EPOCH; offset += WINDOW_DURATION) {
-				long windowStart = epochStartTime + offset;
-				long windowEnd = epochStartTime + offset + WINDOW_DURATION;
-				Double windowMean = mean(handshakes, (h) -> h.getTimestamp() >= windowStart && h.getTimestamp() < windowEnd);
+				long windowStart = startTime + offset;
+				long windowEnd = startTime + offset + WINDOW_DURATION;
+				Double windowMean = mean(handshakeList, (h) -> h.getTimestamp() >= windowStart && h.getTimestamp() < windowEnd);
 
 				if (windowMean != null && windowMean / epochMean > EVENT_THRESHOLD && windowMean > CONTACT_RSSI_THRESHOLD) {
 					contactCounter++;
@@ -88,8 +90,24 @@ public class ContactsFactory {
 		}
 	}
 
+	private static <T> Long min(List<T> values, ToLongConverter<T> converter) {
+		Long min = null;
+		for (T val : values) {
+			if (min == null || converter.toLong(val) < min) {
+				min = converter.toLong(val);
+			}
+		}
+		return min;
+	}
+
 	private interface Condition {
 		boolean test(Handshake handshake);
+
+	}
+
+
+	private interface ToLongConverter<T> {
+		long toLong(T value);
 
 	}
 

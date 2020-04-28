@@ -48,7 +48,7 @@ public class MainApplication extends Application {
 	private BroadcastReceiver sdkReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			if (DP3T.getStatus(context).getMatchedContacts().size() > 0 && !PreferencesUtil.isExposedNotificationShown(context)) {
+			if (DP3T.getStatus(context).getExposureDays().size() > 0 && !PreferencesUtil.isExposedNotificationShown(context)) {
 				NotificationUtil.showNotification(context, R.string.push_exposed_title,
 						R.string.push_exposed_text, R.drawable.ic_handshakes);
 				PreferencesUtil.setExposedNotificationShown(context);
