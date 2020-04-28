@@ -1,7 +1,8 @@
 # Changelog for DP3T-SDK Android
 
-## Latest
+## Version 0.1.10 (28.4.2020)
 
+- improved error handling for sync requests
 - add device info to calibration database
 
 ## Version 0.1.9 (27.4.2020)
