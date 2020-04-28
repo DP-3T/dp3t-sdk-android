@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -46,11 +47,11 @@ public class DP3T {
 
 	private static String appId;
 
-	public static void init(Context context, String appId) {
-		init(context, appId, false);
+	public static void init(Context context, String appId, PublicKey signaturePublicKey) {
+		init(context, appId, false, signaturePublicKey);
 	}
 
-	public static void init(Context context, String appId, boolean enableDevDiscoveryMode) {
+	public static void init(Context context, String appId, boolean enableDevDiscoveryMode, PublicKey signaturePublicKey) {
 		if (ProcessUtil.isMainProcess(context)) {
 			DP3T.appId = appId;
 			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
@@ -62,7 +63,7 @@ public class DP3T {
 		}
 	}
 
-	public static void init(Context context, ApplicationInfo applicationInfo) {
+	public static void init(Context context, ApplicationInfo applicationInfo, PublicKey signaturePublicKey) {
 		if (ProcessUtil.isMainProcess(context)) {
 			DP3T.appId = applicationInfo.getAppId();
 			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);

@@ -11,6 +11,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
+import java.security.PublicKey;
+
 import org.dpppt.android.calibration.util.NotificationUtil;
 import org.dpppt.android.calibration.util.PreferencesUtil;
 import org.dpppt.android.sdk.DP3T;
@@ -34,7 +36,8 @@ public class MainApplication extends Application {
 	}
 
 	public static void initDP3T(Context context) {
-		DP3T.init(context, "org.dpppt.demo", true);
+		PublicKey publicKey = null;
+		DP3T.init(context, "org.dpppt.demo", true, publicKey);
 	}
 
 	@Override
