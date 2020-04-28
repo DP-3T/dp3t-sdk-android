@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Latest
+
+- add device info to calibration database
+
 ## Version 0.1.9 (27.4.2020)
 
 - add log entry for every handshake (ephId) received
