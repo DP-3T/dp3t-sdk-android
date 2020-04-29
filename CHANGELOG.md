@@ -1,5 +1,14 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.1.12 (29.4.2020)
+
+- Switch default advertise mode to BALANCED
+
+## Version 0.1.11 (29.4.2020)
+
+- Change exposure logic to count all exposure windows per day (breaking database change, needs reinstall)
+- use attenuation for thresholds instead of rssi
+
 ## Version 0.1.10 (28.4.2020)
 
 - improved error handling for sync requests

@@ -17,8 +17,8 @@ android {
 	defaultConfig {
 		minSdkVersion 23
 		targetSdkVersion 29
-		versionCode 10
-		versionName "0.1.10"
+		versionCode 12
+		versionName "0.1.12"
 		testInstrumentationRunnerArgument 'androidx.benchmark.suppressErrors', 'EMULATOR,LOW-BATTERY,ACTIVITY-MISSING,DEBUGGABLE,UNLOCKED,UNSUSTAINED-ACTIVITY-MISSING'
 		testInstrumentationRunner "androidx.benchmark.junit4.AndroidBenchmarkRunner"
 
@@ -28,7 +28,6 @@ android {
 	}
 
 	defaultPublishConfig "productionRelease"
-	publishNonDefault true
 
 	flavorDimensions "version"
 
@@ -53,23 +52,14 @@ android {
 
 protobuf {
 	protoc {
-		// You still need protoc like in the non-Android case
 		artifact = 'com.google.protobuf:protoc:3.11.4'
-	}
-	plugins {
-		javalite {
-			// The codegen for lite comes as a separate artifact
-			artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
-		}
 	}
 	generateProtoTasks {
 		all().each { task ->
 			task.builtins {
-				// In most cases you don't need the full Java output if you use the lite output.
-				remove java
-			}
-			task.plugins {
-				javalite {}
+				java {
+					option "lite"
+				}
 			}
 		}
 	}
@@ -120,7 +110,7 @@ dependencies {
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
 
 	implementation 'androidx.core:core:1.2.0'
-	implementation "androidx.security:security-crypto:1.0.0-beta01"
+	implementation 'androidx.security:security-crypto:1.0.0-rc01'
 	implementation 'androidx.work:work-runtime:2.3.4'
 
 	implementation 'com.squareup.retrofit2:retrofit:2.6.2'
@@ -128,11 +118,11 @@ dependencies {
 	implementation('com.squareup.retrofit2:converter-protobuf:2.6.2') {
 		exclude group: 'com.google.protobuf', module: 'protobuf-java'
 	}
-	implementation 'com.google.protobuf:protobuf-lite:3.0.1'
+	implementation 'com.google.protobuf:protobuf-javalite:3.11.1'
 
 	testImplementation 'junit:junit:4.12'
 
-	androidTestImplementation "androidx.benchmark:benchmark-junit4:1.0.0"
+	androidTestImplementation 'androidx.benchmark:benchmark-junit4:1.0.0'
 	androidTestImplementation 'androidx.test.ext:junit:1.1.1'
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }

@@ -51,12 +51,6 @@ public class BackendBucketRepository implements Repository {
 			}
 		}
 		if (response.isSuccessful() && response.body() != null) {
-			okhttp3.Response networkResponse = response.raw().networkResponse();
-			Date serverTime = response.headers().getDate("Date");
-			if (networkResponse != null && serverTime != null &&
-					Math.abs(networkResponse.receivedResponseAtMillis() - serverTime.getTime()) > ALLOWED_SERVER_TIME_DIFF) {
-				throw new ServerTimeOffsetException();
-			}
 			return response.body();
 		} else {
 			throw new StatusCodeException(response.raw());

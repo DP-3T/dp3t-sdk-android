@@ -136,7 +136,7 @@ public class SyncWorker extends Worker {
 			appConfigManager.setLastLoadedBatchReleaseTime(batchReleaseTime);
 		}
 
-		database.removeOldKnownCases();
+		database.removeOldData();
 
 		appConfigManager.setLastSyncDate(System.currentTimeMillis());
 	}
