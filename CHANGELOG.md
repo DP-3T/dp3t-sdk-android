@@ -1,6 +1,6 @@
 # Changelog for DP3T-SDK Android
 
-## Latest
+## Version 0.1.11 (29.4.2020)
 
 - Change exposure logic to count all exposure windows per day (breaking database change, needs reinstall)
 - use attenuation for thresholds instead of rssi

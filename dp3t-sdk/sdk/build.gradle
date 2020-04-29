@@ -17,8 +17,8 @@ android {
 	defaultConfig {
 		minSdkVersion 23
 		targetSdkVersion 29
-		versionCode 10
-		versionName "0.1.10"
+		versionCode 11
+		versionName "0.1.11"
 		testInstrumentationRunnerArgument 'androidx.benchmark.suppressErrors', 'EMULATOR,LOW-BATTERY,ACTIVITY-MISSING,DEBUGGABLE,UNLOCKED,UNSUSTAINED-ACTIVITY-MISSING'
 		testInstrumentationRunner "androidx.benchmark.junit4.AndroidBenchmarkRunner"
 
