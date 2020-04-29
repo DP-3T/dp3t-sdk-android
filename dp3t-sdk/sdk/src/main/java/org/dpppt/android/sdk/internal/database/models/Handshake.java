@@ -64,7 +64,7 @@ public class Handshake {
 	}
 
 	public int getAttenuation() {
-		return -Math.abs(txPowerLevel) - rssi;
+		return txPowerLevel - rssi;
 	}
 
 }
