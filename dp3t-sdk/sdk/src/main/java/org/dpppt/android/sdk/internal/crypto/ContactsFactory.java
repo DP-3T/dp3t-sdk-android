@@ -1,7 +1,5 @@
 package org.dpppt.android.sdk.internal.crypto;
 
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,10 +14,8 @@ public class ContactsFactory {
 
 	private static final long WINDOW_DURATION = 60 * 1000l;
 
-	private static final double BAD_RSSI_THRESHOLD = -85.0;
-	//TODO: set correct value
-	private static final double CONTACT_RSSI_THRESHOLD = -80.0;
-	//TODO: set correct value
+	private static final double BAD_ATTENUATION_THRESHOLD = 64.0;
+	private static final double CONTACT_ATTENUATION_THRESHOLD = 54.0;
 	private static final double EVENT_THRESHOLD = 0.8;
 
 	public static List<Contact> mergeHandshakesToContacts(List<Handshake> handshakes) {
@@ -39,31 +35,31 @@ public class ContactsFactory {
 
 			List<Handshake> filteredHandshakes = new ArrayList<>();
 			for (Handshake handshake : handshakeList) {
-				if (handshake.getRssi() > BAD_RSSI_THRESHOLD) {
+				if (handshake.getAttenuation() < BAD_ATTENUATION_THRESHOLD) {
 					filteredHandshakes.add(handshake);
 				}
 			}
 
-			Double epochMean = mean(handshakeList, (h) -> true);
+			Double epochMean = mean(filteredHandshakes, (h) -> true);
 			if (epochMean == null) {
 				continue;
 			}
 
 			int contactCounter = 0;
 
-			long startTime = min(handshakeList, (h) -> h.getTimestamp());
+			long startTime = min(filteredHandshakes, (h) -> h.getTimestamp());
 			for (long offset = 0; offset < CryptoModule.MILLISECONDS_PER_EPOCH; offset += WINDOW_DURATION) {
 				long windowStart = startTime + offset;
 				long windowEnd = startTime + offset + WINDOW_DURATION;
-				Double windowMean = mean(handshakeList, (h) -> h.getTimestamp() >= windowStart && h.getTimestamp() < windowEnd);
+				Double windowMean = mean(filteredHandshakes, (h) -> h.getTimestamp() >= windowStart && h.getTimestamp() < windowEnd);
 
-				if (windowMean != null && windowMean / epochMean > EVENT_THRESHOLD && windowMean > CONTACT_RSSI_THRESHOLD) {
+				if (windowMean != null && windowMean / epochMean > EVENT_THRESHOLD && windowMean < CONTACT_ATTENUATION_THRESHOLD) {
 					contactCounter++;
 				}
 			}
 
 			contacts.add(
-					new Contact(-1, floorTimestampToBucket(handshakeList.get(0).getTimestamp()), handshakeList.get(0).getEphId(),
+					new Contact(-1, floorTimestampToBucket(filteredHandshakes.get(0).getTimestamp()), handshakeList.get(0).getEphId(),
 							contactCounter,
 							0));
 		}
@@ -79,7 +75,7 @@ public class ContactsFactory {
 				if (valueSum == null) {
 					valueSum = 0.0;
 				}
-				valueSum += handshake.getRssi();
+				valueSum += handshake.getAttenuation();
 				count++;
 			}
 		}

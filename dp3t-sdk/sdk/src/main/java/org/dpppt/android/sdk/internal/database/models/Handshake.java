@@ -63,4 +63,8 @@ public class Handshake {
 		return timestampNanos;
 	}
 
+	public int getAttenuation() {
+		return -Math.abs(txPowerLevel) - rssi;
+	}
+
 }
