@@ -3,6 +3,7 @@
 ## Latest
 
 - Change exposure logic to count all exposure windows per day (breaking database change, needs reinstall)
+- use attenuation for thresholds instead of rssi
 
 ## Version 0.1.10 (28.4.2020)
 
