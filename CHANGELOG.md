@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Latest
+
+- Switch default advertise mode to BALANCED
+
 ## Version 0.1.11 (29.4.2020)
 
 - Change exposure logic to count all exposure windows per day (breaking database change, needs reinstall)
