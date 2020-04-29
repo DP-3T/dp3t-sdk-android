@@ -38,7 +38,7 @@ public class FileUploadRepository {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 		File dbFile = new File(context.getCacheDir(),
-				sdf.format(new Date()) + "_" + name + "_" + DeviceID.getID(context) + "_dp3t_callibration_db.sqlite");
+				sdf.format(new Date()) + "_" + name + "_" + DeviceHelper.getDeviceID(context) + "_dp3t_callibration_db.sqlite");
 
 		try {
 			DP3TCalibrationHelper.exportDb(context, new FileOutputStream(dbFile), () ->

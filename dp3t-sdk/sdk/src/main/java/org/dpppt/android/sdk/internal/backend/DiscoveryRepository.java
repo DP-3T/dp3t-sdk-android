@@ -45,7 +45,7 @@ public class DiscoveryRepository implements Repository {
 				if (response.isSuccessful()) {
 					responseCallback.onSuccess(response.body());
 				} else {
-					onFailure(call, new ResponseException(response.raw()));
+					onFailure(call, new StatusCodeException(response.raw()));
 				}
 			}
 

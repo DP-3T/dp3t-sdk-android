@@ -44,7 +44,7 @@ public class BackendReportRepository implements Repository {
 				if (response.isSuccessful()) {
 					responseCallback.onSuccess(null);
 				} else {
-					onFailure(call, new ResponseException(response.raw()));
+					onFailure(call, new StatusCodeException(response.raw()));
 				}
 			}
 

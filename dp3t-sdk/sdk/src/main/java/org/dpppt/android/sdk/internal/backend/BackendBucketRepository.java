@@ -9,6 +9,9 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import java.io.IOException;
+import java.util.Date;
+
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.dpppt.android.sdk.internal.backend.proto.Exposed;
 
@@ -19,6 +22,8 @@ import retrofit2.converter.protobuf.ProtoConverterFactory;
 public class BackendBucketRepository implements Repository {
 
 	public static long BATCH_LENGTH = 2 * 60 * 60 * 1000L;
+
+	private static final long ALLOWED_SERVER_TIME_DIFF = 30 * 1000L;
 
 	private BucketService bucketService;
 
@@ -32,12 +37,29 @@ public class BackendBucketRepository implements Repository {
 		bucketService = bucketRetrofit.create(BucketService.class);
 	}
 
-	public Exposed.ProtoExposedList getExposees(long batchReleaseTime) throws IOException, ResponseException {
-		Response<Exposed.ProtoExposedList> response = bucketService.getExposees(batchReleaseTime).execute();
+	public Exposed.ProtoExposedList getExposees(long batchReleaseTime)
+			throws IOException, StatusCodeException, ServerTimeOffsetException {
+		Response<Exposed.ProtoExposedList> response;
+		try {
+			response = bucketService.getExposees(batchReleaseTime).execute();
+		} catch (RuntimeException re) {
+			if (re.getCause() instanceof InvalidProtocolBufferException) {
+				// unwrap protobuf exception
+				throw (InvalidProtocolBufferException) re.getCause();
+			} else {
+				throw re;
+			}
+		}
 		if (response.isSuccessful() && response.body() != null) {
+			okhttp3.Response networkResponse = response.raw().networkResponse();
+			Date serverTime = response.headers().getDate("Date");
+			if (networkResponse != null && serverTime != null &&
+					Math.abs(networkResponse.receivedResponseAtMillis() - serverTime.getTime()) > ALLOWED_SERVER_TIME_DIFF) {
+				throw new ServerTimeOffsetException();
+			}
 			return response.body();
 		} else {
-			throw new ResponseException(response.raw());
+			throw new StatusCodeException(response.raw());
 		}
 	}
 

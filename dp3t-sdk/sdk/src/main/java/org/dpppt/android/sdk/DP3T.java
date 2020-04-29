@@ -8,6 +8,7 @@ package org.dpppt.android.sdk;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.sqlite.SQLiteException;
 import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
@@ -23,7 +24,8 @@ import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.ErrorHelper;
 import org.dpppt.android.sdk.internal.SyncWorker;
 import org.dpppt.android.sdk.internal.TracingService;
-import org.dpppt.android.sdk.internal.backend.ResponseException;
+import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
+import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
 import org.dpppt.android.sdk.internal.database.Database;
@@ -114,10 +116,8 @@ public class DP3T {
 		checkInit();
 		try {
 			SyncWorker.doSync(context);
-			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
-		} catch (IOException | ResponseException e) {
-			e.printStackTrace();
-			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(false);
+		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SQLiteException ignored) {
+			// has been handled upstream
 		}
 	}
 
