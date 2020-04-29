@@ -40,7 +40,7 @@ public class CryptoModule {
 	public static final int EPHID_LENGTH = 16;
 
 	public static final int NUMBER_OF_DAYS_TO_KEEP_DATA = 21;
-	public static final int NUMBER_OF_DAYS_TO_KEEP_MATCHED_CONTACTS = 10;
+	public static final int NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS = 10;
 	private static final int NUMBER_OF_EPOCHS_PER_DAY = 24 * 4;
 	public static final int MILLISECONDS_PER_EPOCH = 24 * 60 * 60 * 1000 / NUMBER_OF_EPOCHS_PER_DAY;
 	private static final byte[] BROADCAST_KEY = "broadcast key".getBytes();

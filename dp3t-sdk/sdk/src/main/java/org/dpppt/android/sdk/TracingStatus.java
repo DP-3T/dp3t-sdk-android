@@ -8,7 +8,7 @@ package org.dpppt.android.sdk;
 import java.util.Collection;
 import java.util.List;
 
-import org.dpppt.android.sdk.internal.database.models.MatchedContact;
+import org.dpppt.android.sdk.internal.database.models.ExposureDay;
 
 public class TracingStatus {
 
@@ -17,18 +17,18 @@ public class TracingStatus {
 	private boolean receiving;
 	private long lastSyncDate;
 	private InfectionStatus infectionStatus;
-	private List<MatchedContact> matchedContacts;
+	private List<ExposureDay> exposureDays;
 	private Collection<ErrorState> errors;
 
 	public TracingStatus(int numberOfContacts, boolean advertising, boolean receiving,
 			long lastSyncDate,
-			InfectionStatus infectionStatus, List<MatchedContact> matchedContacts, Collection<ErrorState> errors) {
+			InfectionStatus infectionStatus, List<ExposureDay> exposureDays, Collection<ErrorState> errors) {
 		this.numberOfContacts = numberOfContacts;
 		this.advertising = advertising;
 		this.receiving = receiving;
 		this.lastSyncDate = lastSyncDate;
 		this.infectionStatus = infectionStatus;
-		this.matchedContacts = matchedContacts;
+		this.exposureDays = exposureDays;
 		this.errors = errors;
 	}
 
@@ -52,8 +52,8 @@ public class TracingStatus {
 		return infectionStatus;
 	}
 
-	public List<MatchedContact> getMatchedContacts() {
-		return matchedContacts;
+	public List<ExposureDay> getExposureDays() {
+		return exposureDays;
 	}
 
 	public Collection<ErrorState> getErrors() {
