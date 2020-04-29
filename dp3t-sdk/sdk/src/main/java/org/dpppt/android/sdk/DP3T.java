@@ -71,6 +71,8 @@ public class DP3T {
 	private static void executeInit(Context context) {
 		CryptoModule.getInstance(context).init();
 
+		new Database(context).removeOldData();
+
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		boolean advertising = appConfigManager.isAdvertisingEnabled();
 		boolean receiving = appConfigManager.isReceivingEnabled();
