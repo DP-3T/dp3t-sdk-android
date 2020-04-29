@@ -3,7 +3,6 @@
  * https://www.ubique.ch
  * Copyright (c) 2020. All rights reserved.
  */
-
 package org.dpppt.android.sdk.internal.util;
 
 import java.text.ParseException;
@@ -52,6 +51,20 @@ public class DayDate {
 
 	public long getStartOfDayTimestamp() {
 		return timestampRepresentation;
+	}
+
+	public long getStartOfDay(TimeZone timeZone) {
+		Calendar cal_utc = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+		cal_utc.setTimeInMillis(timestampRepresentation);
+		Calendar cal_timezone = new GregorianCalendar(timeZone);
+		cal_timezone.set(Calendar.YEAR, cal_utc.get(Calendar.YEAR));
+		cal_timezone.set(Calendar.MONTH, cal_utc.get(Calendar.MONTH));
+		cal_timezone.set(Calendar.DAY_OF_MONTH, cal_utc.get(Calendar.DAY_OF_MONTH));
+		cal_timezone.set(Calendar.HOUR_OF_DAY, 0);
+		cal_timezone.set(Calendar.MINUTE, 0);
+		cal_timezone.set(Calendar.SECOND, 0);
+		cal_timezone.set(Calendar.MILLISECOND, 0);
+		return cal_timezone.getTimeInMillis();
 	}
 
 	public boolean isBefore(DayDate other) {
