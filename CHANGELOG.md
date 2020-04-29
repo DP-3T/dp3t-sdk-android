@@ -1,6 +1,6 @@
 # Changelog for DP3T-SDK Android
 
-## Latest
+## Version 0.1.12 (29.4.2020)
 
 - Switch default advertise mode to BALANCED
 
