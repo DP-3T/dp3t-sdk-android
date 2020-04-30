@@ -10,7 +10,7 @@ import okhttp3.Response;
 
 public class TimingVerificationInterceptor implements Interceptor {
 
-	private static final long ALLOWED_SERVER_TIME_DIFF = 30 * 1000L;
+	private static final long ALLOWED_SERVER_TIME_DIFF = 60 * 1000L;
 
 	@NonNull
 	@Override
@@ -19,8 +19,16 @@ public class TimingVerificationInterceptor implements Interceptor {
 
 		Response networkResponse = response.networkResponse();
 		Date serverTime = response.headers().getDate("Date");
-		if (networkResponse != null && serverTime != null &&
-				Math.abs(networkResponse.receivedResponseAtMillis() - serverTime.getTime()) > ALLOWED_SERVER_TIME_DIFF) {
+
+		if (serverTime == null || networkResponse == null) {
+			return response;
+		}
+
+		String ageString = response.header("Age");
+		long age = ageString != null ? Long.parseLong(ageString) : 0;
+		long liveServerTime = serverTime.getTime() + age;
+
+		if (Math.abs(networkResponse.receivedResponseAtMillis() - liveServerTime) > ALLOWED_SERVER_TIME_DIFF) {
 			throw new ServerTimeOffsetException();
 		}
 
