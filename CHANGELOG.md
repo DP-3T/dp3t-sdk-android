@@ -1,6 +1,6 @@
 # Changelog for DP3T-SDK Android
 
-## Latest
+## Version 0.1.15 (30.4.2020)
 
 - stop tracing after reporting positive
 - make contact logic parameters configurable
