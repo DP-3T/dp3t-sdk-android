@@ -1,6 +1,6 @@
 # Changelog for DP3T-SDK Android
 
-## Latest
+## Version 0.1.16 (30.4.2020)
 
 - provide a public key to authenticate bucket response
 
