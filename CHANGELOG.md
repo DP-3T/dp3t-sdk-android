@@ -2,6 +2,7 @@
 
 ## Latest
 
+- stop tracing after reporting positive
 - make contact logic parameters configurable
 
 ## Version 0.1.14 (29.4.2020)
