@@ -21,6 +21,8 @@ import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.ProcessUtil;
 import org.dpppt.android.sdk.util.SignatureUtil;
 
+import okhttp3.CertificatePinner;
+
 public class MainApplication extends Application {
 
 	@Override
@@ -42,6 +44,11 @@ public class MainApplication extends Application {
 						"RZ0FFSndKMkErS2taR0p6QlMzM3dEOUUyaEI1K3VNYgpZcitNU2pOUGhmYzR6Q2w2amdSWkFWVHBKbE" +
 						"0wSmI4RERqcDNRUDZhK2VEK1I1SFYyNzhROVN0SUhnPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t");
 		DP3T.init(context, "org.dpppt.demo", true, publicKey);
+
+		CertificatePinner certificatePinner = new CertificatePinner.Builder()
+				.add("demo.dpppt.org", "sha256/YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=")
+				.build();
+		DP3T.setCertificatePinner(certificatePinner);
 	}
 
 	@Override
