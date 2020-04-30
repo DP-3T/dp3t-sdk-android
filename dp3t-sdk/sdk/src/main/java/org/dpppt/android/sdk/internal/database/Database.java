@@ -9,7 +9,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 import androidx.annotation.NonNull;
 
 import java.io.IOException;
@@ -20,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.dpppt.android.sdk.BuildConfig;
+import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.crypto.ContactsFactory;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
@@ -72,6 +72,7 @@ public class Database {
 				groupedByDay.get(date).add(contact);
 			}
 
+			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 			DayDate maxAgeForExposureDay = new DayDate().subtractDays(CryptoModule.NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS);
 			boolean newExposureDaysAdded = false;
 			for (Map.Entry<DayDate, List<Contact>> dayEntry : groupedByDay.entrySet()) {
@@ -82,7 +83,7 @@ public class Database {
 				for (Contact contact : dayEntry.getValue()) {
 					exposureSumForDay += contact.getWindowCount();
 				}
-				if (exposureSumForDay >= ContactsFactory.TRIGGER_THRESHOLD) {
+				if (exposureSumForDay >= appConfigManager.getNumberOfWindowsForExposure()) {
 					ContentValues exposureDayValues = new ContentValues();
 					exposureDayValues.put(ExposureDays.REPORT_DATE, System.currentTimeMillis());
 					exposureDayValues.put(ExposureDays.EXPOSED_DATE, dayEntry.getKey().getStartOfDayTimestamp());
@@ -183,7 +184,7 @@ public class Database {
 			long currentEpochStart = CryptoModule.getInstance(context).getCurrentEpochStart();
 
 			List<Handshake> handshakes = getHandshakes(currentEpochStart);
-			List<Contact> contacts = ContactsFactory.mergeHandshakesToContacts(handshakes);
+			List<Contact> contacts = ContactsFactory.mergeHandshakesToContacts(context, handshakes);
 			for (Contact contact : contacts) {
 				addContact(contact);
 			}
