@@ -25,7 +25,7 @@ public class TimingVerificationInterceptor implements Interceptor {
 		}
 
 		String ageString = response.header("Age");
-		long age = ageString != null ? Long.parseLong(ageString) : 0;
+		long age = ageString != null ? 1000 * Long.parseLong(ageString) : 0;
 		long liveServerTime = serverTime.getTime() + age;
 
 		if (Math.abs(networkResponse.receivedResponseAtMillis() - liveServerTime) > ALLOWED_SERVER_TIME_DIFF) {
