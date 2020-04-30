@@ -12,6 +12,8 @@ import android.database.sqlite.SQLiteException;
 import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -19,6 +21,7 @@ import java.util.List;
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.backend.models.ApplicationInfo;
 import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
+import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodJson;
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.ErrorHelper;
@@ -34,6 +37,8 @@ import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.DayDate;
 import org.dpppt.android.sdk.internal.util.ProcessUtil;
 
+import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
+
 public class DP3T {
 
 	private static final String TAG = "DP3T Interface";
@@ -42,11 +47,11 @@ public class DP3T {
 
 	private static String appId;
 
-	public static void init(Context context, String appId) {
-		init(context, appId, false);
+	public static void init(Context context, String appId, PublicKey signaturePublicKey) {
+		init(context, appId, false, signaturePublicKey);
 	}
 
-	public static void init(Context context, String appId, boolean enableDevDiscoveryMode) {
+	public static void init(Context context, String appId, boolean enableDevDiscoveryMode, PublicKey signaturePublicKey) {
 		if (ProcessUtil.isMainProcess(context)) {
 			DP3T.appId = appId;
 			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
@@ -54,24 +59,26 @@ public class DP3T {
 			appConfigManager.setDevDiscoveryModeEnabled(enableDevDiscoveryMode);
 			appConfigManager.triggerLoad();
 
-			executeInit(context);
+			executeInit(context, signaturePublicKey);
 		}
 	}
 
-	public static void init(Context context, ApplicationInfo applicationInfo) {
+	public static void init(Context context, ApplicationInfo applicationInfo, PublicKey signaturePublicKey) {
 		if (ProcessUtil.isMainProcess(context)) {
 			DP3T.appId = applicationInfo.getAppId();
 			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 			appConfigManager.setManualApplicationInfo(applicationInfo);
 
-			executeInit(context);
+			executeInit(context, signaturePublicKey);
 		}
 	}
 
-	private static void executeInit(Context context) {
+	private static void executeInit(Context context, PublicKey signaturePublicKey) {
 		CryptoModule.getInstance(context).init();
 
 		new Database(context).removeOldData();
+
+		SyncWorker.setBucketSignaturePublicKey(signaturePublicKey);
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		boolean advertising = appConfigManager.isAdvertisingEnabled();
@@ -176,6 +183,21 @@ public class DP3T {
 			callback.onError(e);
 			Logger.e(TAG, e);
 		}
+	}
+
+	public static void sendFakeInfectedRequest(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod)
+			throws NoSuchAlgorithmException, IOException {
+		checkInit();
+
+		DayDate onsetDate = new DayDate(onset.getTime());
+		ExposeeAuthMethodJson jsonAuthMethod = null;
+		if (exposeeAuthMethod instanceof ExposeeAuthMethodJson) {
+			jsonAuthMethod = (ExposeeAuthMethodJson) exposeeAuthMethod;
+		}
+		ExposeeRequest exposeeRequest = new ExposeeRequest(toBase64(CryptoModule.getInstance(context).getNewRandomKey()),
+				onsetDate.getStartOfDayTimestamp(), 1, jsonAuthMethod);
+		AppConfigManager.getInstance(context).getBackendReportRepository(context)
+				.addExposeeSync(exposeeRequest, exposeeAuthMethod);
 	}
 
 	public static void stop(Context context) {

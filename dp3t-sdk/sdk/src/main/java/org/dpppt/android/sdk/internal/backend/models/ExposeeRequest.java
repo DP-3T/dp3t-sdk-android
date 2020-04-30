@@ -12,11 +12,17 @@ public class ExposeeRequest {
 	private String key;
 	private long keyDate;
 	private ExposeeAuthMethodJson authData;
+	private int fake;
 
 	public ExposeeRequest(String key, long keyDate, ExposeeAuthMethodJson authData) {
+		this(key, keyDate, 0, authData);
+	}
+
+	public ExposeeRequest(String key, long keyDate, int fake, ExposeeAuthMethodJson authData) {
 		this.key = key;
 		this.keyDate = keyDate;
 		this.authData = authData;
+		this.fake = fake;
 	}
 
 	public String getKey() {
@@ -25,6 +31,10 @@ public class ExposeeRequest {
 
 	public long getKeyDate() {
 		return keyDate;
+	}
+
+	public int getFake() {
+		return fake;
 	}
 
 	public ExposeeAuthMethodJson getAuthData() {

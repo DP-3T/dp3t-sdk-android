@@ -11,12 +11,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
+import java.security.PublicKey;
+
 import org.dpppt.android.calibration.util.NotificationUtil;
 import org.dpppt.android.calibration.util.PreferencesUtil;
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.internal.logger.LogLevel;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.ProcessUtil;
+import org.dpppt.android.sdk.util.SignatureUtil;
 
 public class MainApplication extends Application {
 
@@ -34,7 +37,11 @@ public class MainApplication extends Application {
 	}
 
 	public static void initDP3T(Context context) {
-		DP3T.init(context, "org.dpppt.demo", true);
+		PublicKey publicKey = SignatureUtil.getPublicKeyFromBase64OrThrow(
+				"LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0R" +
+						"RZ0FFSndKMkErS2taR0p6QlMzM3dEOUUyaEI1K3VNYgpZcitNU2pOUGhmYzR6Q2w2amdSWkFWVHBKbE" +
+						"0wSmI4RERqcDNRUDZhK2VEK1I1SFYyNzhROVN0SUhnPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t");
+		DP3T.init(context, "org.dpppt.demo", true, publicKey);
 	}
 
 	@Override
