@@ -83,7 +83,7 @@ public class Database {
 				for (Contact contact : dayEntry.getValue()) {
 					exposureSumForDay += contact.getWindowCount();
 				}
-				if (exposureSumForDay >= appConfigManager.getContactTriggerThreshold()) {
+				if (exposureSumForDay >= appConfigManager.getNumberOfWindowsForExposure()) {
 					ContentValues exposureDayValues = new ContentValues();
 					exposureDayValues.put(ExposureDays.REPORT_DATE, System.currentTimeMillis());
 					exposureDayValues.put(ExposureDays.EXPOSED_DATE, dayEntry.getKey().getStartOfDayTimestamp());

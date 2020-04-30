@@ -191,14 +191,14 @@ public class DP3T {
 	}
 
 	public static void setMatchingParameters(Context context, float badAttenuationThreshold, float contactAttenuationThreshold,
-			float contactEventThreshold, int contactTriggerThreshold) {
+			float contactEventThreshold, int numberOfWindowsForExposure) {
 		checkInit();
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.setBadAttenuationThreshold(badAttenuationThreshold);
 		appConfigManager.setContactAttenuationThreshold(contactAttenuationThreshold);
 		appConfigManager.setContactEventThreshold(contactEventThreshold);
-		appConfigManager.setContactTriggerThreshold(contactTriggerThreshold);
+		appConfigManager.setNumberOfWindowsForExposure(numberOfWindowsForExposure);
 	}
 
 	public static IntentFilter getUpdateIntentFilter() {

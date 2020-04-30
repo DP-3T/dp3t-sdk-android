@@ -37,7 +37,7 @@ public class AppConfigManager {
 	private static final BluetoothAdvertiseMode DEFAULT_BLUETOOTH_ADVERTISE_MODE = BluetoothAdvertiseMode.ADVERTISE_MODE_BALANCED;
 	private static final boolean DEFAULT_BLUETOOTH_USE_SCAN_RESPONSE_ENABLED = false;
 
-	private static final int DEFAULT_CONTACT_TRIGGER_THRESHOLD = 15;
+	private static final int DEFAULT_NUMBER_OF_WINDOWS_FOR_EXPOSURE = 15;
 	private static final float DEFAULT_BAD_ATTENUATION_THRESHOLD = 64.0f;
 	private static final float DEFAULT_CONTACT_ATTENUATION_THRESHOLD = 54.0f;
 	private static final float DEFAULT_CONTACT_EVENT_THRESHOLD = 0.8f;
@@ -60,7 +60,7 @@ public class AppConfigManager {
 	private static final String PREF_BAD_ATTENUATION_THRESHOLD = "bad_attenuation_threshold";
 	private static final String PREF_CONTACT_EVENT_THRESHOLD = "contact_event_threshold";
 	private static final String PREF_CONTACT_ATTENUATION_THRESHOLD = "contact_attenuation_threshold";
-	private static final String PREF_CONTACT_TRIGGER_THRESHOLD = "contact_trigger_threshold";
+	private static final String PREF_NUMBER_OF_WINDOWS_FOR_EXPOSURE = "contact_trigger_threshold";
 
 	private String appId;
 	private boolean useDiscovery;
@@ -265,12 +265,12 @@ public class AppConfigManager {
 		sharedPrefs.edit().putFloat(PREF_CONTACT_ATTENUATION_THRESHOLD, threshold).apply();
 	}
 
-	public int getContactTriggerThreshold() {
-		return sharedPrefs.getInt(PREF_CONTACT_TRIGGER_THRESHOLD, DEFAULT_CONTACT_TRIGGER_THRESHOLD);
+	public int getNumberOfWindowsForExposure() {
+		return sharedPrefs.getInt(PREF_NUMBER_OF_WINDOWS_FOR_EXPOSURE, DEFAULT_NUMBER_OF_WINDOWS_FOR_EXPOSURE);
 	}
 
-	public void setContactTriggerThreshold(int threshold) {
-		sharedPrefs.edit().putInt(PREF_CONTACT_TRIGGER_THRESHOLD, threshold).apply();
+	public void setNumberOfWindowsForExposure(int threshold) {
+		sharedPrefs.edit().putInt(PREF_NUMBER_OF_WINDOWS_FOR_EXPOSURE, threshold).apply();
 	}
 
 	public void clearPreferences() {
