@@ -182,24 +182,19 @@ public class DP3T {
 		}
 	}
 
-	public static void sendFakeInfectedRequest(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod,
-			ResponseCallback<Void> callback) {
+	public static void sendFakeInfectedRequest(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod)
+			throws NoSuchAlgorithmException, IOException {
 		checkInit();
 
-		try {
-			DayDate onsetDate = new DayDate(onset.getTime());
-			ExposeeAuthMethodJson jsonAuthMethod = null;
-			if (exposeeAuthMethod instanceof ExposeeAuthMethodJson) {
-				jsonAuthMethod = (ExposeeAuthMethodJson) exposeeAuthMethod;
-			}
-			ExposeeRequest exposeeRequest = new ExposeeRequest(toBase64(CryptoModule.getInstance(context).getNewRandomKey()),
-					onsetDate.getStartOfDayTimestamp(), 1, jsonAuthMethod);
-			AppConfigManager.getInstance(context).getBackendReportRepository(context)
-					.addExposee(exposeeRequest, exposeeAuthMethod, callback);
-		} catch (IllegalStateException | NoSuchAlgorithmException e) {
-			callback.onError(e);
-			Logger.e(TAG, e);
+		DayDate onsetDate = new DayDate(onset.getTime());
+		ExposeeAuthMethodJson jsonAuthMethod = null;
+		if (exposeeAuthMethod instanceof ExposeeAuthMethodJson) {
+			jsonAuthMethod = (ExposeeAuthMethodJson) exposeeAuthMethod;
 		}
+		ExposeeRequest exposeeRequest = new ExposeeRequest(toBase64(CryptoModule.getInstance(context).getNewRandomKey()),
+				onsetDate.getStartOfDayTimestamp(), 1, jsonAuthMethod);
+		AppConfigManager.getInstance(context).getBackendReportRepository(context)
+				.addExposeeSync(exposeeRequest, exposeeAuthMethod);
 	}
 
 	public static void stop(Context context) {
