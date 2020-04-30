@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Latest
+
+- make contact logic parameters configurable
+
 ## Version 0.1.14 (29.4.2020)
 
 - fix attenuation calculation

@@ -190,6 +190,17 @@ public class DP3T {
 		BroadcastHelper.sendUpdateBroadcast(context);
 	}
 
+	public static void setMatchingParameters(Context context, float badAttenuationThreshold, float contactAttenuationThreshold,
+			float contactEventThreshold, int contactTriggerThreshold) {
+		checkInit();
+
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		appConfigManager.setBadAttenuationThreshold(badAttenuationThreshold);
+		appConfigManager.setContactAttenuationThreshold(contactAttenuationThreshold);
+		appConfigManager.setContactEventThreshold(contactEventThreshold);
+		appConfigManager.setContactTriggerThreshold(contactTriggerThreshold);
+	}
+
 	public static IntentFilter getUpdateIntentFilter() {
 		return new IntentFilter(DP3T.UPDATE_INTENT_ACTION);
 	}
