@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.work.*;
 
 import java.io.IOException;
+import java.security.PublicKey;
 import java.util.concurrent.TimeUnit;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -25,12 +26,16 @@ import org.dpppt.android.sdk.internal.backend.proto.Exposed;
 import org.dpppt.android.sdk.internal.database.Database;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
+import io.jsonwebtoken.security.SignatureException;
+
 import static org.dpppt.android.sdk.internal.backend.BackendBucketRepository.BATCH_LENGTH;
 
 public class SyncWorker extends Worker {
 
 	private static final String TAG = "SyncWorker";
 	private static final String WORK_TAG = "org.dpppt.android.sdk.internal.SyncWorker";
+
+	private static PublicKey bucketSignaturePublicKey;
 
 	public static void startSyncWorker(Context context) {
 		Constraints constraints = new Constraints.Builder()
@@ -54,6 +59,10 @@ public class SyncWorker extends Worker {
 		super(context, workerParams);
 	}
 
+	public static void setBucketSignaturePublicKey(PublicKey publicKey) {
+		bucketSignaturePublicKey = publicKey;
+	}
+
 	@NonNull
 	@Override
 	public Result doWork() {
@@ -65,7 +74,7 @@ public class SyncWorker extends Worker {
 
 		try {
 			doSync(context);
-		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SQLiteException e) {
+		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SignatureException | SQLiteException e) {
 			return Result.retry();
 		}
 
@@ -79,12 +88,14 @@ public class SyncWorker extends Worker {
 			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
 			SyncErrorState.getInstance().setSyncError(null);
 			BroadcastHelper.sendErrorUpdateBroadcast(context);
-		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SQLiteException e) {
+		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SignatureException | SQLiteException e) {
 			Logger.e(TAG, e);
 			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(false);
 			ErrorState syncError;
 			if (e instanceof ServerTimeOffsetException) {
 				syncError = ErrorState.SYNC_ERROR_TIMING;
+			} else if (e instanceof SignatureException) {
+				syncError = ErrorState.SYNC_ERROR_SIGNATURE;
 			} else if (e instanceof StatusCodeException || e instanceof InvalidProtocolBufferException) {
 				syncError = ErrorState.SYNC_ERROR_SERVER;
 			} else if (e instanceof SQLiteException) {
@@ -116,7 +127,7 @@ public class SyncWorker extends Worker {
 		}
 
 		BackendBucketRepository backendBucketRepository =
-				new BackendBucketRepository(context, appConfig.getBucketBaseUrl());
+				new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
 
 		for (long batchReleaseTime = nextBatchReleaseTime;
 			 batchReleaseTime < System.currentTimeMillis();

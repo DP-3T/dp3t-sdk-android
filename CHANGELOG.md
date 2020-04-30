@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Latest
+
+- provide a public key to authenticate bucket response
+
 ## Version 0.1.15 (30.4.2020)
 
 - stop tracing after reporting positive
