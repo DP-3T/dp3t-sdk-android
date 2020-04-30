@@ -163,6 +163,7 @@ public class DP3T {
 						public void onSuccess(Void response) {
 							appConfigManager.setIAmInfected(true);
 							CryptoModule.getInstance(context).reset();
+							stop(context);
 							callback.onSuccess(response);
 						}
 
@@ -188,6 +189,17 @@ public class DP3T {
 		context.startService(intent);
 		SyncWorker.stopSyncWorker(context);
 		BroadcastHelper.sendUpdateBroadcast(context);
+	}
+
+	public static void setMatchingParameters(Context context, float badAttenuationThreshold, float contactAttenuationThreshold,
+			float contactEventThreshold, int numberOfWindowsForExposure) {
+		checkInit();
+
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		appConfigManager.setBadAttenuationThreshold(badAttenuationThreshold);
+		appConfigManager.setContactAttenuationThreshold(contactAttenuationThreshold);
+		appConfigManager.setContactEventThreshold(contactEventThreshold);
+		appConfigManager.setNumberOfWindowsForExposure(numberOfWindowsForExposure);
 	}
 
 	public static IntentFilter getUpdateIntentFilter() {

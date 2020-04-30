@@ -37,6 +37,11 @@ public class AppConfigManager {
 	private static final BluetoothAdvertiseMode DEFAULT_BLUETOOTH_ADVERTISE_MODE = BluetoothAdvertiseMode.ADVERTISE_MODE_BALANCED;
 	private static final boolean DEFAULT_BLUETOOTH_USE_SCAN_RESPONSE_ENABLED = false;
 
+	private static final int DEFAULT_NUMBER_OF_WINDOWS_FOR_EXPOSURE = 15;
+	private static final float DEFAULT_BAD_ATTENUATION_THRESHOLD = 64.0f;
+	private static final float DEFAULT_CONTACT_ATTENUATION_THRESHOLD = 54.0f;
+	private static final float DEFAULT_CONTACT_EVENT_THRESHOLD = 0.8f;
+
 	private static final String PREFS_NAME = "dp3t_sdk_preferences";
 	private static final String PREF_APPLICATION_LIST = "applicationList";
 	private static final String PREF_ADVERTISING_ENABLED = "advertisingEnabled";
@@ -52,6 +57,10 @@ public class AppConfigManager {
 	private static final String PREF_ADVERTISEMENT_POWER_LEVEL = "advertisementPowerLevel";
 	private static final String PREF_ADVERTISEMENT_MODE = "advertisementMode";
 	private static final String PREF_BLUETOOTH_USE_SCAN_RESPONSE = "scanResponseEnabled";
+	private static final String PREF_BAD_ATTENUATION_THRESHOLD = "bad_attenuation_threshold";
+	private static final String PREF_CONTACT_EVENT_THRESHOLD = "contact_event_threshold";
+	private static final String PREF_CONTACT_ATTENUATION_THRESHOLD = "contact_attenuation_threshold";
+	private static final String PREF_NUMBER_OF_WINDOWS_FOR_EXPOSURE = "number_of_windows_for_exposure";
 
 	private String appId;
 	private boolean useDiscovery;
@@ -230,6 +239,38 @@ public class AppConfigManager {
 
 	public void setUseScanResponse(boolean useScanResponse) {
 		sharedPrefs.edit().putBoolean(PREF_BLUETOOTH_USE_SCAN_RESPONSE, useScanResponse).apply();
+	}
+
+	public float getBadAttenuationThreshold() {
+		return sharedPrefs.getFloat(PREF_BAD_ATTENUATION_THRESHOLD, DEFAULT_BAD_ATTENUATION_THRESHOLD);
+	}
+
+	public void setBadAttenuationThreshold(float threshold) {
+		sharedPrefs.edit().putFloat(PREF_BAD_ATTENUATION_THRESHOLD, threshold).apply();
+	}
+
+	public float getContactEventThreshold() {
+		return sharedPrefs.getFloat(PREF_CONTACT_EVENT_THRESHOLD, DEFAULT_CONTACT_EVENT_THRESHOLD);
+	}
+
+	public void setContactEventThreshold(float threshold) {
+		sharedPrefs.edit().putFloat(PREF_CONTACT_EVENT_THRESHOLD, threshold).apply();
+	}
+
+	public float getContactAttenuationThreshold() {
+		return sharedPrefs.getFloat(PREF_CONTACT_ATTENUATION_THRESHOLD, DEFAULT_CONTACT_ATTENUATION_THRESHOLD);
+	}
+
+	public void setContactAttenuationThreshold(float threshold) {
+		sharedPrefs.edit().putFloat(PREF_CONTACT_ATTENUATION_THRESHOLD, threshold).apply();
+	}
+
+	public int getNumberOfWindowsForExposure() {
+		return sharedPrefs.getInt(PREF_NUMBER_OF_WINDOWS_FOR_EXPOSURE, DEFAULT_NUMBER_OF_WINDOWS_FOR_EXPOSURE);
+	}
+
+	public void setNumberOfWindowsForExposure(int threshold) {
+		sharedPrefs.edit().putInt(PREF_NUMBER_OF_WINDOWS_FOR_EXPOSURE, threshold).apply();
 	}
 
 	public void clearPreferences() {

@@ -1,5 +1,10 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.1.15 (30.4.2020)
+
+- stop tracing after reporting positive
+- make contact logic parameters configurable
+
 ## Version 0.1.14 (29.4.2020)
 
 - fix attenuation calculation
