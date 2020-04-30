@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.1.14 (29.4.2020)
+
+- fix attenuation calculation
+
 ## Version 0.1.13 (29.4.2020)
 
 - revert premature dependency update
