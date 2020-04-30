@@ -163,6 +163,7 @@ public class DP3T {
 						public void onSuccess(Void response) {
 							appConfigManager.setIAmInfected(true);
 							CryptoModule.getInstance(context).reset();
+							stop(context);
 							callback.onSuccess(response);
 						}
 
