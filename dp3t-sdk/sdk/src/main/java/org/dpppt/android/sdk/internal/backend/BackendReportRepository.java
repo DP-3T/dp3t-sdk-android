@@ -8,6 +8,8 @@ package org.dpppt.android.sdk.internal.backend;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import java.io.IOException;
+
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodAuthorization;
@@ -53,6 +55,13 @@ public class BackendReportRepository implements Repository {
 				responseCallback.onError(throwable);
 			}
 		});
+	}
+
+	public void addExposeeSync(@NonNull ExposeeRequest exposeeRequest, ExposeeAuthMethod exposeeAuthMethod) throws IOException {
+		String authorizationHeader = exposeeAuthMethod instanceof ExposeeAuthMethodAuthorization
+									 ? ((ExposeeAuthMethodAuthorization) exposeeAuthMethod).getAuthorization()
+									 : null;
+		reportService.addExposee(exposeeRequest, authorizationHeader).execute();
 	}
 
 }

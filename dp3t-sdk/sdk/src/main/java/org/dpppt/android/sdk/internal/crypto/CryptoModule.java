@@ -73,17 +73,20 @@ public class CryptoModule {
 		try {
 			String stringKey = esp.getString(KEY_SK_LIST_JSON, null);
 			if (stringKey != null) return true; //key already exists
-
-			KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA256");
-			SecretKey secretKey = keyGenerator.generateKey();
 			SKList skList = new SKList();
-			skList.add(Pair.create(new DayDate(System.currentTimeMillis()), secretKey.getEncoded()));
+			skList.add(Pair.create(new DayDate(System.currentTimeMillis()), getNewRandomKey()));
 			storeSKList(skList);
 			return true;
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		return false;
+	}
+
+	public byte[] getNewRandomKey() throws NoSuchAlgorithmException {
+		KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA256");
+		SecretKey secretKey = keyGenerator.generateKey();
+		return secretKey.getEncoded();
 	}
 
 	protected SKList getSKList() {

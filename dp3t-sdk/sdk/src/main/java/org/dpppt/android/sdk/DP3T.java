@@ -12,6 +12,7 @@ import android.database.sqlite.SQLiteException;
 import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.List;
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.backend.models.ApplicationInfo;
 import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
+import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodJson;
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.ErrorHelper;
@@ -33,6 +35,8 @@ import org.dpppt.android.sdk.internal.database.models.ExposureDay;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.DayDate;
 import org.dpppt.android.sdk.internal.util.ProcessUtil;
+
+import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
 public class DP3T {
 
@@ -176,6 +180,21 @@ public class DP3T {
 			callback.onError(e);
 			Logger.e(TAG, e);
 		}
+	}
+
+	public static void sendFakeInfectedRequest(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod)
+			throws NoSuchAlgorithmException, IOException {
+		checkInit();
+
+		DayDate onsetDate = new DayDate(onset.getTime());
+		ExposeeAuthMethodJson jsonAuthMethod = null;
+		if (exposeeAuthMethod instanceof ExposeeAuthMethodJson) {
+			jsonAuthMethod = (ExposeeAuthMethodJson) exposeeAuthMethod;
+		}
+		ExposeeRequest exposeeRequest = new ExposeeRequest(toBase64(CryptoModule.getInstance(context).getNewRandomKey()),
+				onsetDate.getStartOfDayTimestamp(), 1, jsonAuthMethod);
+		AppConfigManager.getInstance(context).getBackendReportRepository(context)
+				.addExposeeSync(exposeeRequest, exposeeAuthMethod);
 	}
 
 	public static void stop(Context context) {
