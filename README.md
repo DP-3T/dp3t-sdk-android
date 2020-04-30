@@ -8,11 +8,22 @@ The Decentralised Privacy-Preserving Proximity Tracing (DP-3T) project is an ope
 
 DP-3T is a free-standing effort started at EPFL and ETHZ that produced this protocol and that is implementing it in an open-sourced app and server.
 
-
 ## Introduction
-This is the first implementation of the DP-3T "low bandwidth" protocol. The current implementation does not use the as yet unreleased "Contact Tracing" API of Apple/Google--**and has limitations as a result**. Our "hybrid approach" uses Bluetooth Low Energy (BLE) to exchange `EphID`s. It uses advertisements whenever possible and falls back to GATT Server connections if not possible to transmit/collect an `EphID` this way (e.g., on iOS devices when the app is in background). This approach can result in higher energy consumption and scalability issues and will be replaced by the Apple/Google API.
+This is the first implementation of the DP-3T "low bandwidth" protocol.
+
+## Apple/Google Exposure Notification
+
+Currently, it doesn't use the unreleased "Exposure Notification" solution of Apple/Google--**and has limitations as a result**.
+
+Our "hybrid approach" uses Bluetooth Low Energy (BLE) to exchange `EphID`s. It uses advertisements whenever possible and falls back to GATT Server connections if not possible to transmit/collect an `EphID` this way (e.g., on iOS devices when the app is in background). This approach can result in higher energy consumption and scalability issues and will be replaced by the Apple/Google API.
 
 Our immediate roadmap is: to support the Apple/Google wire protocol, to be forward-compatible, and to support the actual Apple/Google API as soon as it is released to iOS and Android devices.
+
+Current version of Exposure Notification:
+
+* [Exposure Notification Android API v1.2](https://www.blog.google/documents/68/Android_Exposure_Notification_API_documentation_v1.2.pdf)
+* [Exposure Notification Cryptography Specificattion v1.2.1](https://www.blog.google/documents/69/Exposure_Notification_-_Cryptography_Specification_v1.2.1.pdf)
+* [Exposure Notification Bluetooth Specification](https://www.blog.google/documents/70/Exposure_Notification_-_Bluetooth_Specification_v1.2.2.pdf)
 
 ## Repositories
 * Android SDK & Calibration app: [dp3t-sdk-android](https://github.com/DP-3T/dp3t-sdk-android)
