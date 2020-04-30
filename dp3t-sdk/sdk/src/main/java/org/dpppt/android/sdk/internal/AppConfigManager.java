@@ -60,7 +60,7 @@ public class AppConfigManager {
 	private static final String PREF_BAD_ATTENUATION_THRESHOLD = "bad_attenuation_threshold";
 	private static final String PREF_CONTACT_EVENT_THRESHOLD = "contact_event_threshold";
 	private static final String PREF_CONTACT_ATTENUATION_THRESHOLD = "contact_attenuation_threshold";
-	private static final String PREF_NUMBER_OF_WINDOWS_FOR_EXPOSURE = "contact_trigger_threshold";
+	private static final String PREF_NUMBER_OF_WINDOWS_FOR_EXPOSURE = "number_of_windows_for_exposure";
 
 	private String appId;
 	private boolean useDiscovery;
