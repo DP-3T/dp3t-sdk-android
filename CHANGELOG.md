@@ -1,6 +1,6 @@
 # Changelog for DP3T-SDK Android
 
-## Latest
+## Version 0.2.0 (30.4.2020)
 
 - Option to pin TLS certificates of backend endpoints
 
