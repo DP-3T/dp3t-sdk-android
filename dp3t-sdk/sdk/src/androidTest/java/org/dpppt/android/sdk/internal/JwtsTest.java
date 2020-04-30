@@ -7,7 +7,7 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 
 import org.dpppt.android.sdk.internal.util.Base64Util;
-import org.dpppt.android.sdk.internal.util.SignatureUtil;
+import org.dpppt.android.sdk.util.SignatureUtil;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,7 +29,7 @@ public class JwtsTest {
 				"g2YXRnZ1BBeklJcEttTmlQbG4vNWFYK0VZM1VEQldVK1hpN09QbTAxakUxWUE1bHpYY3" +
 				"U1N1hnPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t";
 		byte[] expectedHash = Base64Util.fromBase64("lO7wL0d8Yy0PRiL94hTkkq2DW5LWV9O6/sEcYT2Ggkw=");
-		PublicKey publicKey = SignatureUtil.parsePublicKeyHeader(pubkey64);
+		PublicKey publicKey = SignatureUtil.getPublicKeyFromBase64(pubkey64);
 		byte[] contentHash = SignatureUtil.getVerifiedContentHash(jws, publicKey);
 		Assert.assertArrayEquals(expectedHash, contentHash);
 	}
@@ -45,7 +45,7 @@ public class JwtsTest {
 				"FRWUlLb1pJemowREFRY0RRZ0FFdXZQelFqN0w0MkxldXJhRGIrSEtPTnAvbm1mcQppbG" +
 				"g2YXRnZ1BBeklJcEttTmlQbG4vNWFYK0VZM1VEQldVK1hpN09QbTAxakUxWUE1bHpYY3" +
 				"U1N1hnPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t";
-		PublicKey publicKey = SignatureUtil.parsePublicKeyHeader(pubkey64);
+		PublicKey publicKey = SignatureUtil.getPublicKeyFromBase64(pubkey64);
 		byte[] contentHash = SignatureUtil.getVerifiedContentHash(jws, publicKey);
 		Assert.fail("should have thrown a SignatureException");
 	}

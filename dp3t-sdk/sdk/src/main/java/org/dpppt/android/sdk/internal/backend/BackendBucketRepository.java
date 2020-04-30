@@ -13,6 +13,7 @@ import java.security.PublicKey;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.dpppt.android.sdk.backend.SignatureVerificationInterceptor;
 import org.dpppt.android.sdk.internal.backend.proto.Exposed;
 
 import io.jsonwebtoken.security.SignatureException;

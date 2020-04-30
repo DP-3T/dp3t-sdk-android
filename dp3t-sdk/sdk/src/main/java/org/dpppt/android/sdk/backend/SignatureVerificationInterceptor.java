@@ -1,4 +1,4 @@
-package org.dpppt.android.sdk.internal.backend;
+package org.dpppt.android.sdk.backend;
 
 import androidx.annotation.NonNull;
 
@@ -6,10 +6,9 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
-import org.dpppt.android.sdk.internal.util.SignatureUtil;
+import org.dpppt.android.sdk.util.SignatureUtil;
 
 import io.jsonwebtoken.security.SignatureException;
 import okhttp3.Interceptor;
@@ -38,18 +37,6 @@ public class SignatureVerificationInterceptor implements Interceptor {
 		if (jwsHeader == null) {
 			throw new SignatureException("JWS header not found");
 		}
-
-		// <debugging pk>
-		// TODO: remove this; use field `publicKey` instead
-		PublicKey publicKey = this.publicKey;
-		if (publicKey == null && response.headers().get("x-public-key") != null) {
-			try {
-				publicKey = SignatureUtil.parsePublicKeyHeader(response.headers().get("x-public-key"));
-			} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-				throw new SignatureException("Invalid public key header", e);
-			}
-		}
-		// </debugging pk>
 
 		if (publicKey == null) {
 			throw new SignatureException("Public key not specified");
