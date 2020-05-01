@@ -66,6 +66,7 @@ public class SyncWorker extends Worker {
 	@NonNull
 	@Override
 	public Result doWork() {
+		org.dpppt.android.sdk.internal.logger.Logger.d(TAG, "start SyncWorker");
 		Context context = getApplicationContext();
 
 		long scanInterval = AppConfigManager.getInstance(getApplicationContext()).getScanInterval();
@@ -75,9 +76,10 @@ public class SyncWorker extends Worker {
 		try {
 			doSync(context);
 		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SignatureException | SQLiteException e) {
+			org.dpppt.android.sdk.internal.logger.Logger.d(TAG, "SyncWorker finished with exception " + e.getMessage());
 			return Result.retry();
 		}
-
+		org.dpppt.android.sdk.internal.logger.Logger.d(TAG, "SyncWorker finished with success");
 		return Result.success();
 	}
 
