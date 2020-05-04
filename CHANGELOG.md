@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.2.2 (4.5.2020)
+
+- improved sync signature exception handling
+
 ## Version 0.2.1 (1.5.2020)
 
 - Add logs to sync worker
