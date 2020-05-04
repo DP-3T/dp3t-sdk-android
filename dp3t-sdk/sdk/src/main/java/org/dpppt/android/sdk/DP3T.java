@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.dpppt.android.sdk.backend.ResponseCallback;
+import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.backend.models.ApplicationInfo;
 import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodJson;
@@ -129,7 +130,7 @@ public class DP3T {
 		checkInit();
 		try {
 			SyncWorker.doSync(context);
-		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SQLiteException ignored) {
+		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SQLiteException | SignatureException ignored) {
 			// has been handled upstream
 		}
 	}

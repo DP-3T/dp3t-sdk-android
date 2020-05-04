@@ -16,7 +16,6 @@ import java.util.Arrays;
 
 import org.dpppt.android.sdk.util.SignatureUtil;
 
-import io.jsonwebtoken.security.SignatureException;
 import okhttp3.Interceptor;
 import okhttp3.Response;
 
