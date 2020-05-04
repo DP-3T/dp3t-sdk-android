@@ -12,13 +12,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 
+import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.internal.util.Base64Util;
 import org.dpppt.android.sdk.util.SignatureUtil;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import io.jsonwebtoken.security.SignatureException;
 
 @RunWith(AndroidJUnit4.class)
 public class JwtsTest {

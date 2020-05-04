@@ -18,12 +18,12 @@ import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 
+import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.internal.util.Base64Util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.SignatureException;
 
 public class SignatureUtil {
 
@@ -64,12 +64,16 @@ public class SignatureUtil {
 	}
 
 	public static byte[] getVerifiedContentHash(String jws, PublicKey publicKey) throws SignatureException {
-		Jws<Claims> claimsJws = Jwts.parserBuilder()
-				.setSigningKey(publicKey)
-				.build()
-				.parseClaimsJws(jws);
-		String hash64 = claimsJws.getBody().get(JWS_CLAIM_CONTENT_HASH, String.class);
-		return Base64Util.fromBase64(hash64);
+		try {
+			Jws<Claims> claimsJws = Jwts.parserBuilder()
+					.setSigningKey(publicKey)
+					.build()
+					.parseClaimsJws(jws);
+			String hash64 = claimsJws.getBody().get(JWS_CLAIM_CONTENT_HASH, String.class);
+			return Base64Util.fromBase64(hash64);
+		} catch (io.jsonwebtoken.security.SignatureException e) {
+			throw new SignatureException(e.getMessage(), e);
+		}
 	}
 
 }

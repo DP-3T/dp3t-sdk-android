@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
+import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.backend.models.ApplicationInfo;
 import org.dpppt.android.sdk.internal.backend.BackendBucketRepository;
 import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
@@ -25,8 +26,6 @@ import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.backend.proto.Exposed;
 import org.dpppt.android.sdk.internal.database.Database;
 import org.dpppt.android.sdk.internal.logger.Logger;
-
-import io.jsonwebtoken.security.SignatureException;
 
 import static org.dpppt.android.sdk.internal.backend.BackendBucketRepository.BATCH_LENGTH;
 
@@ -66,7 +65,7 @@ public class SyncWorker extends Worker {
 	@NonNull
 	@Override
 	public Result doWork() {
-		org.dpppt.android.sdk.internal.logger.Logger.d(TAG, "start SyncWorker");
+		Logger.d(TAG, "start SyncWorker");
 		Context context = getApplicationContext();
 
 		long scanInterval = AppConfigManager.getInstance(getApplicationContext()).getScanInterval();
@@ -76,14 +75,15 @@ public class SyncWorker extends Worker {
 		try {
 			doSync(context);
 		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SignatureException | SQLiteException e) {
-			org.dpppt.android.sdk.internal.logger.Logger.d(TAG, "SyncWorker finished with exception " + e.getMessage());
+			Logger.d(TAG, "SyncWorker finished with exception " + e.getMessage());
 			return Result.retry();
 		}
-		org.dpppt.android.sdk.internal.logger.Logger.d(TAG, "SyncWorker finished with success");
+		Logger.d(TAG, "SyncWorker finished with success");
 		return Result.success();
 	}
 
-	public static void doSync(Context context) throws IOException, StatusCodeException, ServerTimeOffsetException, SQLiteException {
+	public static void doSync(Context context)
+			throws IOException, StatusCodeException, ServerTimeOffsetException, SQLiteException, SignatureException {
 		try {
 			doSyncInternal(context);
 			Logger.i(TAG, "synced");
