@@ -1,6 +1,6 @@
 # Changelog for DP3T-SDK Android
 
-## Latest
+## Version 0.2.3 (4.5.2020)
 
 - Change 16bit UUID to DP3T registered FD68
 
