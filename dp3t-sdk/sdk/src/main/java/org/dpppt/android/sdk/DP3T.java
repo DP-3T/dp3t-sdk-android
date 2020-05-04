@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.sqlite.SQLiteException;
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
@@ -19,6 +20,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.dpppt.android.sdk.backend.ResponseCallback;
+import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.backend.models.ApplicationInfo;
 import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodJson;
@@ -27,6 +29,7 @@ import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.ErrorHelper;
 import org.dpppt.android.sdk.internal.SyncWorker;
 import org.dpppt.android.sdk.internal.TracingService;
+import org.dpppt.android.sdk.internal.backend.CertificatePinning;
 import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
@@ -36,6 +39,8 @@ import org.dpppt.android.sdk.internal.database.models.ExposureDay;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.DayDate;
 import org.dpppt.android.sdk.internal.util.ProcessUtil;
+
+import okhttp3.CertificatePinner;
 
 import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
@@ -125,7 +130,7 @@ public class DP3T {
 		checkInit();
 		try {
 			SyncWorker.doSync(context);
-		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SQLiteException ignored) {
+		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SQLiteException | SignatureException ignored) {
 			// has been handled upstream
 		}
 	}
@@ -222,6 +227,10 @@ public class DP3T {
 		appConfigManager.setContactAttenuationThreshold(contactAttenuationThreshold);
 		appConfigManager.setContactEventThreshold(contactEventThreshold);
 		appConfigManager.setNumberOfWindowsForExposure(numberOfWindowsForExposure);
+	}
+
+	public static void setCertificatePinner(@NonNull CertificatePinner certificatePinner) {
+		CertificatePinning.setCertificatePinner(certificatePinner);
 	}
 
 	public static IntentFilter getUpdateIntentFilter() {

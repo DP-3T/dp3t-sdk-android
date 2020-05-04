@@ -1,5 +1,17 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.2.2 (4.5.2020)
+
+- improved sync signature exception handling
+
+## Version 0.2.1 (1.5.2020)
+
+- Add logs to sync worker
+
+## Version 0.2.0 (30.4.2020)
+
+- Option to pin TLS certificates of backend endpoints
+
 ## Version 0.1.16 (30.4.2020)
 
 - provide a public key to authenticate bucket response
