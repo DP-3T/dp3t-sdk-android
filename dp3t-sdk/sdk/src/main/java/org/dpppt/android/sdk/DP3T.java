@@ -218,14 +218,11 @@ public class DP3T {
 		BroadcastHelper.sendUpdateBroadcast(context);
 	}
 
-	public static void setMatchingParameters(Context context, float badAttenuationThreshold, float contactAttenuationThreshold,
-			float contactEventThreshold, int numberOfWindowsForExposure) {
+	public static void setMatchingParameters(Context context, float contactAttenuationThreshold, int numberOfWindowsForExposure) {
 		checkInit();
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		appConfigManager.setBadAttenuationThreshold(badAttenuationThreshold);
 		appConfigManager.setContactAttenuationThreshold(contactAttenuationThreshold);
-		appConfigManager.setContactEventThreshold(contactEventThreshold);
 		appConfigManager.setNumberOfWindowsForExposure(numberOfWindowsForExposure);
 	}
 
