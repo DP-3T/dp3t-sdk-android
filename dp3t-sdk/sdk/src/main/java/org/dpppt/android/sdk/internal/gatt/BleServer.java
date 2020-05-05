@@ -25,7 +25,8 @@ public class BleServer {
 
 	private static final String TAG = "BleServer";
 
-	public static final UUID SERVICE_UUID = UUID.fromString("0000FD6F-0000-1000-8000-00805F9B34FB");
+	private static final String DP3T_16_BIT_UUID = "FD68";
+	public static final UUID SERVICE_UUID = UUID.fromString("0000" + DP3T_16_BIT_UUID + "-0000-1000-8000-00805F9B34FB");
 	public static final UUID TOTP_CHARACTERISTIC_UUID = UUID.fromString("8c8494e3-bab5-1848-40a0-1b06991c0001");
 
 	private final Context context;

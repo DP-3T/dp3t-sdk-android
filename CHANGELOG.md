@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.2.3 (4.5.2020)
+
+- Change 16bit UUID to DP3T registered FD68
+
 ## Version 0.2.2 (4.5.2020)
 
 - improved sync signature exception handling
