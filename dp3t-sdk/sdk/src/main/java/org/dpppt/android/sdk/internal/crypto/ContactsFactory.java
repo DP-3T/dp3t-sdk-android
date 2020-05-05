@@ -3,7 +3,6 @@
  * https://www.ubique.ch
  * Copyright (c) 2020. All rights reserved.
  */
-
 package org.dpppt.android.sdk.internal.crypto;
 
 import android.content.Context;
@@ -38,38 +37,26 @@ public class ContactsFactory {
 		List<Contact> contacts = new ArrayList<>();
 		for (List<Handshake> handshakeList : handshakeMapping.values()) {
 
-			List<Handshake> filteredHandshakes = new ArrayList<>();
-			for (Handshake handshake : handshakeList) {
-				if (handshake.getAttenuation() < appConfigManager.getBadAttenuationThreshold()) {
-					filteredHandshakes.add(handshake);
-				}
-			}
-
-			Double epochMean = mean(filteredHandshakes, (h) -> true);
-			if (epochMean == null) {
-				continue;
-			}
-
 			int contactCounter = 0;
 
-			long startTime = min(filteredHandshakes, (h) -> h.getTimestamp());
+			long startTime = min(handshakeList, (h) -> h.getTimestamp());
 			for (long offset = 0; offset < CryptoModule.MILLISECONDS_PER_EPOCH; offset += WINDOW_DURATION) {
 				long windowStart = startTime + offset;
 				long windowEnd = startTime + offset + WINDOW_DURATION;
-				Double windowMean =
-						mean(filteredHandshakes, (h) -> h.getTimestamp() >= windowStart && h.getTimestamp() < windowEnd);
+				Double windowMean = mean(handshakeList, (h) -> h.getTimestamp() >= windowStart && h.getTimestamp() < windowEnd);
 
-				if (windowMean != null && windowMean / epochMean > appConfigManager.getContactEventThreshold() &&
-						windowMean < appConfigManager.getContactAttenuationThreshold()) {
+				if (windowMean != null && windowMean < appConfigManager.getContactAttenuationThreshold()) {
 					contactCounter++;
 				}
 			}
 
-			contacts.add(
-					new Contact(-1, floorTimestampToBucket(filteredHandshakes.get(0).getTimestamp()),
-							handshakeList.get(0).getEphId(),
-							contactCounter,
-							0));
+			if (contactCounter > 0) {
+				contacts.add(
+						new Contact(-1, floorTimestampToBucket(handshakeList.get(0).getTimestamp()),
+								handshakeList.get(0).getEphId(),
+								contactCounter,
+								0));
+			}
 		}
 
 		return contacts;
