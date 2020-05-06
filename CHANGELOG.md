@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.2.4 (6.5.2020)
+
+- simplified contact logic and increased threshold
+
 ## Version 0.2.3 (4.5.2020)
 
 - Change 16bit UUID to DP3T registered FD68
