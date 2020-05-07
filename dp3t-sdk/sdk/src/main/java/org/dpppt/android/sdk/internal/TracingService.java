@@ -17,7 +17,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.LocationManager;
 import android.os.Build;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import androidx.annotation.Nullable;
@@ -30,14 +29,10 @@ import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.R;
 import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.internal.crypto.CryptoModule;
-import org.dpppt.android.sdk.internal.gatt.BleClient;
-import org.dpppt.android.sdk.internal.gatt.BleServer;
+import org.dpppt.android.sdk.internal.gatt.BluetoothService;
 import org.dpppt.android.sdk.internal.gatt.BluetoothServiceStatus;
-import org.dpppt.android.sdk.internal.gatt.BluetoothState;
 import org.dpppt.android.sdk.internal.logger.Logger;
-
-import static org.dpppt.android.sdk.internal.AppConfigManager.DEFAULT_SCAN_DURATION;
-import static org.dpppt.android.sdk.internal.AppConfigManager.DEFAULT_SCAN_INTERVAL;
+import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 
 public class TracingService extends Service {
 
@@ -48,19 +43,12 @@ public class TracingService extends Service {
 	public static final String ACTION_RESTART_SERVER = TracingService.class.getCanonicalName() + ".ACTION_RESTART_SERVER";
 	public static final String ACTION_STOP = TracingService.class.getCanonicalName() + ".ACTION_STOP";
 
-	public static final String EXTRA_ADVERTISE = TracingService.class.getCanonicalName() + ".EXTRA_ADVERTISE";
-	public static final String EXTRA_RECEIVE = TracingService.class.getCanonicalName() + ".EXTRA_RECEIVE";
-	public static final String EXTRA_SCAN_INTERVAL = TracingService.class.getCanonicalName() + ".EXTRA_SCAN_INTERVAL";
-	public static final String EXTRA_SCAN_DURATION = TracingService.class.getCanonicalName() + ".EXTRA_SCAN_DURATION";
-
 	private static final String NOTIFICATION_CHANNEL_ID = "dp3t_tracing_service";
 	private static final int NOTIFICATION_ID = 1827;
 
-	private Handler handler;
-	private PowerManager.WakeLock wl;
+	private TracingController tracingController;
 
-	private BleServer bleServer;
-	private BleClient bleClient;
+	private PowerManager.WakeLock wl;
 
 	private final BroadcastReceiver bluetoothStateChangeReceiver = new BroadcastReceiver() {
 		@Override
@@ -95,11 +83,6 @@ public class TracingService extends Service {
 		}
 	};
 
-	private boolean startAdvertising;
-	private boolean startReceiving;
-	private long scanInterval;
-	private long scanDuration;
-
 	private boolean isFinishing;
 
 	public TracingService() { }
@@ -110,6 +93,8 @@ public class TracingService extends Service {
 
 		isFinishing = false;
 
+		tracingController = createTracingController();
+
 		IntentFilter bluetoothFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
 		registerReceiver(bluetoothStateChangeReceiver, bluetoothFilter);
 
@@ -118,6 +103,17 @@ public class TracingService extends Service {
 
 		IntentFilter errorsUpdateFilter = new IntentFilter(BroadcastHelper.ACTION_UPDATE_ERRORS);
 		registerReceiver(errorsUpdateReceiver, errorsUpdateFilter);
+	}
+
+	private TracingController createTracingController() {
+		switch (DP3T.getMode()) {
+			case DP3T:
+				return new BluetoothService(this);
+			case GOOGLE:
+				return GoogleExposureClient.getInstance(this);
+			default:
+				throw new UnsupportedOperationException();
+		}
 	}
 
 	@Override
@@ -136,25 +132,23 @@ public class TracingService extends Service {
 
 		Logger.i(TAG, "onStartCommand() with " + intent.getAction());
 
-		scanInterval = intent.getLongExtra(EXTRA_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL);
-		scanDuration = intent.getLongExtra(EXTRA_SCAN_DURATION, DEFAULT_SCAN_DURATION);
-
-		startAdvertising = intent.getBooleanExtra(EXTRA_ADVERTISE, true);
-		startReceiving = intent.getBooleanExtra(EXTRA_RECEIVE, true);
+		if (intent.getExtras() != null) {
+			tracingController.setParams(intent.getExtras());
+		}
 
 		if (ACTION_START.equals(intent.getAction())) {
 			startForeground(NOTIFICATION_ID, createForegroundNotification());
-			start();
+			tracingController.start();
 		} else if (ACTION_RESTART_CLIENT.equals(intent.getAction())) {
 			startForeground(NOTIFICATION_ID, createForegroundNotification());
-			ensureStarted();
-			restartClient();
+			tracingController.restartClient();
 		} else if (ACTION_RESTART_SERVER.equals(intent.getAction())) {
 			startForeground(NOTIFICATION_ID, createForegroundNotification());
-			ensureStarted();
-			restartServer();
+			tracingController.restartServer();
 		} else if (ACTION_STOP.equals(intent.getAction())) {
 			stopForegroundService();
+		} else {
+			Logger.w(TAG, "unknown action: " + intent.getAction());
 		}
 
 		return START_REDELIVER_INTENT;
@@ -226,51 +220,11 @@ public class TracingService extends Service {
 		mNotificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
-	private void start() {
-		if (handler != null) {
-			handler.removeCallbacksAndMessages(null);
-		}
-		handler = new Handler();
-
-		invalidateForegroundNotification();
-		restartClient();
-		restartServer();
-	}
-
-	private void ensureStarted() {
-		if (handler == null) {
-			handler = new Handler();
-		}
-		invalidateForegroundNotification();
-	}
-
-	private void restartClient() {
-		//also restart server here to generate a new mac-address so we get rediscovered by apple devices
-		startServer();
-
-		BluetoothState bluetoothState = startClient();
-		if (bluetoothState == BluetoothState.NOT_SUPPORTED) {
-			Logger.e(TAG, "bluetooth not supported");
-			return;
-		}
-
-		handler.postDelayed(() -> {
-			stopScanning();
-			scheduleNextClientRestart(this, scanInterval);
-		}, scanDuration);
-	}
-
-	private void restartServer() {
-		BluetoothState bluetoothState = startServer();
-		if (bluetoothState == BluetoothState.NOT_SUPPORTED) {
-			Logger.e(TAG, "bluetooth not supported");
-			return;
-		}
-
-		scheduleNextServerRestart(this);
-	}
-
 	public static void scheduleNextClientRestart(Context context, long scanInterval) {
+		if (DP3T.getMode() != DP3T.Mode.DP3T) {
+			return;
+		}
+
 		long now = System.currentTimeMillis();
 		long delay = scanInterval - (now % scanInterval);
 		AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -281,6 +235,10 @@ public class TracingService extends Service {
 	}
 
 	public static void scheduleNextServerRestart(Context context) {
+		if (DP3T.getMode() != DP3T.Mode.DP3T) {
+			return;
+		}
+
 		long nextEpochStart = CryptoModule.getInstance(context).getCurrentEpochStart() + CryptoModule.MILLISECONDS_PER_EPOCH;
 		long nextAdvertiseChange = nextEpochStart;
 		String calibrationTestDeviceName = AppConfigManager.getInstance(context).getCalibrationTestDeviceName();
@@ -297,54 +255,11 @@ public class TracingService extends Service {
 
 	private void stopForegroundService() {
 		isFinishing = true;
-		stopClient();
-		stopServer();
+		tracingController.stop();
 		BluetoothServiceStatus.resetInstance();
 		stopForeground(true);
 		wl.release();
 		stopSelf();
-	}
-
-	private BluetoothState startServer() {
-		stopServer();
-		if (startAdvertising) {
-			bleServer = new BleServer(this);
-
-			Logger.d(TAG, "startAdvertising");
-			BluetoothState advertiserState = bleServer.startAdvertising();
-			return advertiserState;
-		}
-		return null;
-	}
-
-	private void stopServer() {
-		if (bleServer != null) {
-			bleServer.stop();
-			bleServer = null;
-		}
-	}
-
-	private BluetoothState startClient() {
-		stopClient();
-		if (startReceiving) {
-			bleClient = new BleClient(this);
-			BluetoothState clientState = bleClient.start();
-			return clientState;
-		}
-		return null;
-	}
-
-	private void stopScanning() {
-		if (bleClient != null) {
-			bleClient.stopScan();
-		}
-	}
-
-	private void stopClient() {
-		if (bleClient != null) {
-			bleClient.stop();
-			bleClient = null;
-		}
 	}
 
 	@Nullable
@@ -361,9 +276,7 @@ public class TracingService extends Service {
 		unregisterReceiver(bluetoothStateChangeReceiver);
 		unregisterReceiver(locationServiceStateChangeReceiver);
 
-		if (handler != null) {
-			handler.removeCallbacksAndMessages(null);
-		}
+		tracingController.destroy();
 	}
 
 }

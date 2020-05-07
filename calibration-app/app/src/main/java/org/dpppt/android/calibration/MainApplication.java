@@ -20,6 +20,7 @@ import java.security.PublicKey;
 import org.dpppt.android.calibration.util.NotificationUtil;
 import org.dpppt.android.calibration.util.PreferencesUtil;
 import org.dpppt.android.sdk.DP3T;
+import org.dpppt.android.sdk.DP3T.Mode;
 import org.dpppt.android.sdk.internal.logger.LogLevel;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.ProcessUtil;
@@ -45,9 +46,9 @@ public class MainApplication extends Application {
 	public static void initDP3T(Context context) {
 		PublicKey publicKey = SignatureUtil.getPublicKeyFromBase64OrThrow(
 				"LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0R" +
-						"RZ0FFWTc3MFZEWjJlZjZCYjh0UXZYWVJpcUFaemtHLwpwNWs0U3pTV3FRY00zNzlqTVN6c3JOaU5nc0" +
-						"hWZlRPeGFqMUFzQ3RrNmJVUDV1cDc3RU5nckVzVkh3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t");
-		DP3T.init(context, "org.dpppt.demo", true, publicKey);
+						"RZ0FFdkxXZHVFWThqcnA4aWNSNEpVSlJaU0JkOFh2UgphR2FLeUg2VlFnTXV2Zk1JcmxrNk92QmtKeH" +
+						"dhbUdNRnFWYW9zOW11di9rWGhZdjF1a1p1R2RjREJBPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t");
+		DP3T.init(context, "org.dpppt.demo", Mode.GOOGLE, true, publicKey);
 
 		CertificatePinner certificatePinner = new CertificatePinner.Builder()
 				.add("demo.dpppt.org", "sha256/YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=")

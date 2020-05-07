@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.gatt.BluetoothServiceStatus;
@@ -32,7 +33,7 @@ public class ErrorHelper {
 
 	private static final String TAG = "ErrorHelper";
 
-	public static Collection<ErrorState> checkTracingErrorStatus(Context context) {
+	public static Collection<ErrorState> checkTracingErrorStatus(Context context, DP3T.Mode mode) {
 		Set<ErrorState> errors = new HashSet<>();
 
 		if (!context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
@@ -51,10 +52,13 @@ public class ErrorHelper {
 			errors.add(ErrorState.BATTERY_OPTIMIZER_ENABLED);
 		}
 
-		boolean locationPermissionGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
-				PackageManager.PERMISSION_GRANTED;
-		if (!locationPermissionGranted) {
-			errors.add(ErrorState.MISSING_LOCATION_PERMISSION);
+		if (mode == DP3T.Mode.DP3T) {
+			boolean locationPermissionGranted =
+					ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+							PackageManager.PERMISSION_GRANTED;
+			if (!locationPermissionGranted) {
+				errors.add(ErrorState.MISSING_LOCATION_PERMISSION);
+			}
 		}
 
 		if (!LocationServiceUtil.isLocationEnabled(context)) {
@@ -70,7 +74,7 @@ public class ErrorHelper {
 			errors.add(syncError);
 		}
 
-		if (!errors.contains(ErrorState.BLE_DISABLED)) {
+		if (mode == DP3T.Mode.DP3T && !errors.contains(ErrorState.BLE_DISABLED)) {
 			BluetoothServiceStatus bluetoothServiceStatus = BluetoothServiceStatus.getInstance(context);
 			switch (bluetoothServiceStatus.getAdvertiseStatus()) {
 				case BluetoothServiceStatus.ADVERTISE_OK:

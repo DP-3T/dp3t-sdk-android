@@ -330,7 +330,7 @@ public class ControlsFragment extends Fragment {
 			if (isRunning) {
 				DP3T.stop(v.getContext());
 			} else {
-				DP3T.start(v.getContext());
+				DP3T.start(getActivity());
 			}
 			updateSdkStatus();
 		});

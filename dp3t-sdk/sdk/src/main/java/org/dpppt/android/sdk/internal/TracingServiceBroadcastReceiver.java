@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import androidx.core.content.ContextCompat;
 
+import org.dpppt.android.sdk.internal.gatt.BluetoothService;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
 public class TracingServiceBroadcastReceiver extends BroadcastReceiver {
@@ -30,10 +31,10 @@ public class TracingServiceBroadcastReceiver extends BroadcastReceiver {
 		long scanDuration = appConfigManager.getScanDuration();
 		if (advertising || receiving) {
 			Intent intent = new Intent(context, TracingService.class).setAction(i.getAction());
-			intent.putExtra(TracingService.EXTRA_ADVERTISE, advertising);
-			intent.putExtra(TracingService.EXTRA_RECEIVE, receiving);
-			intent.putExtra(TracingService.EXTRA_SCAN_INTERVAL, scanInterval);
-			intent.putExtra(TracingService.EXTRA_SCAN_DURATION, scanDuration);
+			intent.putExtra(BluetoothService.EXTRA_ADVERTISE, advertising);
+			intent.putExtra(BluetoothService.EXTRA_RECEIVE, receiving);
+			intent.putExtra(BluetoothService.EXTRA_SCAN_INTERVAL, scanInterval);
+			intent.putExtra(BluetoothService.EXTRA_SCAN_DURATION, scanDuration);
 			ContextCompat.startForegroundService(context, intent);
 		}
 	}

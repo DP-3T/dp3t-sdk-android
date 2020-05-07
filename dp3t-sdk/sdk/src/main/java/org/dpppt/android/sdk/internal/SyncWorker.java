@@ -73,6 +73,7 @@ public class SyncWorker extends Worker {
 		Context context = getApplicationContext();
 
 		long scanInterval = AppConfigManager.getInstance(getApplicationContext()).getScanInterval();
+		// TODO: can we replace the following with a generic restart?
 		TracingService.scheduleNextClientRestart(context, scanInterval);
 		TracingService.scheduleNextServerRestart(context);
 
