@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.2.5 (7.5.2020)
+
+- updated contact logic window size to 5min
+
 ## Version 0.2.4 (6.5.2020)
 
 - simplified contact logic and increased threshold

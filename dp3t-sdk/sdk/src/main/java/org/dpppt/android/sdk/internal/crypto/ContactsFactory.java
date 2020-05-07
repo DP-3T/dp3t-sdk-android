@@ -18,7 +18,7 @@ import org.dpppt.android.sdk.internal.database.models.Handshake;
 
 public class ContactsFactory {
 
-	private static final long WINDOW_DURATION = 60 * 1000l;
+	private static final long WINDOW_DURATION = 5 * 60 * 1000l;
 
 	public static List<Contact> mergeHandshakesToContacts(Context context, List<Handshake> handshakes) {
 		HashMap<EphId, List<Handshake>> handshakeMapping = new HashMap<>();
