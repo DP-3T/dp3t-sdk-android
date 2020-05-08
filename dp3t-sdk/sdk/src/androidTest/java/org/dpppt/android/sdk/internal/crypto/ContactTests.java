@@ -129,26 +129,29 @@ public class ContactTests {
 		module.init();
 		byte[] person1_sk0 = module.getCurrentSK(new DayDate());
 
+		EphId ephId_person0 = module.createEphIds(person0_sk0, true).get(5);
 		for (int offset = -30; offset < -20; offset++) {
 			database.addHandshake(context,
 					new Handshake(0, System.currentTimeMillis() - DAY + offset * MINUTE,
-							module.createEphIds(person0_sk0, true).get(5),
+							ephId_person0,
 							-21, -70, "", "", 0));
 		}
 		database.generateContactsFromHandshakes(context);
 
+		EphId ephId_person1 = module.createEphIds(person1_sk0, true).get(5);
 		for (int offset = -30; offset < -20; offset++) {
 			database.addHandshake(context,
 					new Handshake(0, System.currentTimeMillis() - DAY + offset * MINUTE,
-							module.createEphIds(person1_sk0, true).get(5),
+							ephId_person1,
 							-21, -70, "", "", 0));
 		}
 		database.generateContactsFromHandshakes(context);
 
 		byte[] person1_sk1 = module.getSKt1(person1_sk0);
+		EphId ephId_person1_day1 = module.createEphIds(person1_sk1, true).get(5);
 		for (int offset = -30; offset < -15; offset++) {
 			database.addHandshake(context,
-					new Handshake(0, System.currentTimeMillis() + offset * MINUTE, module.createEphIds(person1_sk1, true).get(5),
+					new Handshake(0, System.currentTimeMillis() + offset * MINUTE, ephId_person1_day1,
 							-21, -70, "", "", 0));
 		}
 		database.generateContactsFromHandshakes(context);
