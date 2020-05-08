@@ -93,13 +93,22 @@ afterEvaluate {
 		}
 	}
 }
-Properties properties = new Properties()
-if (project.rootProject.file('local.properties').exists()) {
-	properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+ext.readProperty = { paramName ->
+	if (project.hasProperty(paramName)) {
+		return project.getProperties().get(paramName)
+	} else {
+		Properties properties = new Properties()
+		if (project.rootProject.file('local.properties').exists()) {
+			properties.load(project.rootProject.file('local.properties').newDataInputStream())
+		}
+		return properties.getProperty(paramName)
+	}
 }
+
 bintray {
-	user = properties.getProperty("bintray.user")
-	key = properties.getProperty("bintray.apikey")
+	user = readProperty('bintrayUser')
+	key = readProperty('bintrayApikey')
 	publications = ['sdkRelease', 'sdkCalibration']
 	publish = true
 	pkg {

@@ -16,4 +16,4 @@ jobs:
       with:
         java-version: 1.8
     - name: Upload
-      run: cd dp3t-sdk; echo "bintray.user=${{secrets.BINTRAY_USER}}"; echo "bintray.apikey=${{secrets.BINTRAY_APIKEY}}"; ./gradlew bintrayUpload
+      run: cd dp3t-sdk; ./gradlew bintrayUpload -PbintrayUser=${{secrets.BINTRAY_USER}} -PbintrayApikey=${{secrets.BINTRAY_APIKEY}}
