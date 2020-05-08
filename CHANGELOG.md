@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Latest
+
+- Change signing of test calibration app
+
 ## Version 0.2.5 (7.5.2020)
 
 - updated contact logic window size to 5min

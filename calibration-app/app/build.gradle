@@ -29,9 +29,9 @@ android {
 	signingConfigs {
 		release {
 			storeFile file('../testKeystore')
-			storePassword '123456'
+			storePassword project.hasProperty('keystorePassword') ? project.keystorePassword : ''
 			keyAlias 'keyAlias'
-			keyPassword '123456'
+			keyPassword project.hasProperty('keyAliasPassword') ? project.keyAliasPassword : ''
 		}
 	}
 	buildTypes {
