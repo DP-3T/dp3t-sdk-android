@@ -26,6 +26,9 @@
 	<uses-feature
 		android:name="android.hardware.bluetooth_le"
 		android:required="true" />
+	<uses-feature
+		android:name="android.hardware.location"
+		android:required="false" />
 
 	<application android:fullBackupContent="@xml/dp3t_sdk_backup_rules">
 
