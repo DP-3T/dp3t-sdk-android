@@ -15,6 +15,7 @@ import android.content.IntentSender;
 import android.os.Bundle;
 import androidx.core.util.Consumer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.android.gms.common.api.ApiException;
@@ -23,6 +24,7 @@ import com.google.android.gms.nearby.exposurenotification.*;
 import com.google.android.gms.tasks.Task;
 
 import org.dpppt.android.sdk.internal.TracingController;
+import org.dpppt.android.sdk.internal.backend.proto.GaenExposed;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
 public class GoogleExposureClient implements TracingController {
@@ -97,17 +99,17 @@ public class GoogleExposureClient implements TracingController {
 		}
 		exposureNotificationClient.start(exposureConfiguration)
 				.addOnSuccessListener(nothing -> Logger.i(TAG, "started successfully"))
-				.addOnFailureListener(e -> Logger.e(TAG, e));
+				.addOnFailureListener(e -> {
+					Logger.e(TAG, e);
+					// TODO: add service error state? need to check when this can happen
+				});
 	}
 
 	@Override
 	public void stop() {
 		exposureNotificationClient.stop()
 				.addOnSuccessListener(nothing -> Logger.i(TAG, "stopped successfully"))
-				.addOnFailureListener(e -> {
-					Logger.e(TAG, e);
-					// TODO: add service error state
-				});
+				.addOnFailureListener(e -> Logger.e(TAG, e));
 	}
 
 	public Task<Boolean> isEnabled() {
@@ -115,13 +117,37 @@ public class GoogleExposureClient implements TracingController {
 	}
 
 	public void getTemporaryExposureKeyHistory() {
+		// TODO: provide callback
 		exposureNotificationClient.getTemporaryExposureKeyHistory()
 				.addOnSuccessListener(temporaryExposureKeys -> Logger.i(TAG, "keys: " + temporaryExposureKeys.toString()))
 				.addOnFailureListener(e -> Logger.e(TAG, e));
 	}
 
-	public Task<Void> provideDiagnosisKeys(List<TemporaryExposureKey> keys) {
-		return exposureNotificationClient.provideDiagnosisKeys(keys);
+	public void provideDiagnosisKeys(List<GaenExposed.Key> keys) {
+		if (keys == null || keys.isEmpty()) {
+			return;
+		}
+
+		List<TemporaryExposureKey> temporaryExposureKeys = new ArrayList<>();
+		for (GaenExposed.Key key : keys) {
+			TemporaryExposureKey temporaryExposureKey = new TemporaryExposureKey.TemporaryExposureKeyBuilder()
+					.setKeyData(key.getKeyData().toByteArray())
+					.setRollingStartIntervalNumber(key.getRollingStartNumber())
+					.setTransmissionRiskLevel(key.getTransmissionRiskLevel())
+					.build();
+			temporaryExposureKeys.add(temporaryExposureKey);
+		}
+
+		// TODO: 1. must wait for completion
+		// TODO: 2. key list must not be longer than #getMaxDiagnosisKeys() (split into multiple batches otherwise)
+		exposureNotificationClient.provideDiagnosisKeys(temporaryExposureKeys)
+				.addOnSuccessListener(nothing -> {
+					// ok
+				})
+				.addOnFailureListener(e -> {
+					Logger.e(TAG, e);
+					// TODO: add service error state
+				});
 	}
 
 	public Task<Integer> getMaxDiagnosisKeysCount() {

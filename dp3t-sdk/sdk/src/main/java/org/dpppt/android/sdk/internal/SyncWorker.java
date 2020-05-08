@@ -20,6 +20,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.dpppt.android.sdk.DP3T;
+import org.dpppt.android.sdk.DP3T.Mode;
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
 import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.backend.models.ApplicationInfo;
@@ -28,8 +30,10 @@ import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.backend.proto.Exposed;
+import org.dpppt.android.sdk.internal.backend.proto.GaenExposed;
 import org.dpppt.android.sdk.internal.database.Database;
 import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 
 import static org.dpppt.android.sdk.internal.backend.BackendBucketRepository.BATCH_LENGTH;
 
@@ -121,9 +125,6 @@ public class SyncWorker extends Worker {
 		appConfigManager.updateFromDiscoverySynchronous();
 		ApplicationInfo appConfig = appConfigManager.getAppConfig();
 
-		Database database = new Database(context);
-		database.generateContactsFromHandshakes(context);
-
 		long lastLoadedBatchReleaseTime = appConfigManager.getLastLoadedBatchReleaseTime();
 		long nextBatchReleaseTime;
 		if (lastLoadedBatchReleaseTime <= 0 || lastLoadedBatchReleaseTime % BATCH_LENGTH != 0) {
@@ -136,25 +137,42 @@ public class SyncWorker extends Worker {
 		BackendBucketRepository backendBucketRepository =
 				new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
 
-		for (long batchReleaseTime = nextBatchReleaseTime;
-			 batchReleaseTime < System.currentTimeMillis();
-			 batchReleaseTime += BATCH_LENGTH) {
+		if (DP3T.getMode() == Mode.DP3T) {
+			Database database = new Database(context);
+			database.generateContactsFromHandshakes(context);
 
-			Exposed.ProtoExposedList result = backendBucketRepository.getExposees(batchReleaseTime);
-			long batchReleaseServerTime = result.getBatchReleaseTime();
-			for (Exposed.ProtoExposeeOrBuilder exposee : result.getExposedOrBuilderList()) {
-				database.addKnownCase(
-						context,
-						exposee.getKey().toByteArray(),
-						exposee.getKeyDate(),
-						batchReleaseServerTime
-				);
+			for (long batchReleaseTime = nextBatchReleaseTime;
+				 batchReleaseTime < System.currentTimeMillis();
+				 batchReleaseTime += BATCH_LENGTH) {
+
+				Exposed.ProtoExposedList result = backendBucketRepository.getExposees(batchReleaseTime);
+				long batchReleaseServerTime = result.getBatchReleaseTime();
+				for (Exposed.ProtoExposeeOrBuilder exposee : result.getExposedOrBuilderList()) {
+					database.addKnownCase(
+							context,
+							exposee.getKey().toByteArray(),
+							exposee.getKeyDate(),
+							batchReleaseServerTime
+					);
+				}
+
+				appConfigManager.setLastLoadedBatchReleaseTime(batchReleaseTime);
 			}
 
-			appConfigManager.setLastLoadedBatchReleaseTime(batchReleaseTime);
-		}
+			database.removeOldData();
+		} else if (DP3T.getMode() == Mode.GOOGLE) {
+			GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 
-		database.removeOldData();
+			for (long batchReleaseTime = nextBatchReleaseTime;
+				 batchReleaseTime < System.currentTimeMillis();
+				 batchReleaseTime += BATCH_LENGTH) {
+
+				GaenExposed.File result = backendBucketRepository.getGaenExposees(batchReleaseTime);
+				googleExposureClient.provideDiagnosisKeys(result.getKeyList());
+
+				appConfigManager.setLastLoadedBatchReleaseTime(batchReleaseTime);
+			}
+		}
 
 		appConfigManager.setLastSyncDate(System.currentTimeMillis());
 	}
