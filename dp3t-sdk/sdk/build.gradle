@@ -93,13 +93,10 @@ afterEvaluate {
 		}
 	}
 }
-Properties properties = new Properties()
-if (project.rootProject.file('local.properties').exists()) {
-	properties.load(project.rootProject.file('local.properties').newDataInputStream())
-}
+
 bintray {
-	user = properties.getProperty("bintray.user")
-	key = properties.getProperty("bintray.apikey")
+	user = project.hasProperty('bintrayUser') ? project.bintrayUser : ''
+	key = project.hasProperty('bintrayApikey') ? project.bintrayApikey : ''
 	publications = ['sdkRelease', 'sdkCalibration']
 	publish = true
 	pkg {
