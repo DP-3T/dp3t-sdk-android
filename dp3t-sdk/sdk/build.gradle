@@ -113,19 +113,19 @@ dependencies {
 	implementation 'androidx.security:security-crypto:1.0.0-rc01'
 	implementation 'androidx.work:work-runtime:2.3.4'
 
-	implementation 'com.squareup.retrofit2:retrofit:2.6.2'
-	implementation 'com.squareup.retrofit2:converter-gson:2.6.2'
-	implementation('com.squareup.retrofit2:converter-protobuf:2.6.2') {
+	implementation 'com.squareup.retrofit2:retrofit:2.8.1'
+	implementation 'com.squareup.retrofit2:converter-gson:2.8.1'
+	implementation('com.squareup.retrofit2:converter-protobuf:2.8.1') {
 		exclude group: 'com.google.protobuf', module: 'protobuf-java'
 	}
-	implementation 'com.google.protobuf:protobuf-javalite:3.11.1'
+	implementation 'com.google.protobuf:protobuf-javalite:3.11.4'
 
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.1'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.1'
 	runtimeOnly('io.jsonwebtoken:jjwt-orgjson:0.11.1') {
 		exclude group: 'org.json', module: 'json'
 	}
-	implementation 'org.bouncycastle:bcprov-jdk15on:1.60'
+	implementation 'org.bouncycastle:bcprov-jdk15on:1.65'
 
 	testImplementation 'junit:junit:4.12'
 
