@@ -53,8 +53,9 @@ public class DP3T {
 
 	public static final String UPDATE_INTENT_ACTION = "org.dpppt.android.sdk.UPDATE_ACTION";
 
-	private static Mode mode;
+	public static final int REQUEST_CODE_START_CONFIRMATION = 391;
 
+	private static Mode mode;
 	private static String appId;
 
 	public static void init(Context context, String appId, Mode mode, PublicKey signaturePublicKey) {
@@ -106,8 +107,20 @@ public class DP3T {
 		}
 	}
 
-	public static void start(Context context) {
-		start(context, true, true);
+	public static void start(Activity activity) {
+		if (getMode() == Mode.GOOGLE) {
+			GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(activity);
+			googleExposureClient.setParams(null);
+			googleExposureClient.startWithConfirmation(activity, REQUEST_CODE_START_CONFIRMATION,
+					() -> {
+						start(activity, true, true);
+					},
+					e -> {
+						// TODO: publish error status?
+					});
+		} else {
+			start(activity, true, true);
+		}
 	}
 
 	protected static void start(Context context, boolean advertise, boolean receive) {
@@ -125,13 +138,6 @@ public class DP3T {
 		ContextCompat.startForegroundService(context, intent);
 		SyncWorker.startSyncWorker(context);
 		BroadcastHelper.sendUpdateBroadcast(context);
-
-		// TODO: separate "prepare()" call, that the app can call in its onboarding?
-		if (getMode() == Mode.GOOGLE && context instanceof Activity) {
-			GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
-			googleExposureClient.setParams(null);
-			googleExposureClient.startWithConfirmation((Activity) context, 0);
-		}
 	}
 
 	public static boolean isStarted(Context context) {

@@ -1,9 +1,19 @@
+/*
+ * Copyright (c) 2020 Ubique Innovation AG <https://www.ubique.ch>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ */
 package org.dpppt.android.sdk.internal.nearby;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.IntentSender;
 import android.os.Bundle;
+import androidx.core.util.Consumer;
 
 import java.util.List;
 
@@ -27,13 +37,13 @@ public class GoogleExposureClient implements TracingController {
 
 	public static GoogleExposureClient getInstance(Context context) {
 		if (instance == null) {
-			instance = new GoogleExposureClient(context);
+			instance = new GoogleExposureClient(context.getApplicationContext());
 		}
 		return instance;
 	}
 
 	private GoogleExposureClient(Context context) {
-		exposureNotificationClient = Nearby.getExposureNotificationClient(context.getApplicationContext());
+		exposureNotificationClient = Nearby.getExposureNotificationClient(context);
 	}
 
 	@Override
@@ -53,18 +63,22 @@ public class GoogleExposureClient implements TracingController {
 				.build();
 	}
 
-	public void startWithConfirmation(Activity activity, int requestCode) {
+	public void startWithConfirmation(Activity activity, int resolutionRequestCode,
+			Runnable successCallback, Consumer<Exception> errorCallback) {
 		if (exposureConfiguration == null) {
 			throw new IllegalStateException("must call setParams()");
 		}
 		exposureNotificationClient.start(exposureConfiguration)
-				.addOnSuccessListener(nothing -> Logger.i(TAG, "started successfully"))
+				.addOnSuccessListener(nothing -> {
+					Logger.i(TAG, "started successfully");
+					successCallback.run();
+				})
 				.addOnFailureListener(e -> {
 					if (e instanceof ApiException) {
 						ApiException apiException = (ApiException) e;
 						if (apiException.getStatusCode() == ExposureNotificationStatusCodes.RESOLUTION_REQUIRED) {
 							try {
-								apiException.getStatus().startResolutionForResult(activity, requestCode);
+								apiException.getStatus().startResolutionForResult(activity, resolutionRequestCode);
 								return;
 							} catch (IntentSender.SendIntentException e2) {
 								Logger.e(TAG, "Error calling startResolutionForResult, sending to settings");
@@ -72,6 +86,7 @@ public class GoogleExposureClient implements TracingController {
 						}
 					}
 					Logger.e(TAG, e);
+					errorCallback.accept(e);
 				});
 	}
 
@@ -82,10 +97,7 @@ public class GoogleExposureClient implements TracingController {
 		}
 		exposureNotificationClient.start(exposureConfiguration)
 				.addOnSuccessListener(nothing -> Logger.i(TAG, "started successfully"))
-				.addOnFailureListener(e -> {
-					Logger.e(TAG, e);
-					// TODO: add service error state
-				});
+				.addOnFailureListener(e -> Logger.e(TAG, e));
 	}
 
 	@Override
