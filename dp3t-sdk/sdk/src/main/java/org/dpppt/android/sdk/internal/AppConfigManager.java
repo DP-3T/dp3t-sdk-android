@@ -1,7 +1,11 @@
 /*
- * Created by Ubique Innovation AG
- * https://www.ubique.ch
- * Copyright (c) 2020. All rights reserved.
+ * Copyright (c) 2020 Ubique Innovation AG <https://www.ubique.ch>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * SPDX-License-Identifier: MPL-2.0
  */
 package org.dpppt.android.sdk.internal;
 
@@ -37,7 +41,7 @@ public class AppConfigManager {
 	private static final BluetoothAdvertiseMode DEFAULT_BLUETOOTH_ADVERTISE_MODE = BluetoothAdvertiseMode.ADVERTISE_MODE_BALANCED;
 	private static final boolean DEFAULT_BLUETOOTH_USE_SCAN_RESPONSE_ENABLED = false;
 
-	private static final int DEFAULT_NUMBER_OF_WINDOWS_FOR_EXPOSURE = 15;
+	private static final int DEFAULT_NUMBER_OF_WINDOWS_FOR_EXPOSURE = 3;
 	private static final float DEFAULT_CONTACT_ATTENUATION_THRESHOLD = 73.0f;
 
 	private static final String PREFS_NAME = "dp3t_sdk_preferences";
