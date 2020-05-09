@@ -14,8 +14,11 @@ import android.database.sqlite.SQLiteException;
 import androidx.annotation.NonNull;
 import androidx.work.*;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -168,7 +171,14 @@ public class SyncWorker extends Worker {
 				 batchReleaseTime += BATCH_LENGTH) {
 
 				GaenExposed.File result = backendBucketRepository.getGaenExposees(batchReleaseTime);
-				googleExposureClient.provideDiagnosisKeys(result.getKeyList());
+				File file = new File(context.getCacheDir(), "keyList.proto");
+				FileOutputStream fout = new FileOutputStream(file);
+				result.writeTo(fout);
+				fout.flush();
+				fout.close();
+				ArrayList<File> fileList = new ArrayList<>();
+				fileList.add(file);
+				googleExposureClient.provideDiagnosisKeys(fileList, "test");
 
 				appConfigManager.setLastLoadedBatchReleaseTime(batchReleaseTime);
 			}

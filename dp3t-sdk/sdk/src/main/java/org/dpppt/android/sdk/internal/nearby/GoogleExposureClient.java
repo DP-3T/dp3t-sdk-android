@@ -15,16 +15,19 @@ import android.content.IntentSender;
 import android.os.Bundle;
 import androidx.core.util.Consumer;
 
-import java.util.ArrayList;
+import java.io.File;
 import java.util.List;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.Nearby;
-import com.google.android.gms.nearby.exposurenotification.*;
+import com.google.android.gms.nearby.exposurenotification.ExposureConfiguration;
+import com.google.android.gms.nearby.exposurenotification.ExposureInformation;
+import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
+import com.google.android.gms.nearby.exposurenotification.ExposureNotificationStatusCodes;
+import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
 import com.google.android.gms.tasks.Task;
 
 import org.dpppt.android.sdk.internal.TracingController;
-import org.dpppt.android.sdk.internal.backend.proto.GaenExposed;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
 public class GoogleExposureClient implements TracingController {
@@ -67,10 +70,7 @@ public class GoogleExposureClient implements TracingController {
 
 	public void startWithConfirmation(Activity activity, int resolutionRequestCode,
 			Runnable successCallback, Consumer<Exception> errorCallback) {
-		if (exposureConfiguration == null) {
-			throw new IllegalStateException("must call setParams()");
-		}
-		exposureNotificationClient.start(exposureConfiguration)
+		exposureNotificationClient.start()
 				.addOnSuccessListener(nothing -> {
 					Logger.i(TAG, "started successfully");
 					successCallback.run();
@@ -97,7 +97,7 @@ public class GoogleExposureClient implements TracingController {
 		if (exposureConfiguration == null) {
 			throw new IllegalStateException("must call setParams()");
 		}
-		exposureNotificationClient.start(exposureConfiguration)
+		exposureNotificationClient.start()
 				.addOnSuccessListener(nothing -> Logger.i(TAG, "started successfully"))
 				.addOnFailureListener(e -> {
 					Logger.e(TAG, e);
@@ -123,25 +123,19 @@ public class GoogleExposureClient implements TracingController {
 				.addOnFailureListener(e -> Logger.e(TAG, e));
 	}
 
-	public void provideDiagnosisKeys(List<GaenExposed.Key> keys) {
+	public void provideDiagnosisKeys(List<File> keys, String token) {
 		if (keys == null || keys.isEmpty()) {
 			return;
 		}
-
-		List<TemporaryExposureKey> temporaryExposureKeys = new ArrayList<>();
-		for (GaenExposed.Key key : keys) {
-			TemporaryExposureKey temporaryExposureKey = new TemporaryExposureKey.TemporaryExposureKeyBuilder()
-					.setKeyData(key.getKeyData().toByteArray())
-					.setRollingStartIntervalNumber(key.getRollingStartNumber())
-					.setTransmissionRiskLevel(key.getTransmissionRiskLevel())
-					.build();
-			temporaryExposureKeys.add(temporaryExposureKey);
+		if (exposureConfiguration == null) {
+			throw new IllegalStateException("must call setParams()");
 		}
 
 		// TODO: 1. must wait for completion
 		// TODO: 2. key list must not be longer than #getMaxDiagnosisKeys() (split into multiple batches otherwise)
-		exposureNotificationClient.provideDiagnosisKeys(temporaryExposureKeys)
+		exposureNotificationClient.provideDiagnosisKeys(keys, exposureConfiguration, token)
 				.addOnSuccessListener(nothing -> {
+					Logger.e(TAG, "inserted keys successfully");
 					// ok
 				})
 				.addOnFailureListener(e -> {
@@ -150,24 +144,12 @@ public class GoogleExposureClient implements TracingController {
 				});
 	}
 
-	public Task<Integer> getMaxDiagnosisKeysCount() {
-		return exposureNotificationClient.getMaxDiagnosisKeyCount();
+	public Task<ExposureSummary> getExposureSummary(String token) {
+		return exposureNotificationClient.getExposureSummary(token);
 	}
 
-	public Task<ExposureSummary> getExposureSummary() {
-		return exposureNotificationClient.getExposureSummary();
-	}
-
-	public Task<List<ExposureInformation>> getExposureInformation() {
-		return exposureNotificationClient.getExposureInformation();
-	}
-
-	public Task<Void> resetAllData() {
-		return exposureNotificationClient.resetAllData();
-	}
-
-	public Task<Void> resetTemporaryExposureKey() {
-		return exposureNotificationClient.resetTemporaryExposureKey();
+	public Task<List<ExposureInformation>> getExposureInformation(String token) {
+		return exposureNotificationClient.getExposureInformation(token);
 	}
 
 	@Override

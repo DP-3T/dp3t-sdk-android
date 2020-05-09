@@ -18,11 +18,11 @@ public class ExposureNotificationBroadcastReceiver extends BroadcastReceiver {
 		if (ExposureNotificationClient.ACTION_EXPOSURE_STATE_UPDATED.equals(action)) {
 			Logger.i(TAG, action);
 			// TODO: we've been exposed
-		} else if (ExposureNotificationClient.ACTION_REQUEST_DIAGNOSIS_KEYS.equals(action)) {
+		} /*else if (ExposureNotificationClient.ACTION_REQUEST_DIAGNOSIS_KEYS.equals(action)) {
 			// TODO: load exposed list from backend
 			// TODO: ExposureClient#provideDiagnosisKeys()
 			Logger.i(TAG, action);
-		}
+		}*/
 	}
 
 }
