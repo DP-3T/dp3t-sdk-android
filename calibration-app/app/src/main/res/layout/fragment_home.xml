@@ -25,22 +25,6 @@
 		android:paddingBottom="@dimen/spacing_large">
 
 		<Button
-			android:id="@+id/home_button_location"
-			style="@style/Sample.Button.Requirements"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginBottom="@dimen/spacing_medium"
-			tools:text="@string/req_location_permission_ungranted" />
-
-		<Button
-			android:id="@+id/home_button_battery_optimization"
-			style="@style/Sample.Button.Requirements"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginBottom="@dimen/spacing_medium"
-			tools:text="@string/req_battery_active" />
-
-		<Button
 			android:id="@+id/home_button_bluetooth"
 			style="@style/Sample.Button.Requirements"
 			android:layout_width="wrap_content"
@@ -66,36 +50,6 @@
 			android:layout_height="wrap_content"
 			android:text="@string/button_tracking_start" />
 
-		<LinearLayout
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:layout_marginStart="@dimen/spacing_large"
-			android:layout_marginEnd="@dimen/spacing_large"
-			android:layout_marginBottom="@dimen/spacing_large"
-			android:gravity="center_horizontal"
-			android:orientation="horizontal">
-
-			<Button
-				android:id="@+id/home_button_start_advertising"
-				style="@style/Sample.Button"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_marginRight="@dimen/spacing_medium"
-				android:layout_weight="2"
-				android:text="@string/button_advertising_start"
-				app:backgroundTint="@color/selector_button_red" />
-
-			<Button
-				android:id="@+id/home_button_start_receiving"
-				style="@style/Sample.Button"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_weight="2"
-				android:text="@string/button_receiving_start"
-				app:backgroundTint="@color/selector_button_red" />
-
-		</LinearLayout>
-
 		<Button
 			android:id="@+id/home_button_sync"
 			style="@style/Sample.Button"
@@ -112,55 +66,6 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:text="@string/button_clear_data" />
-
-		<LinearLayout
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content">
-
-			<FrameLayout
-				android:layout_width="0dp"
-				android:layout_height="wrap_content"
-				android:layout_margin="@dimen/spacing_large"
-				android:layout_weight="1">
-
-				<Button
-					android:id="@+id/home_button_export_db"
-					style="@style/Sample.Button"
-					android:layout_width="match_parent"
-					android:layout_height="wrap_content"
-					android:text="@string/button_export_db" />
-
-				<ProgressBar
-					android:id="@+id/home_loading_view_export_db"
-					android:layout_width="@dimen/loading_size_small"
-					android:layout_height="@dimen/loading_size_small"
-					android:layout_gravity="center"
-					android:visibility="gone" />
-
-			</FrameLayout>
-
-			<FrameLayout
-				android:layout_width="0dp"
-				android:layout_height="wrap_content"
-				android:layout_margin="@dimen/spacing_large"
-				android:layout_weight="1">
-
-				<Button
-					android:id="@+id/home_button_upload_db"
-					style="@style/Sample.Button"
-					android:layout_width="wrap_content"
-					android:layout_height="wrap_content"
-					android:text="@string/button_upload_db" />
-
-				<ProgressBar
-					android:id="@+id/home_loading_view_upload_db"
-					android:layout_width="@dimen/loading_size_small"
-					android:layout_height="@dimen/loading_size_small"
-					android:layout_gravity="center"
-					android:visibility="gone" />
-
-			</FrameLayout>
-		</LinearLayout>
 
 		<FrameLayout
 			android:layout_width="wrap_content"

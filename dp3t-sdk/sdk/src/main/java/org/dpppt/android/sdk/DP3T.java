@@ -11,16 +11,15 @@ package org.dpppt.android.sdk;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.sqlite.SQLiteException;
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 import androidx.core.util.Consumer;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -37,70 +36,52 @@ import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.ErrorHelper;
 import org.dpppt.android.sdk.internal.SyncWorker;
-import org.dpppt.android.sdk.internal.TracingService;
 import org.dpppt.android.sdk.internal.backend.CertificatePinning;
 import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
-import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
-import org.dpppt.android.sdk.internal.crypto.CryptoModule;
-import org.dpppt.android.sdk.internal.database.Database;
 import org.dpppt.android.sdk.internal.database.models.ExposureDay;
-import org.dpppt.android.sdk.internal.gatt.BluetoothService;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.util.DayDate;
-import org.dpppt.android.sdk.internal.util.ProcessUtil;
 
 import okhttp3.CertificatePinner;
-
-import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
 public class DP3T {
 
 	private static final String TAG = "DP3T Interface";
 
-	public static final String UPDATE_INTENT_ACTION = "org.dpppt.android.sdk.UPDATE_ACTION";
+	public static final String ACTION_UPDATE = "org.dpppt.android.sdk.ACTION_UPDATE";
+	public static final String ACTION_UPDATE_ERRORS = "org.dpppt.android.sdk.ACTION_UPDATE_ERRORS";
 
 	public static final int REQUEST_CODE_START_CONFIRMATION = 391;
 	public static final int REQUEST_CODE_EXPORT_KEYS = 392;
 
-	private static Mode mode;
 	private static String appId;
 
-	public static void init(Context context, String appId, Mode mode, PublicKey signaturePublicKey) {
-		init(context, appId, mode, false, signaturePublicKey);
+	public static void init(Context context, String appId, PublicKey signaturePublicKey) {
+		init(context, appId, false, signaturePublicKey);
 	}
 
-	public static void init(Context context, String appId, Mode mode, boolean enableDevDiscoveryMode,
+	public static void init(Context context, String appId, boolean enableDevDiscoveryMode,
 			PublicKey signaturePublicKey) {
-		if (ProcessUtil.isMainProcess(context)) {
 			DP3T.appId = appId;
 			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 			appConfigManager.setAppId(appId);
 			appConfigManager.setDevDiscoveryModeEnabled(enableDevDiscoveryMode);
 			appConfigManager.triggerLoad();
 
-			executeInit(context, mode, signaturePublicKey);
-		}
+			executeInit(context, signaturePublicKey);
 	}
 
-	public static void init(Context context, ApplicationInfo applicationInfo, Mode mode, PublicKey signaturePublicKey) {
-		if (ProcessUtil.isMainProcess(context)) {
+	public static void init(Context context, ApplicationInfo applicationInfo, PublicKey signaturePublicKey) {
 			DP3T.appId = applicationInfo.getAppId();
 			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 			appConfigManager.setManualApplicationInfo(applicationInfo);
 
-			executeInit(context, mode, signaturePublicKey);
-		}
+			executeInit(context, signaturePublicKey);
 	}
 
-	private static void executeInit(Context context, Mode mode, PublicKey signaturePublicKey) {
-		DP3T.mode = mode;
-
-		CryptoModule.getInstance(context).init();
-
-		new Database(context).removeOldData();
-
+	private static void executeInit(Context context, PublicKey signaturePublicKey) {
 		SyncWorker.setBucketSignaturePublicKey(signaturePublicKey);
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
@@ -118,19 +99,15 @@ public class DP3T {
 	}
 
 	public static void start(Activity activity) {
-		if (getMode() == Mode.GOOGLE) {
-			GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(activity);
-			googleExposureClient.setParams(null);
-			googleExposureClient.startWithConfirmation(activity, REQUEST_CODE_START_CONFIRMATION,
-					() -> {
-						start(activity, true, true);
-					},
-					e -> {
-						// TODO: publish error status?
-					});
-		} else {
-			start(activity, true, true);
-		}
+		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(activity);
+		googleExposureClient.setParams(null);
+		googleExposureClient.startWithConfirmation(activity, REQUEST_CODE_START_CONFIRMATION,
+				() -> {
+					start(activity, true, true);
+				},
+				e -> {
+					// TODO: publish error status?
+				});
 	}
 
 	protected static void start(Context context, boolean advertise, boolean receive) {
@@ -138,14 +115,6 @@ public class DP3T {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.setAdvertisingEnabled(advertise);
 		appConfigManager.setReceivingEnabled(receive);
-		long scanInterval = appConfigManager.getScanInterval();
-		long scanDuration = appConfigManager.getScanDuration();
-		Intent intent = new Intent(context, TracingService.class).setAction(TracingService.ACTION_START);
-		intent.putExtra(BluetoothService.EXTRA_ADVERTISE, advertise);
-		intent.putExtra(BluetoothService.EXTRA_RECEIVE, receive);
-		intent.putExtra(BluetoothService.EXTRA_SCAN_INTERVAL, scanInterval);
-		intent.putExtra(BluetoothService.EXTRA_SCAN_DURATION, scanDuration);
-		ContextCompat.startForegroundService(context, intent);
 		SyncWorker.startSyncWorker(context);
 		BroadcastHelper.sendUpdateBroadcast(context);
 	}
@@ -167,11 +136,11 @@ public class DP3T {
 
 	public static TracingStatus getStatus(Context context) {
 		checkInit();
-		Database database = new Database(context);
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		Collection<TracingStatus.ErrorState> errorStates = ErrorHelper.checkTracingErrorStatus(context, mode);
-		List<ExposureDay> exposureDays = database.getExposureDays();
+		Collection<TracingStatus.ErrorState> errorStates = ErrorHelper.checkTracingErrorStatus(context);
 		InfectionStatus infectionStatus;
+		int contactCount = 0; // TODO: contactCount
+		List<ExposureDay> exposureDays = new ArrayList<>(); // TODO: exposureDays
 		if (appConfigManager.getIAmInfected()) {
 			infectionStatus = InfectionStatus.INFECTED;
 		} else if (exposureDays.size() > 0) {
@@ -180,7 +149,7 @@ public class DP3T {
 			infectionStatus = InfectionStatus.HEALTHY;
 		}
 		return new TracingStatus(
-				database.getContacts().size(),
+				contactCount,
 				appConfigManager.isAdvertisingEnabled(),
 				appConfigManager.isReceivingEnabled(),
 				appConfigManager.getLastSyncDate(),
@@ -196,51 +165,21 @@ public class DP3T {
 
 		DayDate onsetDate = new DayDate(onset.getTime());
 
-		switch (getMode()) {
-			case DP3T:
-				ExposeeRequest exposeeRequest =
-						CryptoModule.getInstance(context).getSecretKeyForPublishing(onsetDate, exposeeAuthMethod);
-
-				AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-				try {
-					appConfigManager.getBackendReportRepository(context).addExposee(exposeeRequest, exposeeAuthMethod,
-							new ResponseCallback<Void>() {
-								@Override
-								public void onSuccess(Void response) {
-									appConfigManager.setIAmInfected(true);
-									CryptoModule.getInstance(context).reset();
-									stop(context);
-									callback.onSuccess(response);
-								}
-
-								@Override
-								public void onError(Throwable throwable) {
-									callback.onError(throwable);
-								}
-							});
-				} catch (IllegalStateException e) {
-					callback.onError(e);
-					Logger.e(TAG, e);
-				}
-
-				break;
-			case GOOGLE:
-				GoogleExposureClient.getInstance(context)
-						.getTemporaryExposureKeyHistory((Activity) context, REQUEST_CODE_EXPORT_KEYS,
-								new OnSuccessListener<List<TemporaryExposureKey>>() {
-									@Override
-									public void onSuccess(List<TemporaryExposureKey> temporaryExposureKeys) {
-										Logger.i("Keys", temporaryExposureKeys.toString());
-									}
-								}, new Consumer<Exception>() {
-									@Override
-									public void accept(Exception e) {
-										Logger.e("error", e);
-									}
-								});
-				// TODO: upload
-				break;
-		}
+		GoogleExposureClient.getInstance(context)
+				.getTemporaryExposureKeyHistory((Activity) context, REQUEST_CODE_EXPORT_KEYS,
+						new OnSuccessListener<List<TemporaryExposureKey>>() {
+							@Override
+							public void onSuccess(List<TemporaryExposureKey> temporaryExposureKeys) {
+								Logger.i("Keys", temporaryExposureKeys.toString());
+							}
+						}, new Consumer<Exception>() {
+							@Override
+							public void accept(Exception e) {
+								Logger.e("error", e);
+							}
+						});
+		// TODO: upload
+		// appConfigManager.getBackendReportRepository(context).addExposee(...)
 	}
 
 	public static void sendFakeInfectedRequest(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod)
@@ -252,10 +191,12 @@ public class DP3T {
 		if (exposeeAuthMethod instanceof ExposeeAuthMethodJson) {
 			jsonAuthMethod = (ExposeeAuthMethodJson) exposeeAuthMethod;
 		}
-		ExposeeRequest exposeeRequest = new ExposeeRequest(toBase64(CryptoModule.getInstance(context).getNewRandomKey()),
+
+		// TODO: fake request
+		/*ExposeeRequest exposeeRequest = new ExposeeRequest(toBase64(CryptoModule.getInstance(context).getNewRandomKey()),
 				onsetDate.getStartOfDayTimestamp(), 1, jsonAuthMethod);
 		AppConfigManager.getInstance(context).getBackendReportRepository(context)
-				.addExposeeSync(exposeeRequest, exposeeAuthMethod);
+				.addExposeeSync(exposeeRequest, exposeeAuthMethod);*/
 	}
 
 	public static void stop(Context context) {
@@ -265,8 +206,6 @@ public class DP3T {
 		appConfigManager.setAdvertisingEnabled(false);
 		appConfigManager.setReceivingEnabled(false);
 
-		Intent intent = new Intent(context, TracingService.class).setAction(TracingService.ACTION_STOP);
-		context.startService(intent);
 		SyncWorker.stopSyncWorker(context);
 		BroadcastHelper.sendUpdateBroadcast(context);
 	}
@@ -283,12 +222,8 @@ public class DP3T {
 		CertificatePinning.setCertificatePinner(certificatePinner);
 	}
 
-	public static Mode getMode() {
-		return mode;
-	}
-
 	public static IntentFilter getUpdateIntentFilter() {
-		return new IntentFilter(DP3T.UPDATE_INTENT_ACTION);
+		return new IntentFilter(DP3T.ACTION_UPDATE);
 	}
 
 	public static void clearData(Context context, Runnable onDeleteListener) {
@@ -298,16 +233,8 @@ public class DP3T {
 			throw new IllegalStateException("Tracking must be stopped for clearing the local data");
 		}
 
-		CryptoModule.getInstance(context).reset();
 		appConfigManager.clearPreferences();
 		Logger.clear();
-		Database db = new Database(context);
-		db.recreateTables(response -> onDeleteListener.run());
-	}
-
-
-	public enum Mode {
-		DP3T, GOOGLE
 	}
 
 }
