@@ -18,6 +18,7 @@ import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodAuthorization;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
+import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -45,6 +46,28 @@ public class BackendReportRepository implements Repository {
 									 ? ((ExposeeAuthMethodAuthorization) exposeeAuthMethod).getAuthorization()
 									 : null;
 		reportService.addExposee(exposeeRequest, authorizationHeader).enqueue(new Callback<Void>() {
+			@Override
+			public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+				if (response.isSuccessful()) {
+					responseCallback.onSuccess(null);
+				} else {
+					onFailure(call, new StatusCodeException(response.raw()));
+				}
+			}
+
+			@Override
+			public void onFailure(@NonNull Call<Void> call, @NonNull Throwable throwable) {
+				responseCallback.onError(throwable);
+			}
+		});
+	}
+
+	public void addGaenExposee(@NonNull GaenRequest exposeeRequest, ExposeeAuthMethod exposeeAuthMethod,
+			@NonNull ResponseCallback<Void> responseCallback) {
+		String authorizationHeader = exposeeAuthMethod instanceof ExposeeAuthMethodAuthorization
+									 ? ((ExposeeAuthMethodAuthorization) exposeeAuthMethod).getAuthorization()
+									 : null;
+		reportService.addGaenExposee(exposeeRequest, authorizationHeader).enqueue(new Callback<Void>() {
 			@Override
 			public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
 				if (response.isSuccessful()) {

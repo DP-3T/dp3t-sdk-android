@@ -39,12 +39,16 @@ import org.dpppt.android.sdk.internal.SyncWorker;
 import org.dpppt.android.sdk.internal.backend.CertificatePinning;
 import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
+import org.dpppt.android.sdk.internal.backend.models.GaenKey;
+import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.database.models.ExposureDay;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.util.DayDate;
 
 import okhttp3.CertificatePinner;
+
+import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
 public class DP3T {
 
@@ -64,25 +68,28 @@ public class DP3T {
 
 	public static void init(Context context, String appId, boolean enableDevDiscoveryMode,
 			PublicKey signaturePublicKey) {
-			DP3T.appId = appId;
-			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-			appConfigManager.setAppId(appId);
-			appConfigManager.setDevDiscoveryModeEnabled(enableDevDiscoveryMode);
-			appConfigManager.triggerLoad();
+		DP3T.appId = appId;
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		appConfigManager.setAppId(appId);
+		appConfigManager.setDevDiscoveryModeEnabled(enableDevDiscoveryMode);
+		appConfigManager.triggerLoad();
 
-			executeInit(context, signaturePublicKey);
+		executeInit(context, signaturePublicKey);
 	}
 
 	public static void init(Context context, ApplicationInfo applicationInfo, PublicKey signaturePublicKey) {
-			DP3T.appId = applicationInfo.getAppId();
-			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-			appConfigManager.setManualApplicationInfo(applicationInfo);
+		DP3T.appId = applicationInfo.getAppId();
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		appConfigManager.setManualApplicationInfo(applicationInfo);
 
-			executeInit(context, signaturePublicKey);
+		executeInit(context, signaturePublicKey);
 	}
 
 	private static void executeInit(Context context, PublicKey signaturePublicKey) {
 		SyncWorker.setBucketSignaturePublicKey(signaturePublicKey);
+
+		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
+		googleExposureClient.setParams(null);
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		boolean advertising = appConfigManager.isAdvertisingEnabled();
@@ -171,15 +178,47 @@ public class DP3T {
 							@Override
 							public void onSuccess(List<TemporaryExposureKey> temporaryExposureKeys) {
 								Logger.i("Keys", temporaryExposureKeys.toString());
+
+								GaenRequest exposeeListRequest = new GaenRequest();
+								ArrayList<GaenKey> keys = new ArrayList<>();
+								for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
+									keys.add(new GaenKey(toBase64(temporaryExposureKey.getKeyData()),
+											temporaryExposureKey.getRollingStartIntervalNumber(),
+											temporaryExposureKey.getRollingPeriod(),
+											temporaryExposureKey.getTransmissionRiskLevel()));
+								}
+								exposeeListRequest.setGaenKeys(keys);
+
+								AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+								try {
+									appConfigManager.getBackendReportRepository(context)
+											.addGaenExposee(exposeeListRequest, exposeeAuthMethod,
+													new ResponseCallback<Void>() {
+														@Override
+														public void onSuccess(Void response) {
+															appConfigManager.setIAmInfected(true);
+															//TODO can we reset?
+															stop(context);
+															callback.onSuccess(response);
+														}
+
+														@Override
+														public void onError(Throwable throwable) {
+															callback.onError(throwable);
+														}
+													});
+								} catch (IllegalStateException e) {
+									callback.onError(e);
+									Logger.e(TAG, e);
+								}
 							}
 						}, new Consumer<Exception>() {
 							@Override
 							public void accept(Exception e) {
-								Logger.e("error", e);
+								callback.onError(e);
+								Logger.e(TAG, e);
 							}
 						});
-		// TODO: upload
-		// appConfigManager.getBackendReportRepository(context).addExposee(...)
 	}
 
 	public static void sendFakeInfectedRequest(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod)
