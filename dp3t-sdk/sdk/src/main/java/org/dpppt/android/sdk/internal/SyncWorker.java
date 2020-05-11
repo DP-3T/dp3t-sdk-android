@@ -21,6 +21,9 @@ import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
+import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.dpppt.android.sdk.DP3T;
@@ -33,10 +36,11 @@ import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.backend.proto.Exposed;
-import org.dpppt.android.sdk.internal.backend.proto.GaenExposed;
 import org.dpppt.android.sdk.internal.database.Database;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
+
+import okhttp3.ResponseBody;
 
 import static org.dpppt.android.sdk.internal.backend.BackendBucketRepository.BATCH_LENGTH;
 
@@ -136,7 +140,8 @@ public class SyncWorker extends Worker {
 		} else {
 			nextBatchReleaseTime = lastLoadedBatchReleaseTime + BATCH_LENGTH;
 		}
-		nextBatchReleaseTime -= 15 * BATCH_LENGTH;
+		//nextBatchReleaseTime -= 1 * BATCH_LENGTH;
+		nextBatchReleaseTime = 1589155200000l;
 
 		BackendBucketRepository backendBucketRepository =
 				new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
@@ -167,31 +172,86 @@ public class SyncWorker extends Worker {
 		} else if (DP3T.getMode() == Mode.GOOGLE) {
 			GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 
+			googleExposureClient.getExposureSummary("123123" + nextBatchReleaseTime).addOnSuccessListener(
+					new OnSuccessListener<ExposureSummary>() {
+						@Override
+						public void onSuccess(ExposureSummary exposureSummary) {
+							Logger.d("result", exposureSummary.toString());
+						}
+					}).addOnFailureListener(new OnFailureListener() {
+				@Override
+				public void onFailure(@NonNull Exception e) {
+					e.printStackTrace();
+				}
+			});
+
 			for (long batchReleaseTime = nextBatchReleaseTime;
 				 batchReleaseTime < System.currentTimeMillis();
 				 batchReleaseTime += BATCH_LENGTH) {
 
-				GaenExposed.File result = backendBucketRepository.getGaenExposees(batchReleaseTime);
+				ResponseBody result = backendBucketRepository.getGaenExposees(batchReleaseTime);
 
-				GaenExposed.File newBatch = GaenExposed.File.newBuilder().addAllKey(result.getKeyList()).setHeader(
+				/*GaenExposed.File newBatch = GaenExposed.File.newBuilder().addAllKey(result.getKeyList()).setHeader(
 						GaenExposed.Header.newBuilder()
 								.setBatchNum(0)
 								.setBatchSize(1)
 								.setRegion("ch")
 								.setStartTimestamp(batchReleaseTime - BATCH_LENGTH)
 								.setEndTimestamp(batchReleaseTime)
-				).build();
+				).build();*/
 
-				File file = new File(context.getCacheDir(), "keyList.proto");
+				File file = new File(context.getFilesDir(), "keyList.zip");
 				FileOutputStream fout = new FileOutputStream(file);
-				newBatch.writeTo(fout);
+				fout.write(result.bytes());
 				fout.flush();
 				fout.close();
+
+/*
+				ZipFile zipFile = new ZipFile(file);
+				Enumeration<? extends ZipEntry> entries = zipFile.entries();
+
+				File file2 = new File(context.getFilesDir(), "keyList2.zip");
+				ZipOutputStream out = new ZipOutputStream(new FileOutputStream(file2));
+
+				ZipEntry entry = zin.getNextEntry();
+				while (entry != null) {
+					String name = entry.getName();
+					boolean notInFiles = true;
+					for (File f : files) {
+						if (f.getName().equals(name)) {
+							notInFiles = false;
+							break;
+						}
+					}
+					if (notInFiles) {
+						// Add ZIP entry to output stream.
+					}
+					entry = zin.getNextEntry();
+				}
+				while (entries.hasMoreElements()) {
+					ZipEntry entry = entries.nextElement();
+					if(entry.getName().equals("export.bin")){
+						byte[] data = new byte[(int) entry.getSize()+16];
+						byte[] header = "EK Export v1".getBytes();
+						for(int i=0; i<12; i++){
+							data[i] = header[i];
+						}
+						zipFile.getInputStream(entry).read(data, 16, data.length-16);
+
+						out.putNextEntry(new ZipEntry(name));
+						// Transfer bytes from the ZIP file to the output file
+						int len;
+						while ((len = zin.read(buf)) > 0) {
+							out.write(buf, 0, len);
+						}
+					}
+				}
+				zipFile.close();*/
+
 				ArrayList<File> fileList = new ArrayList<>();
 				fileList.add(file);
-				if (result.getKeyCount() > 0) {
-					googleExposureClient.provideDiagnosisKeys(fileList, "test");
-				}
+				googleExposureClient.provideDiagnosisKeys(fileList, "123123" + batchReleaseTime);
+
 				appConfigManager.setLastLoadedBatchReleaseTime(batchReleaseTime);
 			}
 		}

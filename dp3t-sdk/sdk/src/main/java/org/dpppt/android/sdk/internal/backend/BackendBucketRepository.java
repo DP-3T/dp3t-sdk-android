@@ -23,6 +23,7 @@ import org.dpppt.android.sdk.backend.SignatureVerificationInterceptor;
 import org.dpppt.android.sdk.internal.backend.proto.Exposed;
 import org.dpppt.android.sdk.internal.backend.proto.GaenExposed;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -52,7 +53,7 @@ public class BackendBucketRepository implements Repository {
 		return getExposeesInternal(() -> bucketService.getExposees(batchReleaseTime));
 	}
 
-	public GaenExposed.File getGaenExposees(long batchReleaseTime)
+	public ResponseBody getGaenExposees(long batchReleaseTime)
 			throws IOException, StatusCodeException, ServerTimeOffsetException, SignatureException {
 		return getExposeesInternal(() -> bucketService.getGaenExposees(batchReleaseTime));
 	}
