@@ -58,15 +58,17 @@ import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.DP3TCalibrationHelper;
 import org.dpppt.android.sdk.InfectionStatus;
 import org.dpppt.android.sdk.TracingStatus;
-import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodJson;
+import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.database.Database;
 import org.dpppt.android.sdk.util.FileUploadRepository;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import static org.dpppt.android.sdk.DP3T.REQUEST_CODE_EXPORT_KEYS;
 
 public class ControlsFragment extends Fragment {
 
@@ -134,7 +136,25 @@ public class ControlsFragment extends Fragment {
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-		if (requestCode == REQUEST_CODE_SAVE_DB && resultCode == Activity.RESULT_OK && data != null) {
+		if (requestCode == REQUEST_CODE_EXPORT_KEYS) {
+			DP3T.sendIAmInfected(getContext(), new Date(), new ExposeeAuthMethodJson("asdf"), new ResponseCallback<Void>() {
+				@Override
+				public void onSuccess(Void response) {
+					DialogUtil.showMessageDialog(getContext(), getString(R.string.dialog_title_success),
+							getString(R.string.dialog_message_request_success));
+					setExposeLoadingViewVisible(false);
+					updateSdkStatus();
+				}
+
+				@Override
+				public void onError(Throwable throwable) {
+					DialogUtil.showMessageDialog(getContext(), getString(R.string.dialog_title_error),
+							throwable.getLocalizedMessage());
+					Log.e(TAG, throwable.getMessage(), throwable);
+					setExposeLoadingViewVisible(false);
+				}
+			});
+		} else if (requestCode == REQUEST_CODE_SAVE_DB && resultCode == Activity.RESULT_OK && data != null) {
 			Uri uri = data.getData();
 			try {
 				OutputStream targetOut = getContext().getContentResolver().openOutputStream(uri);

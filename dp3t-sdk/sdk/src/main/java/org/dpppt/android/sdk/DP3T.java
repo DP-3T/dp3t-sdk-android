@@ -16,6 +16,7 @@ import android.content.IntentFilter;
 import android.database.sqlite.SQLiteException;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.core.util.Consumer;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -24,12 +25,19 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
+import com.google.android.gms.tasks.OnSuccessListener;
+
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.backend.models.ApplicationInfo;
 import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodJson;
-import org.dpppt.android.sdk.internal.*;
+import org.dpppt.android.sdk.internal.AppConfigManager;
+import org.dpppt.android.sdk.internal.BroadcastHelper;
+import org.dpppt.android.sdk.internal.ErrorHelper;
+import org.dpppt.android.sdk.internal.SyncWorker;
+import org.dpppt.android.sdk.internal.TracingService;
 import org.dpppt.android.sdk.internal.backend.CertificatePinning;
 import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
@@ -54,6 +62,7 @@ public class DP3T {
 	public static final String UPDATE_INTENT_ACTION = "org.dpppt.android.sdk.UPDATE_ACTION";
 
 	public static final int REQUEST_CODE_START_CONFIRMATION = 391;
+	public static final int REQUEST_CODE_EXPORT_KEYS = 392;
 
 	private static Mode mode;
 	private static String appId;
@@ -62,7 +71,8 @@ public class DP3T {
 		init(context, appId, mode, false, signaturePublicKey);
 	}
 
-	public static void init(Context context, String appId, Mode mode, boolean enableDevDiscoveryMode, PublicKey signaturePublicKey) {
+	public static void init(Context context, String appId, Mode mode, boolean enableDevDiscoveryMode,
+			PublicKey signaturePublicKey) {
 		if (ProcessUtil.isMainProcess(context)) {
 			DP3T.appId = appId;
 			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
@@ -188,7 +198,8 @@ public class DP3T {
 
 		switch (getMode()) {
 			case DP3T:
-				ExposeeRequest exposeeRequest = CryptoModule.getInstance(context).getSecretKeyForPublishing(onsetDate, exposeeAuthMethod);
+				ExposeeRequest exposeeRequest =
+						CryptoModule.getInstance(context).getSecretKeyForPublishing(onsetDate, exposeeAuthMethod);
 
 				AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 				try {
@@ -214,7 +225,19 @@ public class DP3T {
 
 				break;
 			case GOOGLE:
-				GoogleExposureClient.getInstance(context).getTemporaryExposureKeyHistory();
+				GoogleExposureClient.getInstance(context)
+						.getTemporaryExposureKeyHistory((Activity) context, REQUEST_CODE_EXPORT_KEYS,
+								new OnSuccessListener<List<TemporaryExposureKey>>() {
+									@Override
+									public void onSuccess(List<TemporaryExposureKey> temporaryExposureKeys) {
+										Logger.i("Keys", temporaryExposureKeys.toString());
+									}
+								}, new Consumer<Exception>() {
+									@Override
+									public void accept(Exception e) {
+										Logger.e("error", e);
+									}
+								});
 				// TODO: upload
 				break;
 		}

@@ -20,11 +20,8 @@ import java.util.List;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.Nearby;
-import com.google.android.gms.nearby.exposurenotification.ExposureConfiguration;
-import com.google.android.gms.nearby.exposurenotification.ExposureInformation;
-import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
-import com.google.android.gms.nearby.exposurenotification.ExposureNotificationStatusCodes;
-import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
+import com.google.android.gms.nearby.exposurenotification.*;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import org.dpppt.android.sdk.internal.TracingController;
@@ -116,11 +113,25 @@ public class GoogleExposureClient implements TracingController {
 		return exposureNotificationClient.isEnabled();
 	}
 
-	public void getTemporaryExposureKeyHistory() {
-		// TODO: provide callback
+	public void getTemporaryExposureKeyHistory(Activity activity, int resolutionRequestCode,
+			OnSuccessListener<List<TemporaryExposureKey>> successCallback, Consumer<Exception> errorCallback) {
 		exposureNotificationClient.getTemporaryExposureKeyHistory()
-				.addOnSuccessListener(temporaryExposureKeys -> Logger.i(TAG, "keys: " + temporaryExposureKeys.toString()))
-				.addOnFailureListener(e -> Logger.e(TAG, e));
+				.addOnSuccessListener(successCallback)
+				.addOnFailureListener(e -> {
+					if (e instanceof ApiException) {
+						ApiException apiException = (ApiException) e;
+						if (apiException.getStatusCode() == ExposureNotificationStatusCodes.RESOLUTION_REQUIRED) {
+							try {
+								apiException.getStatus().startResolutionForResult(activity, resolutionRequestCode);
+								return;
+							} catch (IntentSender.SendIntentException e2) {
+								Logger.e(TAG, "Error calling startResolutionForResult, sending to settings");
+							}
+						}
+					}
+					Logger.e(TAG, e);
+					errorCallback.accept(e);
+				});
 	}
 
 	public void provideDiagnosisKeys(List<File> keys, String token) {

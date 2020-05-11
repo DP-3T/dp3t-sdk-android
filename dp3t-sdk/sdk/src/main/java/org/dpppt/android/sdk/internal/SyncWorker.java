@@ -136,6 +136,7 @@ public class SyncWorker extends Worker {
 		} else {
 			nextBatchReleaseTime = lastLoadedBatchReleaseTime + BATCH_LENGTH;
 		}
+		nextBatchReleaseTime -= 15 * BATCH_LENGTH;
 
 		BackendBucketRepository backendBucketRepository =
 				new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
@@ -171,15 +172,26 @@ public class SyncWorker extends Worker {
 				 batchReleaseTime += BATCH_LENGTH) {
 
 				GaenExposed.File result = backendBucketRepository.getGaenExposees(batchReleaseTime);
+
+				GaenExposed.File newBatch = GaenExposed.File.newBuilder().addAllKey(result.getKeyList()).setHeader(
+						GaenExposed.Header.newBuilder()
+								.setBatchNum(0)
+								.setBatchSize(1)
+								.setRegion("ch")
+								.setStartTimestamp(batchReleaseTime - BATCH_LENGTH)
+								.setEndTimestamp(batchReleaseTime)
+				).build();
+
 				File file = new File(context.getCacheDir(), "keyList.proto");
 				FileOutputStream fout = new FileOutputStream(file);
-				result.writeTo(fout);
+				newBatch.writeTo(fout);
 				fout.flush();
 				fout.close();
 				ArrayList<File> fileList = new ArrayList<>();
 				fileList.add(file);
-				googleExposureClient.provideDiagnosisKeys(fileList, "test");
-
+				if (result.getKeyCount() > 0) {
+					googleExposureClient.provideDiagnosisKeys(fileList, "test");
+				}
 				appConfigManager.setLastLoadedBatchReleaseTime(batchReleaseTime);
 			}
 		}
