@@ -9,21 +9,28 @@
  */
 package org.dpppt.android.sdk.internal.backend.models;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import org.dpppt.android.sdk.models.ApplicationInfo;
+public class GaenRequest {
+	List<GaenKey> gaenKeys;
 
-public class ApplicationsList {
+	Integer fake = 0;
 
-	private List<ApplicationInfo> applications;
 
-	public ApplicationsList() {
-		applications = new ArrayList<>();
+	public List<GaenKey> getGaenKeys() {
+		return this.gaenKeys;
 	}
 
-	public List<ApplicationInfo> getApplications() {
-		return applications;
+	public void setGaenKeys(List<GaenKey> gaenKeys) {
+		this.gaenKeys = gaenKeys;
+	}
+
+	public Integer isFake() {
+		return this.fake;
+	}
+
+	public void setFake(Integer fake) {
+		this.fake = fake;
 	}
 
 }

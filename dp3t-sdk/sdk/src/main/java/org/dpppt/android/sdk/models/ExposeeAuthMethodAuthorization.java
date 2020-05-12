@@ -7,14 +7,18 @@
  *
  * SPDX-License-Identifier: MPL-2.0
  */
+package org.dpppt.android.sdk.models;
 
-package org.dpppt.android.sdk.internal.crypto;
+public class ExposeeAuthMethodAuthorization implements ExposeeAuthMethod {
 
-import android.util.Pair;
+	private String authorization;
 
-import java.util.ArrayList;
+	public ExposeeAuthMethodAuthorization(String authorization) {
+		this.authorization = authorization;
+	}
 
-import org.dpppt.android.sdk.internal.util.DayDate;
+	public String getAuthorization() {
+		return authorization;
+	}
 
-public class SKList extends ArrayList<Pair<DayDate, byte[]>> {
 }

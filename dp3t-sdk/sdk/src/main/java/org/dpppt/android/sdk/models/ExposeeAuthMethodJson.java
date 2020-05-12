@@ -7,11 +7,18 @@
  *
  * SPDX-License-Identifier: MPL-2.0
  */
+package org.dpppt.android.sdk.models;
 
-package org.dpppt.android.sdk.internal.gatt;
+public class ExposeeAuthMethodJson implements ExposeeAuthMethod {
 
-public enum  BluetoothState {
-	ENABLED,
-	DISABLED,
-	NOT_SUPPORTED
+	private String value;
+
+	public ExposeeAuthMethodJson(String value) {
+		this.value = value;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
 }

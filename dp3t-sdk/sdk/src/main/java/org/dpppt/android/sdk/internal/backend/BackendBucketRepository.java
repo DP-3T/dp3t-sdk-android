@@ -15,15 +15,11 @@ import androidx.annotation.NonNull;
 import java.io.IOException;
 import java.security.PublicKey;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-
 import org.dpppt.android.sdk.backend.SignatureException;
-import org.dpppt.android.sdk.backend.SignatureVerificationInterceptor;
-import org.dpppt.android.sdk.internal.backend.proto.Exposed;
 
+import okhttp3.ResponseBody;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.converter.protobuf.ProtoConverterFactory;
 
 public class BackendBucketRepository implements Repository {
 
@@ -36,27 +32,17 @@ public class BackendBucketRepository implements Repository {
 				.baseUrl(bucketBaseUrl)
 				.client(getClientBuilder(context)
 						.addInterceptor(new TimingVerificationInterceptor())
-						.addInterceptor(new SignatureVerificationInterceptor(publicKey))
+						// TODO .addInterceptor(new SignatureVerificationInterceptor(publicKey))
 						.build())
-				.addConverterFactory(ProtoConverterFactory.create())
 				.build();
 
 		bucketService = bucketRetrofit.create(BucketService.class);
 	}
 
-	public Exposed.ProtoExposedList getExposees(long batchReleaseTime)
+	public ResponseBody getGaenExposees(long batchReleaseTime)
 			throws IOException, StatusCodeException, ServerTimeOffsetException, SignatureException {
-		Response<Exposed.ProtoExposedList> response;
-		try {
-			response = bucketService.getExposees(batchReleaseTime).execute();
-		} catch (RuntimeException re) {
-			if (re.getCause() instanceof InvalidProtocolBufferException) {
-				// unwrap protobuf exception
-				throw (InvalidProtocolBufferException) re.getCause();
-			} else {
-				throw re;
-			}
-		}
+		Response<ResponseBody> response;
+		response = bucketService.getGaenExposees(batchReleaseTime).execute();
 		if (response.isSuccessful() && response.body() != null) {
 			return response.body();
 		} else {

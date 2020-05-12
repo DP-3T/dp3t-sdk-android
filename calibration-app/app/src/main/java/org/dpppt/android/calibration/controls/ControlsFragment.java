@@ -9,7 +9,6 @@
  */
 package org.dpppt.android.calibration.controls;
 
-import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
@@ -17,10 +16,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.Settings;
 import android.text.Editable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -36,14 +33,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 
-import java.io.FileNotFoundException;
-import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -58,22 +52,16 @@ import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.DP3TCalibrationHelper;
 import org.dpppt.android.sdk.InfectionStatus;
 import org.dpppt.android.sdk.TracingStatus;
-import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.backend.ResponseCallback;
-import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodJson;
-import org.dpppt.android.sdk.internal.database.Database;
-import org.dpppt.android.sdk.util.FileUploadRepository;
+import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import static org.dpppt.android.sdk.DP3T.REQUEST_CODE_EXPORT_KEYS;
 
 public class ControlsFragment extends Fragment {
 
 	private static final String TAG = ControlsFragment.class.getCanonicalName();
 
 	private static final int REQUEST_CODE_PERMISSION_LOCATION = 1;
-	private static final int REQUEST_CODE_SAVE_DB = 2;
 	private static final int REQUEST_CODE_REPORT_EXPOSED = 3;
 
 	private static final DateFormat DATE_FORMAT_SYNC = SimpleDateFormat.getDateTimeInstance();
@@ -134,16 +122,24 @@ public class ControlsFragment extends Fragment {
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-		if (requestCode == REQUEST_CODE_SAVE_DB && resultCode == Activity.RESULT_OK && data != null) {
-			Uri uri = data.getData();
-			try {
-				OutputStream targetOut = getContext().getContentResolver().openOutputStream(uri);
-				DP3TCalibrationHelper.exportDb(getContext(), targetOut, () ->
-						new Handler(getContext().getMainLooper()).post(() -> setExportDbLoadingViewVisible(false)));
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-			return;
+		if (requestCode == REQUEST_CODE_EXPORT_KEYS) {
+			DP3T.sendIAmInfected(getContext(), new Date(), new ExposeeAuthMethodJson("asdf"), new ResponseCallback<Void>() {
+				@Override
+				public void onSuccess(Void response) {
+					DialogUtil.showMessageDialog(getContext(), getString(R.string.dialog_title_success),
+							getString(R.string.dialog_message_request_success));
+					setExposeLoadingViewVisible(false);
+					updateSdkStatus();
+				}
+
+				@Override
+				public void onError(Throwable throwable) {
+					DialogUtil.showMessageDialog(getContext(), getString(R.string.dialog_title_error),
+							throwable.getLocalizedMessage());
+					Log.e(TAG, throwable.getMessage(), throwable);
+					setExposeLoadingViewVisible(false);
+				}
+			});
 		} else if (requestCode == REQUEST_CODE_REPORT_EXPOSED) {
 			if (resultCode == Activity.RESULT_OK) {
 				long onsetDate = data.getLongExtra(ExposedDialogFragment.RESULT_EXTRA_DATE_MILLIS, -1);
@@ -154,39 +150,13 @@ public class ControlsFragment extends Fragment {
 	}
 
 	private void setupUi(View view) {
-		Button locationButton = view.findViewById(R.id.home_button_location);
-		locationButton.setOnClickListener(
-				v -> requestPermissions(new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
-						REQUEST_CODE_PERMISSION_LOCATION));
-
-		Button batteryButton = view.findViewById(R.id.home_button_battery_optimization);
-		batteryButton.setOnClickListener(
-				v -> startActivity(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-						Uri.parse("package:" + getContext().getPackageName()))));
-
 		Button bluetoothButton = view.findViewById(R.id.home_button_bluetooth);
 		bluetoothButton.setOnClickListener(v -> {
-			if (BluetoothAdapter.getDefaultAdapter() != null) {
-				BluetoothAdapter.getDefaultAdapter().enable();
-			} else {
-				Toast.makeText(getContext(), "No BluetoothAdapter found!", Toast.LENGTH_LONG).show();
-			}
+			// TODO: enable bluetooth via intent
 		});
 
 		Button refreshButton = view.findViewById(R.id.home_button_sync);
 		refreshButton.setOnClickListener(v -> resyncSdk());
-
-		Button buttonStartAdvertising = view.findViewById(R.id.home_button_start_advertising);
-		buttonStartAdvertising.setOnClickListener(v -> {
-			DP3TCalibrationHelper.start(v.getContext(), true, false);
-			updateSdkStatus();
-		});
-
-		Button buttonStartReceiving = view.findViewById(R.id.home_button_start_receiving);
-		buttonStartReceiving.setOnClickListener(v -> {
-			DP3TCalibrationHelper.start(v.getContext(), false, true);
-			updateSdkStatus();
-		});
 
 		Button buttonClearData = view.findViewById(R.id.home_button_clear_data);
 		buttonClearData.setOnClickListener(v -> {
@@ -196,35 +166,6 @@ public class ControlsFragment extends Fragment {
 								new Handler(getContext().getMainLooper()).post(this::updateSdkStatus));
 						MainApplication.initDP3T(v.getContext());
 					});
-		});
-
-		Button buttonSaveDb = view.findViewById(R.id.home_button_export_db);
-		buttonSaveDb.setOnClickListener(v -> {
-			Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-			intent.setType("application/sqlite");
-			intent.putExtra(Intent.EXTRA_TITLE, "dp3t_sample_db.sqlite");
-			startActivityForResult(intent, REQUEST_CODE_SAVE_DB);
-			setExportDbLoadingViewVisible(true);
-		});
-
-		Button uploadDB = view.findViewById(R.id.home_button_upload_db);
-		uploadDB.setOnClickListener(v -> {
-			setUploadDbLoadingViewVisible(true);
-			new FileUploadRepository()
-					.uploadDatabase(getContext(), AppConfigManager.getInstance(getContext()).getCalibrationTestDeviceName(),
-							new Callback<Void>() {
-								@Override
-								public void onResponse(Call<Void> call, Response<Void> response) {
-									setUploadDbLoadingViewVisible(false);
-								}
-
-								@Override
-								public void onFailure(Call<Void> call, Throwable t) {
-									t.printStackTrace();
-									Toast.makeText(getContext(), "Upload failed!", Toast.LENGTH_LONG).show();
-									setUploadDbLoadingViewVisible(false);
-								}
-							});
 		});
 
 		EditText deanonymizationDeviceId = view.findViewById(R.id.deanonymization_device_id);
@@ -285,18 +226,6 @@ public class ControlsFragment extends Fragment {
 		Context context = getContext();
 		if (view == null || context == null) return;
 
-		boolean locationGranted = RequirementsUtil.isLocationPermissionGranted(context);
-		Button locationButton = view.findViewById(R.id.home_button_location);
-		locationButton.setEnabled(!locationGranted);
-		locationButton.setText(locationGranted ? R.string.req_location_permission_granted
-											   : R.string.req_location_permission_ungranted);
-
-		boolean batteryOptDeactivated = RequirementsUtil.isBatteryOptimizationDeactivated(context);
-		Button batteryButton = view.findViewById(R.id.home_button_battery_optimization);
-		batteryButton.setEnabled(!batteryOptDeactivated);
-		batteryButton.setText(batteryOptDeactivated ? R.string.req_battery_deactivated
-													: R.string.req_battery_deactivated);
-
 		boolean bluetoothActivated = RequirementsUtil.isBluetoothEnabled();
 		Button bluetoothButton = view.findViewById(R.id.home_button_bluetooth);
 		bluetoothButton.setEnabled(!bluetoothActivated);
@@ -322,7 +251,7 @@ public class ControlsFragment extends Fragment {
 		statusText.setText(formatStatusString(status));
 
 		Button buttonStartStopTracking = view.findViewById(R.id.home_button_start_stop_tracking);
-		boolean isRunning = status.isAdvertising() || status.isReceiving();
+		boolean isRunning = status.isTracingEnabled();
 		buttonStartStopTracking.setSelected(isRunning);
 		buttonStartStopTracking.setText(getString(isRunning ? R.string.button_tracking_stop
 															: R.string.button_tracking_start));
@@ -330,22 +259,13 @@ public class ControlsFragment extends Fragment {
 			if (isRunning) {
 				DP3T.stop(v.getContext());
 			} else {
-				DP3T.start(v.getContext());
+				DP3T.start(getActivity());
 			}
 			updateSdkStatus();
 		});
 
-		Button buttonStartAdvertising = view.findViewById(R.id.home_button_start_advertising);
-		buttonStartAdvertising.setEnabled(!isRunning);
-		Button buttonStartReceiving = view.findViewById(R.id.home_button_start_receiving);
-		buttonStartReceiving.setEnabled(!isRunning);
-
 		Button buttonClearData = view.findViewById(R.id.home_button_clear_data);
 		buttonClearData.setEnabled(!isRunning);
-		Button buttonSaveDb = view.findViewById(R.id.home_button_export_db);
-		buttonSaveDb.setEnabled(!isRunning);
-		Button buttonUploadDb = view.findViewById(R.id.home_button_upload_db);
-		buttonUploadDb.setEnabled(!isRunning);
 
 		Button buttonReportInfected = view.findViewById(R.id.home_button_report_infected);
 		buttonReportInfected.setEnabled(status.getInfectionStatus() != InfectionStatus.INFECTED);
@@ -373,11 +293,11 @@ public class ControlsFragment extends Fragment {
 
 	private SpannableString formatStatusString(TracingStatus status) {
 		SpannableStringBuilder builder = new SpannableStringBuilder();
-		boolean isTracking = status.isAdvertising() || status.isReceiving();
+		boolean isTracking = status.isTracingEnabled();
 		builder.append(getString(isTracking ? R.string.status_tracking_active : R.string.status_tracking_inactive)).append("\n")
 				.setSpan(new StyleSpan(Typeface.BOLD), 0, builder.length() - 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-		builder.append(getString(R.string.status_advertising, status.isAdvertising())).append("\n")
-				.append(getString(R.string.status_receiving, status.isReceiving())).append("\n");
+		builder.append(getString(R.string.status_advertising, status.isTracingEnabled())).append("\n")
+				.append(getString(R.string.status_receiving, status.isTracingEnabled())).append("\n");
 
 		long lastSyncDateUTC = status.getLastSyncDate();
 		String lastSyncDateString =
@@ -386,9 +306,7 @@ public class ControlsFragment extends Fragment {
 				.append(getString(R.string.status_self_infected, status.getInfectionStatus() == InfectionStatus.INFECTED))
 				.append("\n")
 				.append(getString(R.string.status_been_exposed, status.getInfectionStatus() == InfectionStatus.EXPOSED))
-				.append("\n")
-				.append(getString(R.string.status_number_contacts, status.getNumberOfContacts())).append("\n")
-				.append(getString(R.string.status_number_handshakes, new Database(getContext()).getHandshakes().size()));
+				.append("\n");
 
 		Collection<TracingStatus.ErrorState> errors = status.getErrors();
 		if (errors != null && errors.size() > 0) {
@@ -431,22 +349,6 @@ public class ControlsFragment extends Fragment {
 		if (view != null) {
 			view.findViewById(R.id.home_loading_view_exposed).setVisibility(visible ? View.VISIBLE : View.GONE);
 			view.findViewById(R.id.home_button_report_infected).setVisibility(visible ? View.INVISIBLE : View.VISIBLE);
-		}
-	}
-
-	private void setExportDbLoadingViewVisible(boolean visible) {
-		View view = getView();
-		if (view != null) {
-			view.findViewById(R.id.home_loading_view_export_db).setVisibility(visible ? View.VISIBLE : View.GONE);
-			view.findViewById(R.id.home_button_export_db).setVisibility(visible ? View.INVISIBLE : View.VISIBLE);
-		}
-	}
-
-	private void setUploadDbLoadingViewVisible(boolean visible) {
-		View view = getView();
-		if (view != null) {
-			view.findViewById(R.id.home_loading_view_upload_db).setVisibility(visible ? View.VISIBLE : View.GONE);
-			view.findViewById(R.id.home_button_upload_db).setVisibility(visible ? View.INVISIBLE : View.VISIBLE);
 		}
 	}
 

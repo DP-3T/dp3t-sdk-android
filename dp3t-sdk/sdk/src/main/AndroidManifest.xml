@@ -11,13 +11,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="org.dpppt.android.sdk">
 
-	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.BLUETOOTH" />
-	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-	<uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
 	<uses-feature
@@ -26,23 +21,40 @@
 	<uses-feature
 		android:name="android.hardware.bluetooth_le"
 		android:required="true" />
-	<uses-feature
-		android:name="android.hardware.location"
-		android:required="false" />
 
 	<application android:fullBackupContent="@xml/dp3t_sdk_backup_rules">
 
-		<service
-			android:name="org.dpppt.android.sdk.internal.TracingService"
-			android:enabled="true"
-			android:foregroundServiceType="location" />
+		<receiver
+			android:name="org.dpppt.android.sdk.internal.nearby.ExposureNotificationBroadcastReceiver"
+			android:permission="com.google.android.gms.nearby.exposurenotification.EXPOSURE_CALLBACK"
+			android:exported="true">
+			<intent-filter>
+				<action android:name="com.google.android.gms.exposurenotification.ACTION_EXPOSURE_STATE_UPDATED" />
+				<action android:name="com.google.android.gms.exposurenotification.ACTION_REQUEST_DIAGNOSIS_KEYS" />
+			</intent-filter>
+		</receiver>
 
 		<receiver
-			android:name="org.dpppt.android.sdk.internal.TracingServiceBroadcastReceiver"
-			android:enabled="true">
+			android:name="org.dpppt.android.sdk.internal.BluetoothStateBroadcastReceiver"
+			android:exported="true">
 			<intent-filter>
-				<action android:name="android.intent.action.BOOT_COMPLETED" />
-				<action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+				<action android:name="android.bluetooth.adapter.action.STATE_CHANGED" />
+			</intent-filter>
+		</receiver>
+
+		<receiver
+			android:name="org.dpppt.android.sdk.internal.LocationServiceBroadcastReceiver"
+			android:exported="true">
+			<intent-filter>
+				<action android:name="android.location.MODE_CHANGED" />
+			</intent-filter>
+		</receiver>
+
+		<receiver
+			android:name="org.dpppt.android.sdk.internal.TracingErrorsBroadcastReceiver"
+			android:exported="false">
+			<intent-filter>
+				<action android:name="org.dpppt.android.sdk.ACTION_UPDATE_ERRORS" />
 			</intent-filter>
 		</receiver>
 

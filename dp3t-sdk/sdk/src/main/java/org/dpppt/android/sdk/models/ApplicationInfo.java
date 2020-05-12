@@ -7,7 +7,7 @@
  *
  * SPDX-License-Identifier: MPL-2.0
  */
-package org.dpppt.android.sdk.backend.models;
+package org.dpppt.android.sdk.models;
 
 public class ApplicationInfo {
 

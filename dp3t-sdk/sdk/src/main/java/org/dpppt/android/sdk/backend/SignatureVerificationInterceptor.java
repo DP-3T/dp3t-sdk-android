@@ -29,7 +29,7 @@ public class SignatureVerificationInterceptor implements Interceptor {
 
 	private final PublicKey publicKey;
 
-	public SignatureVerificationInterceptor(@NonNull PublicKey publicKey) {
+	public SignatureVerificationInterceptor(PublicKey publicKey) {
 		this.publicKey = publicKey;
 	}
 

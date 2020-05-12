@@ -22,7 +22,6 @@ import org.dpppt.android.calibration.util.PreferencesUtil;
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.internal.logger.LogLevel;
 import org.dpppt.android.sdk.internal.logger.Logger;
-import org.dpppt.android.sdk.internal.util.ProcessUtil;
 import org.dpppt.android.sdk.util.SignatureUtil;
 
 import okhttp3.CertificatePinner;
@@ -32,10 +31,8 @@ public class MainApplication extends Application {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-		if (ProcessUtil.isMainProcess(this)) {
-			registerReceiver(sdkReceiver, DP3T.getUpdateIntentFilter());
-			initDP3T(this);
-		}
+		registerReceiver(sdkReceiver, DP3T.getUpdateIntentFilter());
+		initDP3T(this);
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			NotificationUtil.createNotificationChannel(this);
 		}
@@ -45,8 +42,8 @@ public class MainApplication extends Application {
 	public static void initDP3T(Context context) {
 		PublicKey publicKey = SignatureUtil.getPublicKeyFromBase64OrThrow(
 				"LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0R" +
-						"RZ0FFWTc3MFZEWjJlZjZCYjh0UXZYWVJpcUFaemtHLwpwNWs0U3pTV3FRY00zNzlqTVN6c3JOaU5nc0" +
-						"hWZlRPeGFqMUFzQ3RrNmJVUDV1cDc3RU5nckVzVkh3PT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t");
+						"RZ0FFdkxXZHVFWThqcnA4aWNSNEpVSlJaU0JkOFh2UgphR2FLeUg2VlFnTXV2Zk1JcmxrNk92QmtKeH" +
+						"dhbUdNRnFWYW9zOW11di9rWGhZdjF1a1p1R2RjREJBPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t");
 		DP3T.init(context, "org.dpppt.demo", true, publicKey);
 
 		CertificatePinner certificatePinner = new CertificatePinner.Builder()
@@ -57,9 +54,7 @@ public class MainApplication extends Application {
 
 	@Override
 	public void onTerminate() {
-		if (ProcessUtil.isMainProcess(this)) {
-			unregisterReceiver(sdkReceiver);
-		}
+		unregisterReceiver(sdkReceiver);
 		super.onTerminate();
 	}
 

@@ -1,7 +1,6 @@
--keep class org.dpppt.android.sdk.backend.models.** { *; }
+-keep class org.dpppt.android.sdk.models.** { *; }
 -keep class org.dpppt.android.sdk.internal.backend.models.** { *; }
 -keep class org.dpppt.android.sdk.internal.backend.proto.** { *; }
--keep class org.dpppt.android.sdk.internal.database.models.** { *; }
 
 -keep class com.google.crypto.tink.proto.** { *; }
 

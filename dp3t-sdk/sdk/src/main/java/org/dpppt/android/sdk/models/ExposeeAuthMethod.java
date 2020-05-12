@@ -7,19 +7,7 @@
  *
  * SPDX-License-Identifier: MPL-2.0
  */
-package org.dpppt.android.sdk.util;
+package org.dpppt.android.sdk.models;
 
-import okhttp3.MultipartBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.http.Multipart;
-import retrofit2.http.POST;
-import retrofit2.http.Part;
-
-public interface FileUpload {
-
-	@Multipart
-	@POST("/upload")
-	Call<Void> upload(@Part MultipartBody.Part file);
-
+public interface ExposeeAuthMethod {
 }
