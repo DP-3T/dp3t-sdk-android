@@ -7,18 +7,18 @@
  *
  * SPDX-License-Identifier: MPL-2.0
  */
-package org.dpppt.android.sdk.backend.models;
+package org.dpppt.android.sdk.models;
 
-public class ExposeeAuthMethodAuthorization implements ExposeeAuthMethod {
+public class ExposeeAuthMethodJson implements ExposeeAuthMethod {
 
-	private String authorization;
+	private String value;
 
-	public ExposeeAuthMethodAuthorization(String authorization) {
-		this.authorization = authorization;
+	public ExposeeAuthMethodJson(String value) {
+		this.value = value;
 	}
 
-	public String getAuthorization() {
-		return authorization;
+	public String getValue() {
+		return value;
 	}
 
 }

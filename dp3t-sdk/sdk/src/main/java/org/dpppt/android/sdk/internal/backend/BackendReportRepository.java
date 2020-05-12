@@ -15,8 +15,8 @@ import androidx.annotation.NonNull;
 import java.io.IOException;
 
 import org.dpppt.android.sdk.backend.ResponseCallback;
-import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
-import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodAuthorization;
+import org.dpppt.android.sdk.models.ExposeeAuthMethod;
+import org.dpppt.android.sdk.models.ExposeeAuthMethodAuthorization;
 import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 

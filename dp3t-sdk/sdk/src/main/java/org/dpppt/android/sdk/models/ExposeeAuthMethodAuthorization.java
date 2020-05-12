@@ -7,22 +7,18 @@
  *
  * SPDX-License-Identifier: MPL-2.0
  */
-package org.dpppt.android.sdk.internal;
+package org.dpppt.android.sdk.models;
 
-import android.os.Bundle;
+public class ExposeeAuthMethodAuthorization implements ExposeeAuthMethod {
 
-public interface TracingController {
+	private String authorization;
 
-	void setParams(Bundle extras);
+	public ExposeeAuthMethodAuthorization(String authorization) {
+		this.authorization = authorization;
+	}
 
-	void start();
-
-	void stop();
-
-	void restartClient();
-
-	void restartServer();
-
-	void destroy();
+	public String getAuthorization() {
+		return authorization;
+	}
 
 }

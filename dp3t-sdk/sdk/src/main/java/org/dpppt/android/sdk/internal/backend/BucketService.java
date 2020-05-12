@@ -9,20 +9,12 @@
  */
 package org.dpppt.android.sdk.internal.backend;
 
-import org.dpppt.android.sdk.internal.backend.proto.Exposed;
-import org.dpppt.android.sdk.internal.backend.proto.GaenExposed;
-
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
-import retrofit2.http.Headers;
 import retrofit2.http.Path;
 
 interface BucketService {
-
-	@Headers("Accept: application/x-protobuf")
-	@GET("v1/exposed/{batchReleaseTime}")
-	Call<Exposed.ProtoExposedList> getExposees(@Path("batchReleaseTime") long batchReleaseTime);
 
 	@GET("v1/gaen/exposed/{batchReleaseTime}")
 	Call<ResponseBody> getGaenExposees(@Path("batchReleaseTime") long batchReleaseTime);

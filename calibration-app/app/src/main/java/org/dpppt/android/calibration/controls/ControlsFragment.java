@@ -53,7 +53,7 @@ import org.dpppt.android.sdk.DP3TCalibrationHelper;
 import org.dpppt.android.sdk.InfectionStatus;
 import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.backend.ResponseCallback;
-import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodJson;
+import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
 
 import static org.dpppt.android.sdk.DP3T.REQUEST_CODE_EXPORT_KEYS;
 
@@ -251,7 +251,7 @@ public class ControlsFragment extends Fragment {
 		statusText.setText(formatStatusString(status));
 
 		Button buttonStartStopTracking = view.findViewById(R.id.home_button_start_stop_tracking);
-		boolean isRunning = status.isAdvertising() || status.isReceiving();
+		boolean isRunning = status.isTracingEnabled();
 		buttonStartStopTracking.setSelected(isRunning);
 		buttonStartStopTracking.setText(getString(isRunning ? R.string.button_tracking_stop
 															: R.string.button_tracking_start));
@@ -293,11 +293,11 @@ public class ControlsFragment extends Fragment {
 
 	private SpannableString formatStatusString(TracingStatus status) {
 		SpannableStringBuilder builder = new SpannableStringBuilder();
-		boolean isTracking = status.isAdvertising() || status.isReceiving();
+		boolean isTracking = status.isTracingEnabled();
 		builder.append(getString(isTracking ? R.string.status_tracking_active : R.string.status_tracking_inactive)).append("\n")
 				.setSpan(new StyleSpan(Typeface.BOLD), 0, builder.length() - 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-		builder.append(getString(R.string.status_advertising, status.isAdvertising())).append("\n")
-				.append(getString(R.string.status_receiving, status.isReceiving())).append("\n");
+		builder.append(getString(R.string.status_advertising, status.isTracingEnabled())).append("\n")
+				.append(getString(R.string.status_receiving, status.isTracingEnabled())).append("\n");
 
 		long lastSyncDateUTC = status.getLastSyncDate();
 		String lastSyncDateString =
@@ -306,8 +306,7 @@ public class ControlsFragment extends Fragment {
 				.append(getString(R.string.status_self_infected, status.getInfectionStatus() == InfectionStatus.INFECTED))
 				.append("\n")
 				.append(getString(R.string.status_been_exposed, status.getInfectionStatus() == InfectionStatus.EXPOSED))
-				.append("\n")
-				.append(getString(R.string.status_number_contacts, status.getNumberOfContacts())).append("\n");
+				.append("\n");
 
 		Collection<TracingStatus.ErrorState> errors = status.getErrors();
 		if (errors != null && errors.size() > 0) {

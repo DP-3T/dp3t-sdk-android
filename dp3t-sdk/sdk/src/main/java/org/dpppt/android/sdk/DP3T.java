@@ -29,9 +29,9 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.backend.SignatureException;
-import org.dpppt.android.sdk.backend.models.ApplicationInfo;
-import org.dpppt.android.sdk.backend.models.ExposeeAuthMethod;
-import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodJson;
+import org.dpppt.android.sdk.models.ApplicationInfo;
+import org.dpppt.android.sdk.models.ExposeeAuthMethod;
+import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.ErrorHelper;
@@ -41,7 +41,7 @@ import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.models.GaenKey;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
-import org.dpppt.android.sdk.internal.database.models.ExposureDay;
+import org.dpppt.android.sdk.models.ExposureDay;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.util.DayDate;
@@ -89,14 +89,7 @@ public class DP3T {
 		SyncWorker.setBucketSignaturePublicKey(signaturePublicKey);
 
 		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
-		googleExposureClient.setParams(null);
-
-		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		boolean advertising = appConfigManager.isAdvertisingEnabled();
-		boolean receiving = appConfigManager.isReceivingEnabled();
-		if (advertising || receiving) {
-			start(context, advertising, receiving);
-		}
+		googleExposureClient.setParams();
 	}
 
 	private static void checkInit() throws IllegalStateException {
@@ -107,21 +100,19 @@ public class DP3T {
 
 	public static void start(Activity activity) {
 		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(activity);
-		googleExposureClient.setParams(null);
 		googleExposureClient.startWithConfirmation(activity, REQUEST_CODE_START_CONFIRMATION,
 				() -> {
-					start(activity, true, true);
+					startInternal(activity);
 				},
 				e -> {
 					// TODO: publish error status?
 				});
 	}
 
-	protected static void start(Context context, boolean advertise, boolean receive) {
+	private static void startInternal(Context context) {
 		checkInit();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		appConfigManager.setAdvertisingEnabled(advertise);
-		appConfigManager.setReceivingEnabled(receive);
+		appConfigManager.setTracingEnabled(true);
 		SyncWorker.startSyncWorker(context);
 		BroadcastHelper.sendUpdateBroadcast(context);
 	}
@@ -129,7 +120,7 @@ public class DP3T {
 	public static boolean isStarted(Context context) {
 		checkInit();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		return appConfigManager.isAdvertisingEnabled() || appConfigManager.isReceivingEnabled();
+		return appConfigManager.isTracingEnabled();
 	}
 
 	public static void sync(Context context) {
@@ -146,7 +137,6 @@ public class DP3T {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		Collection<TracingStatus.ErrorState> errorStates = ErrorHelper.checkTracingErrorStatus(context);
 		InfectionStatus infectionStatus;
-		int contactCount = 0; // TODO: contactCount
 		List<ExposureDay> exposureDays = new ArrayList<>(); // TODO: exposureDays
 		if (appConfigManager.getIAmInfected()) {
 			infectionStatus = InfectionStatus.INFECTED;
@@ -156,9 +146,7 @@ public class DP3T {
 			infectionStatus = InfectionStatus.HEALTHY;
 		}
 		return new TracingStatus(
-				contactCount,
-				appConfigManager.isAdvertisingEnabled(),
-				appConfigManager.isReceivingEnabled(),
+				appConfigManager.isTracingEnabled(),
 				appConfigManager.getLastSyncDate(),
 				infectionStatus,
 				exposureDays,
@@ -242,19 +230,12 @@ public class DP3T {
 		checkInit();
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		appConfigManager.setAdvertisingEnabled(false);
-		appConfigManager.setReceivingEnabled(false);
+		appConfigManager.setTracingEnabled(false);
+
+		GoogleExposureClient.getInstance(context).stop();
 
 		SyncWorker.stopSyncWorker(context);
 		BroadcastHelper.sendUpdateBroadcast(context);
-	}
-
-	public static void setMatchingParameters(Context context, float contactAttenuationThreshold, int numberOfWindowsForExposure) {
-		checkInit();
-
-		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		appConfigManager.setContactAttenuationThreshold(contactAttenuationThreshold);
-		appConfigManager.setNumberOfWindowsForExposure(numberOfWindowsForExposure);
 	}
 
 	public static void setCertificatePinner(@NonNull CertificatePinner certificatePinner) {
@@ -268,8 +249,8 @@ public class DP3T {
 	public static void clearData(Context context, Runnable onDeleteListener) {
 		checkInit();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		if (appConfigManager.isAdvertisingEnabled() || appConfigManager.isReceivingEnabled()) {
-			throw new IllegalStateException("Tracking must be stopped for clearing the local data");
+		if (appConfigManager.isTracingEnabled()) {
+			throw new IllegalStateException("Tracing must be stopped to clear the local data");
 		}
 
 		appConfigManager.clearPreferences();

@@ -15,7 +15,7 @@ import android.content.SharedPreferences;
 import java.io.IOException;
 
 import org.dpppt.android.sdk.backend.ResponseCallback;
-import org.dpppt.android.sdk.backend.models.ApplicationInfo;
+import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
 import org.dpppt.android.sdk.internal.backend.DiscoveryRepository;
 import org.dpppt.android.sdk.internal.backend.models.ApplicationsList;
@@ -34,27 +34,14 @@ public class AppConfigManager {
 
 	public static final int CALIBRATION_TEST_DEVICE_NAME_LENGTH = 4;
 
-	public static final long DEFAULT_SCAN_INTERVAL = 1 * 60 * 1000L;
-	public static final long DEFAULT_SCAN_DURATION = 20 * 1000L;
-	private static final boolean DEFAULT_BLUETOOTH_USE_SCAN_RESPONSE_ENABLED = false;
-
-	private static final int DEFAULT_NUMBER_OF_WINDOWS_FOR_EXPOSURE = 3;
-	private static final float DEFAULT_CONTACT_ATTENUATION_THRESHOLD = 73.0f;
-
 	private static final String PREFS_NAME = "dp3t_sdk_preferences";
 	private static final String PREF_APPLICATION_LIST = "applicationList";
-	private static final String PREF_ADVERTISING_ENABLED = "advertisingEnabled";
-	private static final String PREF_RECEIVING_ENABLED = "receivingEnabled";
+	private static final String PREF_TRACING_ENABLED = "tracingEnabled";
 	private static final String PREF_LAST_LOADED_BATCH_RELEASE_TIME = "lastLoadedBatchReleaseTime";
 	private static final String PREF_LAST_SYNC_DATE = "lastSyncDate";
 	private static final String PREF_LAST_SYNC_NET_SUCCESS = "lastSyncNetSuccess";
 	private static final String PREF_I_AM_INFECTED = "IAmInfected";
 	private static final String PREF_CALIBRATION_TEST_DEVICE_NAME = "calibrationTestDeviceName";
-	private static final String PREF_SCAN_INTERVAL = "scanInterval";
-	private static final String PREF_SCAN_DURATION = "scanDuration";
-	private static final String PREF_BLUETOOTH_USE_SCAN_RESPONSE = "scanResponseEnabled";
-	private static final String PREF_CONTACT_ATTENUATION_THRESHOLD = "contact_attenuation_threshold";
-	private static final String PREF_NUMBER_OF_WINDOWS_FOR_EXPOSURE = "number_of_windows_for_exposure";
 
 	private String appId;
 	private boolean useDiscovery;
@@ -115,24 +102,12 @@ public class AppConfigManager {
 		throw new IllegalStateException("The provided appId is not found by the discovery service!");
 	}
 
-	@Deprecated
-	public void setAdvertisingEnabled(boolean enabled) {
-		sharedPrefs.edit().putBoolean(PREF_ADVERTISING_ENABLED, enabled).apply();
+	public void setTracingEnabled(boolean enabled) {
+		sharedPrefs.edit().putBoolean(PREF_TRACING_ENABLED, enabled).apply();
 	}
 
-	@Deprecated
-	public boolean isAdvertisingEnabled() {
-		return sharedPrefs.getBoolean(PREF_ADVERTISING_ENABLED, false);
-	}
-
-	@Deprecated
-	public void setReceivingEnabled(boolean enabled) {
-		sharedPrefs.edit().putBoolean(PREF_RECEIVING_ENABLED, enabled).apply();
-	}
-
-	@Deprecated
-	public boolean isReceivingEnabled() {
-		return sharedPrefs.getBoolean(PREF_RECEIVING_ENABLED, false);
+	public boolean isTracingEnabled() {
+		return sharedPrefs.getBoolean(PREF_TRACING_ENABLED, false);
 	}
 
 	public void setLastLoadedBatchReleaseTime(long lastLoadedBatchReleaseTime) {
@@ -187,56 +162,6 @@ public class AppConfigManager {
 
 	public String getCalibrationTestDeviceName() {
 		return sharedPrefs.getString(PREF_CALIBRATION_TEST_DEVICE_NAME, null);
-	}
-
-	@Deprecated
-	public void setScanDuration(long scanDuration) {
-		sharedPrefs.edit().putLong(PREF_SCAN_DURATION, scanDuration).apply();
-	}
-
-	@Deprecated
-	public long getScanDuration() {
-		return sharedPrefs.getLong(PREF_SCAN_DURATION, DEFAULT_SCAN_DURATION);
-	}
-
-	@Deprecated
-	public void setScanInterval(long scanInterval) {
-		sharedPrefs.edit().putLong(PREF_SCAN_INTERVAL, scanInterval).apply();
-	}
-
-	@Deprecated
-	public long getScanInterval() {
-		return sharedPrefs.getLong(PREF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL);
-	}
-
-	@Deprecated
-	public boolean isScanResponseEnabled() {
-		return sharedPrefs.getBoolean(PREF_BLUETOOTH_USE_SCAN_RESPONSE, DEFAULT_BLUETOOTH_USE_SCAN_RESPONSE_ENABLED);
-	}
-
-	@Deprecated
-	public void setUseScanResponse(boolean useScanResponse) {
-		sharedPrefs.edit().putBoolean(PREF_BLUETOOTH_USE_SCAN_RESPONSE, useScanResponse).apply();
-	}
-
-	@Deprecated
-	public float getContactAttenuationThreshold() {
-		return sharedPrefs.getFloat(PREF_CONTACT_ATTENUATION_THRESHOLD, DEFAULT_CONTACT_ATTENUATION_THRESHOLD);
-	}
-
-	@Deprecated
-	public void setContactAttenuationThreshold(float threshold) {
-		sharedPrefs.edit().putFloat(PREF_CONTACT_ATTENUATION_THRESHOLD, threshold).apply();
-	}
-
-	@Deprecated
-	public int getNumberOfWindowsForExposure() {
-		return sharedPrefs.getInt(PREF_NUMBER_OF_WINDOWS_FOR_EXPOSURE, DEFAULT_NUMBER_OF_WINDOWS_FOR_EXPOSURE);
-	}
-
-	@Deprecated
-	public void setNumberOfWindowsForExposure(int threshold) {
-		sharedPrefs.edit().putInt(PREF_NUMBER_OF_WINDOWS_FOR_EXPOSURE, threshold).apply();
 	}
 
 	public void clearPreferences() {

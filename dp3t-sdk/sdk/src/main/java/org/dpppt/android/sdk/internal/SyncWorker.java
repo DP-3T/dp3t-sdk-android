@@ -25,7 +25,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
 import org.dpppt.android.sdk.backend.SignatureException;
-import org.dpppt.android.sdk.backend.models.ApplicationInfo;
+import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.internal.backend.BackendBucketRepository;
 import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
@@ -130,7 +130,7 @@ public class SyncWorker extends Worker {
 		} else {
 			nextBatchReleaseTime = lastLoadedBatchReleaseTime + BATCH_LENGTH;
 		}
-		//nextBatchReleaseTime -= 1 * BATCH_LENGTH;
+
 		// TODO: debug code
 		nextBatchReleaseTime = 1589155200000L;
 

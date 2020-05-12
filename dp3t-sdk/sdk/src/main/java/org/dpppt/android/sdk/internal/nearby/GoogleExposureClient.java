@@ -12,7 +12,6 @@ package org.dpppt.android.sdk.internal.nearby;
 import android.app.Activity;
 import android.content.Context;
 import android.content.IntentSender;
-import android.os.Bundle;
 import androidx.core.util.Consumer;
 
 import java.io.File;
@@ -24,10 +23,9 @@ import com.google.android.gms.nearby.exposurenotification.*;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
-import org.dpppt.android.sdk.internal.TracingController;
 import org.dpppt.android.sdk.internal.logger.Logger;
 
-public class GoogleExposureClient implements TracingController {
+public class GoogleExposureClient {
 
 	private static final String TAG = "GoogleExposureClient";
 
@@ -46,23 +44,6 @@ public class GoogleExposureClient implements TracingController {
 
 	private GoogleExposureClient(Context context) {
 		exposureNotificationClient = Nearby.getExposureNotificationClient(context);
-	}
-
-	@Override
-	public void setParams(Bundle extras) {
-		// TODO
-		// default values
-		exposureConfiguration = new ExposureConfiguration.ExposureConfigurationBuilder()
-				.setMinimumRiskScore(4)
-				.setAttenuationScores(new int[] { 4, 4, 4, 4, 4, 4, 4, 4 })
-				.setAttenuationWeight(50)
-				.setDaysSinceLastExposureScores(new int[] { 4, 4, 4, 4, 4, 4, 4, 4 })
-				.setDaysSinceLastExposureWeight(50)
-				.setDurationScores(new int[] { 4, 4, 4, 4, 4, 4, 4, 4 })
-				.setDurationWeight(50)
-				.setTransmissionRiskScores(new int[] { 4, 4, 4, 4, 4, 4, 4, 4 })
-				.setTransmissionRiskWeight(50)
-				.build();
 	}
 
 	public void startWithConfirmation(Activity activity, int resolutionRequestCode,
@@ -89,20 +70,6 @@ public class GoogleExposureClient implements TracingController {
 				});
 	}
 
-	@Override
-	public void start() {
-		if (exposureConfiguration == null) {
-			throw new IllegalStateException("must call setParams()");
-		}
-		exposureNotificationClient.start()
-				.addOnSuccessListener(nothing -> Logger.i(TAG, "started successfully"))
-				.addOnFailureListener(e -> {
-					Logger.e(TAG, e);
-					// TODO: add service error state? need to check when this can happen
-				});
-	}
-
-	@Override
 	public void stop() {
 		exposureNotificationClient.stop()
 				.addOnSuccessListener(nothing -> Logger.i(TAG, "stopped successfully"))
@@ -134,6 +101,22 @@ public class GoogleExposureClient implements TracingController {
 				});
 	}
 
+	public void setParams() {
+		// TODO
+		// default values
+		exposureConfiguration = new ExposureConfiguration.ExposureConfigurationBuilder()
+				.setMinimumRiskScore(4)
+				.setAttenuationScores(new int[] { 4, 4, 4, 4, 4, 4, 4, 4 })
+				.setAttenuationWeight(50)
+				.setDaysSinceLastExposureScores(new int[] { 4, 4, 4, 4, 4, 4, 4, 4 })
+				.setDaysSinceLastExposureWeight(50)
+				.setDurationScores(new int[] { 4, 4, 4, 4, 4, 4, 4, 4 })
+				.setDurationWeight(50)
+				.setTransmissionRiskScores(new int[] { 4, 4, 4, 4, 4, 4, 4, 4 })
+				.setTransmissionRiskWeight(50)
+				.build();
+	}
+
 	public void provideDiagnosisKeys(List<File> keys, String token) {
 		if (keys == null || keys.isEmpty()) {
 			return;
@@ -143,7 +126,6 @@ public class GoogleExposureClient implements TracingController {
 		}
 
 		// TODO: 1. must wait for completion
-		// TODO: 2. key list must not be longer than #getMaxDiagnosisKeys() (split into multiple batches otherwise)
 		exposureNotificationClient.provideDiagnosisKeys(keys, exposureConfiguration, token)
 				.addOnSuccessListener(nothing -> {
 					Logger.e(TAG, "inserted keys successfully");
@@ -161,21 +143,6 @@ public class GoogleExposureClient implements TracingController {
 
 	public Task<List<ExposureInformation>> getExposureInformation(String token) {
 		return exposureNotificationClient.getExposureInformation(token);
-	}
-
-	@Override
-	public void restartClient() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void restartServer() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void destroy() {
-		instance = null;
 	}
 
 }

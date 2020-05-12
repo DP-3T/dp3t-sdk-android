@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package org.dpppt.android.sdk.internal.database.models;
+package org.dpppt.android.sdk.models;
 
 import org.dpppt.android.sdk.internal.util.DayDate;
 

@@ -10,7 +10,7 @@
 
 package org.dpppt.android.sdk.backend;
 
-public class SignatureException extends io.jsonwebtoken.security.SignatureException {
+public class SignatureException extends RuntimeException {
 
 	public SignatureException(String message) {
 		super(message);

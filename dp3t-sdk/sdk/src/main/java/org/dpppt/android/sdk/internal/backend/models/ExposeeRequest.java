@@ -9,7 +9,7 @@
  */
 package org.dpppt.android.sdk.internal.backend.models;
 
-import org.dpppt.android.sdk.backend.models.ExposeeAuthMethodJson;
+import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
 
 public class ExposeeRequest {
 

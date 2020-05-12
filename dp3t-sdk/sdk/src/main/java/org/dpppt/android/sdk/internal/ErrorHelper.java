@@ -12,7 +12,6 @@ package org.dpppt.android.sdk.internal;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.os.PowerManager;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -39,13 +38,6 @@ public class ErrorHelper {
 			}
 		}
 
-		PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-		boolean batteryOptimizationsDeactivated =
-				powerManager == null || powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
-		if (!batteryOptimizationsDeactivated) {
-			errors.add(ErrorState.BATTERY_OPTIMIZER_ENABLED);
-		}
-
 		if (!LocationServiceUtil.isLocationEnabled(context)) {
 			errors.add(ErrorState.LOCATION_SERVICE_DISABLED);
 		}
@@ -58,6 +50,10 @@ public class ErrorHelper {
 			}
 			errors.add(syncError);
 		}
+
+		// TODO: add error if EN framework is not available
+
+		// TODO: add error if sdk tracing is enabled, but system is disabled
 
 		return errors;
 	}
