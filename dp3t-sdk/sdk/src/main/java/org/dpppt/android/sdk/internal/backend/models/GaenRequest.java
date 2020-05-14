@@ -14,8 +14,19 @@ import java.util.List;
 public class GaenRequest {
 	List<GaenKey> gaenKeys;
 
-	Integer fake = 0;
+	int delayedKeyDate;
 
+	int fake;
+
+	public GaenRequest(List<GaenKey> gaenKeys, int delayedKeyDate) {
+		this(gaenKeys, delayedKeyDate, 0);
+	}
+
+	public GaenRequest(List<GaenKey> gaenKeys, int delayedKeyDate, int fake) {
+		this.gaenKeys = gaenKeys;
+		this.delayedKeyDate = delayedKeyDate;
+		this.fake = fake;
+	}
 
 	public List<GaenKey> getGaenKeys() {
 		return this.gaenKeys;

@@ -106,7 +106,7 @@ public class GoogleExposureClient {
 		// default values
 		exposureConfiguration = new ExposureConfiguration.ExposureConfigurationBuilder()
 				.setMinimumRiskScore(4)
-				.setAttenuationScores(new int[] { 4, 4, 4, 4, 4, 4, 4, 4 })
+				.setAttenuationScores(new int[] { 1, 1, 1, 1, 1, 1, 1, 1 })
 				.setAttenuationWeight(50)
 				.setDaysSinceLastExposureScores(new int[] { 4, 4, 4, 4, 4, 4, 4, 4 })
 				.setDaysSinceLastExposureWeight(50)
@@ -115,6 +115,10 @@ public class GoogleExposureClient {
 				.setTransmissionRiskScores(new int[] { 4, 4, 4, 4, 4, 4, 4, 4 })
 				.setTransmissionRiskWeight(50)
 				.build();
+	}
+
+	public ExposureConfiguration getExposureConfiguration() {
+		return exposureConfiguration;
 	}
 
 	public void provideDiagnosisKeys(List<File> keys, String token) {

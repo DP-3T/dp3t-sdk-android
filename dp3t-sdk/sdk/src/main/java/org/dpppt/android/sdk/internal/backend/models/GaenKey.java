@@ -11,55 +11,45 @@ package org.dpppt.android.sdk.internal.backend.models;
 
 
 public class GaenKey {
+
 	String keyData;
 
-	Integer rollingStartNumber;
+	int rollingStartNumber;
 
-	Integer rollingPeriod;
+	int rollingPeriod;
 
-	Integer transmissionRiskLevel;
+	int transmissionRiskLevel;
 
+	int fake;
 
-	public GaenKey() {
-	}
 
 	public GaenKey(String keyData, Integer rollingStartNumber, Integer rollingPeriod, Integer transmissionRiskLevel) {
+		this(keyData, rollingStartNumber, rollingPeriod, transmissionRiskLevel, 0);
+	}
+
+
+	public GaenKey(String keyData, Integer rollingStartNumber, Integer rollingPeriod, Integer transmissionRiskLevel, int fake) {
 		this.keyData = keyData;
 		this.rollingStartNumber = rollingStartNumber;
 		this.rollingPeriod = rollingPeriod;
 		this.transmissionRiskLevel = transmissionRiskLevel;
+		this.fake = fake;
 	}
 
 	public String getKeyData() {
 		return this.keyData;
 	}
 
-	public void setKeyData(String keyData) {
-		this.keyData = keyData;
-	}
-
 	public Integer getRollingStartNumber() {
 		return this.rollingStartNumber;
-	}
-
-	public void setRollingStartNumber(Integer rollingStartNumber) {
-		this.rollingStartNumber = rollingStartNumber;
 	}
 
 	public Integer getRollingPeriod() {
 		return this.rollingPeriod;
 	}
 
-	public void setRollingPeriod(Integer rollingPeriod) {
-		this.rollingPeriod = rollingPeriod;
-	}
-
 	public Integer getTransmissionRiskLevel() {
 		return this.transmissionRiskLevel;
-	}
-
-	public void setTransmissionRiskLevel(Integer transmissionRiskLevel) {
-		this.transmissionRiskLevel = transmissionRiskLevel;
 	}
 
 }

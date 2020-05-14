@@ -55,8 +55,6 @@ import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
 
-import static org.dpppt.android.sdk.DP3T.REQUEST_CODE_EXPORT_KEYS;
-
 public class ControlsFragment extends Fragment {
 
 	private static final String TAG = ControlsFragment.class.getCanonicalName();
@@ -122,29 +120,11 @@ public class ControlsFragment extends Fragment {
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-		if (requestCode == REQUEST_CODE_EXPORT_KEYS) {
-			DP3T.sendIAmInfected(getContext(), new Date(), new ExposeeAuthMethodJson("asdf"), new ResponseCallback<Void>() {
-				@Override
-				public void onSuccess(Void response) {
-					DialogUtil.showMessageDialog(getContext(), getString(R.string.dialog_title_success),
-							getString(R.string.dialog_message_request_success));
-					setExposeLoadingViewVisible(false);
-					updateSdkStatus();
-				}
-
-				@Override
-				public void onError(Throwable throwable) {
-					DialogUtil.showMessageDialog(getContext(), getString(R.string.dialog_title_error),
-							throwable.getLocalizedMessage());
-					Log.e(TAG, throwable.getMessage(), throwable);
-					setExposeLoadingViewVisible(false);
-				}
-			});
-		} else if (requestCode == REQUEST_CODE_REPORT_EXPOSED) {
+		if (requestCode == REQUEST_CODE_REPORT_EXPOSED) {
 			if (resultCode == Activity.RESULT_OK) {
 				long onsetDate = data.getLongExtra(ExposedDialogFragment.RESULT_EXTRA_DATE_MILLIS, -1);
 				String authCodeBase64 = data.getStringExtra(ExposedDialogFragment.RESULT_EXTRA_AUTH_CODE_INPUT_BASE64);
-				sendInfectedUpdate(getContext(), new Date(onsetDate), authCodeBase64);
+				sendInfectedUpdate(new Date(onsetDate), authCodeBase64);
 			}
 		}
 	}
@@ -322,13 +302,13 @@ public class ControlsFragment extends Fragment {
 		return new SpannableString(builder);
 	}
 
-	private void sendInfectedUpdate(Context context, Date onsetDate, String codeInputBase64) {
+	private void sendInfectedUpdate(Date onsetDate, String codeInputBase64) {
 		setExposeLoadingViewVisible(true);
 
-		DP3T.sendIAmInfected(context, onsetDate, new ExposeeAuthMethodJson(codeInputBase64), new ResponseCallback<Void>() {
+		DP3T.sendIAmInfected(getActivity(), onsetDate, new ExposeeAuthMethodJson(codeInputBase64), new ResponseCallback<Void>() {
 			@Override
 			public void onSuccess(Void response) {
-				DialogUtil.showMessageDialog(context, getString(R.string.dialog_title_success),
+				DialogUtil.showMessageDialog(getContext(), getString(R.string.dialog_title_success),
 						getString(R.string.dialog_message_request_success));
 				setExposeLoadingViewVisible(false);
 				updateSdkStatus();
@@ -336,7 +316,7 @@ public class ControlsFragment extends Fragment {
 
 			@Override
 			public void onError(Throwable throwable) {
-				DialogUtil.showMessageDialog(context, getString(R.string.dialog_title_error),
+				DialogUtil.showMessageDialog(getContext(), getString(R.string.dialog_title_error),
 						throwable.getLocalizedMessage());
 				Log.e(TAG, throwable.getMessage(), throwable);
 				setExposeLoadingViewVisible(false);

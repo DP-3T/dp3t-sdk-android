@@ -131,26 +131,24 @@ public class SyncWorker extends Worker {
 		}
 
 		// TODO: debug code
-		nextBatchReleaseTime = 1589155200000L;
+		nextBatchReleaseTime -= 1 * BATCH_LENGTH;
 
 		BackendBucketRepository backendBucketRepository =
 				new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
 
 		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 
-		googleExposureClient.getExposureSummary("123123" + nextBatchReleaseTime)
-				.addOnSuccessListener(exposureSummary -> {
-					Logger.d("result", exposureSummary.toString());
-				})
-				.addOnFailureListener(e -> {
-					e.printStackTrace();
-				});
+		long fixedBatchTime = 1589241600000l;
+
+		googleExposureClient.getExposureSummary(googleExposureClient.getExposureConfiguration().toString() + fixedBatchTime)
+				.addOnSuccessListener(exposureSummary -> Logger.d("result", exposureSummary.toString()))
+				.addOnFailureListener(e -> e.printStackTrace());
 
 		for (long batchReleaseTime = nextBatchReleaseTime;
 			 batchReleaseTime < System.currentTimeMillis();
 			 batchReleaseTime += BATCH_LENGTH) {
 
-			ResponseBody result = backendBucketRepository.getGaenExposees(batchReleaseTime);
+			ResponseBody result = backendBucketRepository.getGaenExposees(fixedBatchTime);
 
 			/*GaenExposed.File newBatch = GaenExposed.File.newBuilder().addAllKey(result.getKeyList()).setHeader(
 					GaenExposed.Header.newBuilder()
@@ -211,7 +209,8 @@ public class SyncWorker extends Worker {
 
 			ArrayList<File> fileList = new ArrayList<>();
 			fileList.add(file);
-			googleExposureClient.provideDiagnosisKeys(fileList, "123123" + batchReleaseTime);
+			googleExposureClient
+					.provideDiagnosisKeys(fileList, googleExposureClient.getExposureConfiguration().toString() + fixedBatchTime);
 
 			appConfigManager.setLastLoadedBatchReleaseTime(batchReleaseTime);
 		}

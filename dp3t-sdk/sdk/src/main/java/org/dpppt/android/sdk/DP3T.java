@@ -16,7 +16,6 @@ import android.content.IntentFilter;
 import android.database.sqlite.SQLiteException;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.util.Consumer;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -25,9 +24,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 
 import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
-import com.google.android.gms.tasks.OnSuccessListener;
 
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.backend.SignatureException;
@@ -42,11 +41,12 @@ import org.dpppt.android.sdk.internal.backend.models.GaenKey;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
-import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ApplicationInfo;
+import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
 import org.dpppt.android.sdk.models.ExposureDay;
+import org.dpppt.android.sdk.util.DateUtil;
 
 import okhttp3.CertificatePinner;
 
@@ -63,6 +63,8 @@ public class DP3T {
 	public static final int REQUEST_CODE_EXPORT_KEYS = 392;
 
 	private static String appId;
+
+	private static PendingIAmInfectedRequest pendingIAmInfectedRequest;
 
 	public static void init(Context context, ApplicationInfo applicationInfo, PublicKey signaturePublicKey) {
 		DP3T.appId = applicationInfo.getAppId();
@@ -100,6 +102,13 @@ public class DP3T {
 		if (requestCode == DP3T.REQUEST_CODE_START_CONFIRMATION) {
 			if (resultCode == Activity.RESULT_OK) {
 				DP3T.start(activity);
+			}
+			return true;
+		} else if (requestCode == REQUEST_CODE_EXPORT_KEYS) {
+			if (resultCode == Activity.RESULT_OK) {
+				executeIAmInfected();
+			} else {
+				reportFailedIAmInfected(new CancellationException("user denied key export"));
 			}
 			return true;
 		}
@@ -151,59 +160,76 @@ public class DP3T {
 		);
 	}
 
-	public static void sendIAmInfected(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod,
+	public static void sendIAmInfected(Activity activity, Date onset, ExposeeAuthMethod exposeeAuthMethod,
 			ResponseCallback<Void> callback) {
 		checkInit();
 
-		DayDate onsetDate = new DayDate(onset.getTime());
+		pendingIAmInfectedRequest = new PendingIAmInfectedRequest(activity, onset, exposeeAuthMethod, callback);
 
-		GoogleExposureClient.getInstance(context)
-				.getTemporaryExposureKeyHistory((Activity) context, REQUEST_CODE_EXPORT_KEYS,
-						new OnSuccessListener<List<TemporaryExposureKey>>() {
-							@Override
-							public void onSuccess(List<TemporaryExposureKey> temporaryExposureKeys) {
-								Logger.i("Keys", temporaryExposureKeys.toString());
+		executeIAmInfected();
+	}
 
-								GaenRequest exposeeListRequest = new GaenRequest();
-								ArrayList<GaenKey> keys = new ArrayList<>();
-								for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
-									keys.add(new GaenKey(toBase64(temporaryExposureKey.getKeyData()),
-											temporaryExposureKey.getRollingStartIntervalNumber(),
-											temporaryExposureKey.getRollingPeriod(),
-											temporaryExposureKey.getTransmissionRiskLevel()));
-								}
-								exposeeListRequest.setGaenKeys(keys);
+	private static void executeIAmInfected() {
+		if (pendingIAmInfectedRequest == null) {
+			throw new IllegalStateException("pendingIAmInfectedRequest must be set beforee calling executeIAmInfected()");
+		}
+		DayDate onsetDate = new DayDate(pendingIAmInfectedRequest.onset.getTime());
 
-								AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-								try {
-									appConfigManager.getBackendReportRepository(context)
-											.addGaenExposee(exposeeListRequest, exposeeAuthMethod,
-													new ResponseCallback<Void>() {
-														@Override
-														public void onSuccess(Void response) {
-															appConfigManager.setIAmInfected(true);
-															//TODO can we reset?
-															stop(context);
-															callback.onSuccess(response);
-														}
+		GoogleExposureClient.getInstance(pendingIAmInfectedRequest.activity)
+				.getTemporaryExposureKeyHistory(pendingIAmInfectedRequest.activity, REQUEST_CODE_EXPORT_KEYS,
+						temporaryExposureKeys -> {
+							Logger.i("Keys", temporaryExposureKeys.toString());
 
-														@Override
-														public void onError(Throwable throwable) {
-															callback.onError(throwable);
-														}
-													});
-								} catch (IllegalStateException e) {
-									callback.onError(e);
-									Logger.e(TAG, e);
-								}
+							ArrayList<GaenKey> keys = new ArrayList<>();
+							for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
+								keys.add(new GaenKey(toBase64(temporaryExposureKey.getKeyData()),
+										temporaryExposureKey.getRollingStartIntervalNumber(),
+										temporaryExposureKey.getRollingPeriod(),
+										temporaryExposureKey.getTransmissionRiskLevel()));
 							}
-						}, new Consumer<Exception>() {
-							@Override
-							public void accept(Exception e) {
-								callback.onError(e);
-								Logger.e(TAG, e);
+							while (keys.size() < 14) {
+								keys.add(new GaenKey(toBase64(new byte[16]),
+										DateUtil.getCurrentRollingStartNumber(),
+										0,
+										0));
 							}
+							GaenRequest exposeeListRequest = new GaenRequest(keys, DateUtil.getCurrentRollingStartNumber());
+							exposeeListRequest.setGaenKeys(keys);
+
+							AppConfigManager appConfigManager = AppConfigManager.getInstance(pendingIAmInfectedRequest.activity);
+							try {
+								appConfigManager.getBackendReportRepository(pendingIAmInfectedRequest.activity)
+										.addGaenExposee(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
+												new ResponseCallback<Void>() {
+													@Override
+													public void onSuccess(Void response) {
+														appConfigManager.setIAmInfected(true);
+														//TODO can we reset?
+														stop(pendingIAmInfectedRequest.activity);
+														pendingIAmInfectedRequest.callback.onSuccess(response);
+														pendingIAmInfectedRequest = null;
+													}
+
+													@Override
+													public void onError(Throwable throwable) {
+														reportFailedIAmInfected(throwable);
+													}
+												});
+							} catch (IllegalStateException e) {
+								reportFailedIAmInfected(e);
+							}
+						}, e -> {
+							reportFailedIAmInfected(e);
 						});
+	}
+
+	private static void reportFailedIAmInfected(Throwable e) {
+		if (pendingIAmInfectedRequest == null) {
+			throw new IllegalStateException("pendingIAmInfectedRequest must be set before calling reportFailedIAmInfected()");
+		}
+		pendingIAmInfectedRequest.callback.onError(e);
+		Logger.e(TAG, e);
+		pendingIAmInfectedRequest = null;
 	}
 
 	public static void sendFakeInfectedRequest(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod)
@@ -260,6 +286,23 @@ public class DP3T {
 
 		appConfigManager.clearPreferences();
 		Logger.clear();
+	}
+
+
+	private static class PendingIAmInfectedRequest {
+		Activity activity;
+		Date onset;
+		ExposeeAuthMethod exposeeAuthMethod;
+		ResponseCallback<Void> callback;
+
+		public PendingIAmInfectedRequest(Activity activity, Date onset, ExposeeAuthMethod exposeeAuthMethod,
+				ResponseCallback<Void> callback) {
+			this.activity = activity;
+			this.onset = onset;
+			this.exposeeAuthMethod = exposeeAuthMethod;
+			this.callback = callback;
+		}
+
 	}
 
 }
