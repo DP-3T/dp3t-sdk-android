@@ -57,6 +57,8 @@ public class TracingStatus {
 		LOCATION_SERVICE_DISABLED(R.string.dp3t_sdk_service_notification_error_location_service),
 		BLE_DISABLED(R.string.dp3t_sdk_service_notification_error_bluetooth_disabled),
 		BLE_NOT_SUPPORTED(R.string.dp3t_sdk_service_notification_error_bluetooth_not_supported),
+		GAEN_NOT_AVAILABLE(R.string.dp3t_sdk_service_notification_error_gaen_not_available),
+		GAEN_UNEXPECTEDLY_DISABLED(R.string.dp3t_sdk_service_notification_error_gaen_unexpectedly_disabled),
 		SYNC_ERROR_SERVER(R.string.dp3t_sdk_service_notification_error_sync_server),
 		SYNC_ERROR_NETWORK(R.string.dp3t_sdk_service_notification_error_sync_network),
 		SYNC_ERROR_DATABASE(R.string.dp3t_sdk_service_notification_error_sync_database),
