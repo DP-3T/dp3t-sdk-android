@@ -10,10 +10,13 @@
 package org.dpppt.android.sdk;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.sqlite.SQLiteException;
+import android.location.LocationManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -30,10 +33,7 @@ import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.backend.SignatureException;
-import org.dpppt.android.sdk.internal.AppConfigManager;
-import org.dpppt.android.sdk.internal.BroadcastHelper;
-import org.dpppt.android.sdk.internal.ErrorHelper;
-import org.dpppt.android.sdk.internal.SyncWorker;
+import org.dpppt.android.sdk.internal.*;
 import org.dpppt.android.sdk.internal.backend.CertificatePinning;
 import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
@@ -71,7 +71,7 @@ public class DP3T {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.setManualApplicationInfo(applicationInfo);
 
-		executeInit(context, signaturePublicKey);
+		executeInit(context.getApplicationContext(), signaturePublicKey);
 	}
 
 	private static void executeInit(Context context, PublicKey signaturePublicKey) {
@@ -79,6 +79,14 @@ public class DP3T {
 
 		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 		googleExposureClient.setParams();
+
+		BroadcastReceiver bluetoothStateChangeReceiver = new BluetoothStateBroadcastReceiver();
+		IntentFilter bluetoothFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+		context.registerReceiver(bluetoothStateChangeReceiver, bluetoothFilter);
+
+		BroadcastReceiver locationServiceStateChangeReceiver = new LocationServiceBroadcastReceiver();
+		IntentFilter locationServiceFilter = new IntentFilter(LocationManager.MODE_CHANGED_ACTION);
+		context.registerReceiver(locationServiceStateChangeReceiver, locationServiceFilter);
 	}
 
 	private static void checkInit() throws IllegalStateException {
@@ -123,7 +131,7 @@ public class DP3T {
 		BroadcastHelper.sendUpdateBroadcast(context);
 	}
 
-	public static boolean isStarted(Context context) {
+	public static boolean isTracingEnabled(Context context) {
 		checkInit();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		return appConfigManager.isTracingEnabled();

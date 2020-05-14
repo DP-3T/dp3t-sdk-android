@@ -59,7 +59,6 @@ public class ControlsFragment extends Fragment {
 
 	private static final String TAG = ControlsFragment.class.getCanonicalName();
 
-	private static final int REQUEST_CODE_PERMISSION_LOCATION = 1;
 	private static final int REQUEST_CODE_REPORT_EXPOSED = 3;
 
 	private static final DateFormat DATE_FORMAT_SYNC = SimpleDateFormat.getDateTimeInstance();
@@ -190,15 +189,6 @@ public class ControlsFragment extends Fragment {
 			}
 		}
 		DP3TCalibrationHelper.setCalibrationTestDeviceName(getContext(), deviceId);
-	}
-
-	@Override
-	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-		if (requestCode == REQUEST_CODE_PERMISSION_LOCATION) {
-			checkPermissionRequirements();
-			updateSdkStatus();
-		}
 	}
 
 	private void checkPermissionRequirements() {

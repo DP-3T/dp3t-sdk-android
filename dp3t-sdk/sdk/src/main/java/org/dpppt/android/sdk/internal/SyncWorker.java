@@ -55,6 +55,8 @@ public class SyncWorker extends Worker {
 
 		WorkManager workManager = WorkManager.getInstance(context);
 		workManager.enqueueUniquePeriodicWork(WORK_TAG, ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest);
+
+		Logger.d(TAG, "scheduled SyncWorker");
 	}
 
 	public static void stopSyncWorker(Context context) {

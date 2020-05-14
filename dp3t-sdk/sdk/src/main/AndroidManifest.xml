@@ -26,27 +26,18 @@
 
 		<receiver
 			android:name="org.dpppt.android.sdk.internal.nearby.ExposureNotificationBroadcastReceiver"
-			android:permission="com.google.android.gms.nearby.exposurenotification.EXPOSURE_CALLBACK"
-			android:exported="true">
+			android:exported="true"
+			android:permission="com.google.android.gms.nearby.exposurenotification.EXPOSURE_CALLBACK">
 			<intent-filter>
 				<action android:name="com.google.android.gms.exposurenotification.ACTION_EXPOSURE_STATE_UPDATED" />
 				<action android:name="com.google.android.gms.exposurenotification.ACTION_REQUEST_DIAGNOSIS_KEYS" />
 			</intent-filter>
 		</receiver>
 
-		<receiver
-			android:name="org.dpppt.android.sdk.internal.BluetoothStateBroadcastReceiver"
-			android:exported="true">
+		<receiver android:name="org.dpppt.android.sdk.internal.BootCompletedBroadcastReceiver">
 			<intent-filter>
-				<action android:name="android.bluetooth.adapter.action.STATE_CHANGED" />
-			</intent-filter>
-		</receiver>
-
-		<receiver
-			android:name="org.dpppt.android.sdk.internal.LocationServiceBroadcastReceiver"
-			android:exported="true">
-			<intent-filter>
-				<action android:name="android.location.MODE_CHANGED" />
+				<action android:name="android.intent.action.BOOT_COMPLETED" />
+				<action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
 			</intent-filter>
 		</receiver>
 
