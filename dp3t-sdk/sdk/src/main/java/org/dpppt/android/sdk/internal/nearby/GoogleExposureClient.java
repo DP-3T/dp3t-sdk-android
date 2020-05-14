@@ -105,15 +105,13 @@ public class GoogleExposureClient {
 		// TODO
 		// default values
 		exposureConfiguration = new ExposureConfiguration.ExposureConfigurationBuilder()
-				.setMinimumRiskScore(4)
+				.setMinimumRiskScore(1)
 				.setAttenuationScores(new int[] { 1, 1, 1, 1, 1, 1, 1, 1 })
-				.setAttenuationWeight(50)
-				.setDaysSinceLastExposureScores(new int[] { 4, 4, 4, 4, 4, 4, 4, 4 })
-				.setDaysSinceLastExposureWeight(50)
-				.setDurationScores(new int[] { 4, 4, 4, 4, 4, 4, 4, 4 })
-				.setDurationWeight(50)
-				.setTransmissionRiskScores(new int[] { 4, 4, 4, 4, 4, 4, 4, 4 })
-				.setTransmissionRiskWeight(50)
+				.setAttenuationWeight(100)
+				.setDaysSinceLastExposureWeight(0)
+				.setDurationWeight(0)
+				.setTransmissionRiskWeight(0)
+				.setDurationAtAttenuationThresholds(new int[] { 20, 40 })
 				.build();
 	}
 

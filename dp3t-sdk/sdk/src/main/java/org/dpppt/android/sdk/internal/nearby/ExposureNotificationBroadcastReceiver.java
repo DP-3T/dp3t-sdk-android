@@ -21,8 +21,9 @@ public class ExposureNotificationBroadcastReceiver extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		String action = intent.getAction();
 		if (ExposureNotificationClient.ACTION_EXPOSURE_STATE_UPDATED.equals(action)) {
-			Logger.i(TAG, "received update for " + intent.getStringExtra(ExposureNotificationClient.EXTRA_TOKEN));
 			ExposureSummary exposureSummary = intent.getParcelableExtra(ExposureNotificationClient.EXTRA_EXPOSURE_SUMMARY);
+			Logger.i(TAG, "received update for " + intent.getStringExtra(ExposureNotificationClient.EXTRA_TOKEN) + " " +
+					exposureSummary.toString());
 
 			if (exposureSummary.getAttenuationDurationsInMinutes()[0] >
 					AppConfigManager.getInstance(context).getMinDurationForExposure()) {
