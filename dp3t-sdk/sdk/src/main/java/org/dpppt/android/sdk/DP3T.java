@@ -87,6 +87,10 @@ public class DP3T {
 		BroadcastReceiver locationServiceStateChangeReceiver = new LocationServiceBroadcastReceiver();
 		IntentFilter locationServiceFilter = new IntentFilter(LocationManager.MODE_CHANGED_ACTION);
 		context.registerReceiver(locationServiceStateChangeReceiver, locationServiceFilter);
+
+		BroadcastReceiver tracingErrorsChangeReceiver = new TracingErrorsBroadcastReceiver();
+		IntentFilter tracingErrorsFilter = new IntentFilter(DP3T.ACTION_UPDATE_ERRORS);
+		context.registerReceiver(tracingErrorsChangeReceiver, tracingErrorsFilter);
 	}
 
 	private static void checkInit() throws IllegalStateException {

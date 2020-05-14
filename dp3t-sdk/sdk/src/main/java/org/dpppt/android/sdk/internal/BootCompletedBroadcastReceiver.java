@@ -30,7 +30,7 @@ public class BootCompletedBroadcastReceiver extends BroadcastReceiver {
 
 		if (DP3T.isTracingEnabled(context)) {
 			SyncWorker.startSyncWorker(context);
-			BroadcastHelper.sendUpdateBroadcast(context);
+			BroadcastHelper.sendErrorUpdateBroadcast(context);
 		}
 	}
 

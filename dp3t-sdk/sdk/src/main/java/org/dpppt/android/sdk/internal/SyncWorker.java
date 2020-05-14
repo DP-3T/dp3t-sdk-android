@@ -75,8 +75,6 @@ public class SyncWorker extends Worker {
 	@NonNull
 	@Override
 	public Result doWork() {
-		// TODO: check error state & publish notification if there is an issue
-
 		Logger.d(TAG, "start SyncWorker");
 		Context context = getApplicationContext();
 

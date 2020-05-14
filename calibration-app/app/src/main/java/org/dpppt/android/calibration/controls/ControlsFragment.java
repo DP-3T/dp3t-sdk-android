@@ -60,6 +60,7 @@ public class ControlsFragment extends Fragment {
 	private static final String TAG = ControlsFragment.class.getCanonicalName();
 
 	private static final int REQUEST_CODE_REPORT_EXPOSED = 3;
+	private static final int REQUEST_CODE_ENABLE_BLE = 4;
 
 	private static final DateFormat DATE_FORMAT_SYNC = SimpleDateFormat.getDateTimeInstance();
 
@@ -125,13 +126,16 @@ public class ControlsFragment extends Fragment {
 				String authCodeBase64 = data.getStringExtra(ExposedDialogFragment.RESULT_EXTRA_AUTH_CODE_INPUT_BASE64);
 				sendInfectedUpdate(new Date(onsetDate), authCodeBase64);
 			}
+		} else if (requestCode == REQUEST_CODE_ENABLE_BLE) {
+			// handled by bluetoothReceiver
 		}
 	}
 
 	private void setupUi(View view) {
 		Button bluetoothButton = view.findViewById(R.id.home_button_bluetooth);
 		bluetoothButton.setOnClickListener(v -> {
-			// TODO: enable bluetooth via intent
+			Intent bleIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+			startActivityForResult(bleIntent, REQUEST_CODE_ENABLE_BLE);
 		});
 
 		Button refreshButton = view.findViewById(R.id.home_button_sync);
