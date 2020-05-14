@@ -30,6 +30,10 @@ public final class Json {
 		}
 	}
 
+	public static <T> T fromJson(String json, Class<T> classOfT) {
+		return GSON.fromJson(json, classOfT);
+	}
+
 	private Json() { }
 
 }

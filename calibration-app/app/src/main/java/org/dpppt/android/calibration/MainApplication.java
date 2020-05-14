@@ -22,6 +22,7 @@ import org.dpppt.android.calibration.util.PreferencesUtil;
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.internal.logger.LogLevel;
 import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.util.SignatureUtil;
 
 import okhttp3.CertificatePinner;
@@ -32,19 +33,21 @@ public class MainApplication extends Application {
 	public void onCreate() {
 		super.onCreate();
 		registerReceiver(sdkReceiver, DP3T.getUpdateIntentFilter());
+		Logger.init(getApplicationContext(), LogLevel.DEBUG);
 		initDP3T(this);
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			NotificationUtil.createNotificationChannel(this);
 		}
-		Logger.init(getApplicationContext(), LogLevel.DEBUG);
 	}
 
 	public static void initDP3T(Context context) {
-		PublicKey publicKey = SignatureUtil.getPublicKeyFromBase64OrThrow(
+		PublicKey signaturePublicKey = SignatureUtil.getPublicKeyFromBase64OrThrow(
 				"LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0R" +
 						"RZ0FFdkxXZHVFWThqcnA4aWNSNEpVSlJaU0JkOFh2UgphR2FLeUg2VlFnTXV2Zk1JcmxrNk92QmtKeH" +
 						"dhbUdNRnFWYW9zOW11di9rWGhZdjF1a1p1R2RjREJBPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t");
-		DP3T.init(context, "org.dpppt.demo", true, publicKey);
+		DP3T.init(context,
+				new ApplicationInfo("org.dpppt.demo", "https://demo.dpppt.org/", "https://demo.dpppt.org/"),
+				signaturePublicKey);
 
 		CertificatePinner certificatePinner = new CertificatePinner.Builder()
 				.add("demo.dpppt.org", "sha256/YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=")

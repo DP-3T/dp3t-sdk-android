@@ -62,21 +62,6 @@ public class DP3T {
 
 	private static String appId;
 
-	public static void init(Context context, String appId, PublicKey signaturePublicKey) {
-		init(context, appId, false, signaturePublicKey);
-	}
-
-	public static void init(Context context, String appId, boolean enableDevDiscoveryMode,
-			PublicKey signaturePublicKey) {
-		DP3T.appId = appId;
-		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		appConfigManager.setAppId(appId);
-		appConfigManager.setDevDiscoveryModeEnabled(enableDevDiscoveryMode);
-		appConfigManager.triggerLoad();
-
-		executeInit(context, signaturePublicKey);
-	}
-
 	public static void init(Context context, ApplicationInfo applicationInfo, PublicKey signaturePublicKey) {
 		DP3T.appId = applicationInfo.getAppId();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
@@ -254,7 +239,7 @@ public class DP3T {
 		return new IntentFilter(DP3T.ACTION_UPDATE);
 	}
 
-	public static void clearData(Context context, Runnable onDeleteListener) {
+	public static void clearData(Context context) {
 		checkInit();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		if (appConfigManager.isTracingEnabled()) {

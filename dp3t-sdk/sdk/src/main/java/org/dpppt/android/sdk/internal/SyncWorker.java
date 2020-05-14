@@ -119,7 +119,6 @@ public class SyncWorker extends Worker {
 
 	private static void doSyncInternal(Context context) throws IOException, StatusCodeException, ServerTimeOffsetException {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		appConfigManager.updateFromDiscoverySynchronous();
 		ApplicationInfo appConfig = appConfigManager.getAppConfig();
 
 		long lastLoadedBatchReleaseTime = appConfigManager.getLastLoadedBatchReleaseTime();

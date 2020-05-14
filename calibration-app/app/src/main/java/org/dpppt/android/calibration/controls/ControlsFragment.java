@@ -162,9 +162,9 @@ public class ControlsFragment extends Fragment {
 		buttonClearData.setOnClickListener(v -> {
 			DialogUtil.showConfirmDialog(v.getContext(), R.string.dialog_clear_data_title,
 					(dialog, which) -> {
-						DP3T.clearData(v.getContext(), () ->
-								new Handler(getContext().getMainLooper()).post(this::updateSdkStatus));
+						DP3T.clearData(v.getContext());
 						MainApplication.initDP3T(v.getContext());
+						v.post(this::updateSdkStatus);
 					});
 		});
 
