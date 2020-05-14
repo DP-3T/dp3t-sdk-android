@@ -94,8 +94,8 @@ public class AppConfigManager {
 		return sharedPrefs.getBoolean(PREF_I_AM_INFECTED, false);
 	}
 
-	public void setIAmInfected(boolean exposed) {
-		sharedPrefs.edit().putBoolean(PREF_I_AM_INFECTED, exposed).apply();
+	public void setIAmInfected(boolean infected) {
+		sharedPrefs.edit().putBoolean(PREF_I_AM_INFECTED, infected).apply();
 	}
 
 	public BackendReportRepository getBackendReportRepository(Context context) throws IllegalStateException {
@@ -118,6 +118,11 @@ public class AppConfigManager {
 
 	public void clearPreferences() {
 		sharedPrefs.edit().clear().apply();
+	}
+
+	public int getMinDurationForExposure() {
+		//TODO load from config request
+		return 15;
 	}
 
 }

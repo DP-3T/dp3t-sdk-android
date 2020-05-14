@@ -174,7 +174,7 @@ public class DP3T {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		Collection<TracingStatus.ErrorState> errorStates = ErrorHelper.checkTracingErrorStatus(context);
 		InfectionStatus infectionStatus;
-		List<ExposureDay> exposureDays = new ArrayList<>(); // TODO: exposureDays
+		List<ExposureDay> exposureDays = ExposureDayStorage.getInstance(context).getExposureDays();
 		if (appConfigManager.getIAmInfected()) {
 			infectionStatus = InfectionStatus.INFECTED;
 		} else if (exposureDays.size() > 0) {
@@ -292,12 +292,12 @@ public class DP3T {
 		BroadcastHelper.sendUpdateBroadcast(context);
 	}
 
-	public static void resetExposureDays() {
-		// TODO
+	public static void resetExposureDays(Context context) {
+		ExposureDayStorage.getInstance(context).clear();
 	}
 
-	public static void resetInfectionStatus() {
-		// TODO
+	public static void resetInfectionStatus(Context context) {
+		AppConfigManager.getInstance(context).setIAmInfected(false);
 	}
 
 	public static void setCertificatePinner(@NonNull CertificatePinner certificatePinner) {
@@ -316,6 +316,7 @@ public class DP3T {
 		}
 
 		appConfigManager.clearPreferences();
+		ExposureDayStorage.getInstance(context).clear();
 		Logger.clear();
 	}
 

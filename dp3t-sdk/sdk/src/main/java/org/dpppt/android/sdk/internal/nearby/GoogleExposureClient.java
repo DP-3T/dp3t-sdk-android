@@ -20,6 +20,7 @@ import java.util.List;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.exposurenotification.*;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
@@ -120,7 +121,7 @@ public class GoogleExposureClient {
 		return exposureConfiguration;
 	}
 
-	public void provideDiagnosisKeys(List<File> keys, String token) {
+	public void provideDiagnosisKeys(List<File> keys, String token, OnFailureListener onFailureListener) {
 		if (keys == null || keys.isEmpty()) {
 			return;
 		}
@@ -128,16 +129,12 @@ public class GoogleExposureClient {
 			throw new IllegalStateException("must call setParams()");
 		}
 
-		// TODO: 1. must wait for completion
 		exposureNotificationClient.provideDiagnosisKeys(keys, exposureConfiguration, token)
 				.addOnSuccessListener(nothing -> {
-					Logger.e(TAG, "inserted keys successfully");
+					Logger.d(TAG, "inserted keys successfully");
 					// ok
 				})
-				.addOnFailureListener(e -> {
-					Logger.e(TAG, e);
-					// TODO: add service error state
-				});
+				.addOnFailureListener(onFailureListener);
 	}
 
 	public Task<ExposureSummary> getExposureSummary(String token) {

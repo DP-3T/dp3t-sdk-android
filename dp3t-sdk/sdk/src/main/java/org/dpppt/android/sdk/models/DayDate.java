@@ -13,7 +13,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class DayDate {
+public class DayDate implements Comparable {
 
 	private static final SimpleDateFormat dayDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
 
@@ -108,6 +108,22 @@ public class DayDate {
 		cal.setTimeInMillis(timestampRepresentation);
 		cal.add(Calendar.DATE, -days);
 		return new DayDate(cal.getTimeInMillis());
+	}
+
+	@Override
+	public int compareTo(Object o) {
+		if (o instanceof DayDate) {
+			DayDate other = (DayDate) o;
+			if (isBefore(other)) {
+				return -1;
+			} else if (other.isBefore(this)) {
+				return 1;
+			} else {
+				return 0;
+			}
+		} else {
+			return -1;
+		}
 	}
 
 }

@@ -20,6 +20,7 @@ import java.security.PublicKey;
 import org.dpppt.android.calibration.util.NotificationUtil;
 import org.dpppt.android.calibration.util.PreferencesUtil;
 import org.dpppt.android.sdk.DP3T;
+import org.dpppt.android.sdk.internal.backend.BackendBucketRepository;
 import org.dpppt.android.sdk.internal.logger.LogLevel;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.models.ApplicationInfo;
@@ -53,6 +54,7 @@ public class MainApplication extends Application {
 				.add("demo.dpppt.org", "sha256/YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=")
 				.build();
 		DP3T.setCertificatePinner(certificatePinner);
+		BackendBucketRepository.BATCH_LENGTH = 5 * 60 * 1000L;
 	}
 
 	@Override
