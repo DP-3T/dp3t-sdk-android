@@ -7,15 +7,12 @@
  *
  * SPDX-License-Identifier: MPL-2.0
  */
-package org.dpppt.android.sdk.internal.util;
+package org.dpppt.android.sdk.models;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import com.google.gson.annotations.JsonAdapter;
-
-@JsonAdapter(DayDateJsonAdapter.class)
 public class DayDate {
 
 	private static final SimpleDateFormat dayDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);

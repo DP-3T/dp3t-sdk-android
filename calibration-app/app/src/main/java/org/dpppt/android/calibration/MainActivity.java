@@ -9,7 +9,6 @@
  */
 package org.dpppt.android.calibration;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
@@ -72,12 +71,11 @@ public class MainActivity extends AppCompatActivity {
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-		if (requestCode == DP3T.REQUEST_CODE_START_CONFIRMATION) {
-			if (resultCode == Activity.RESULT_OK) {
-				DP3T.start(this);
-			}
+		boolean handled = DP3T.onActivityResult(this, requestCode, resultCode, data);
+
+		if (!handled) {
+			super.onActivityResult(requestCode, resultCode, data);
 		}
-		super.onActivityResult(requestCode, resultCode, data);
 	}
 
 }

@@ -11,9 +11,11 @@ package org.dpppt.android.sdk;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.sqlite.SQLiteException;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.Consumer;
 
 import java.io.IOException;
@@ -40,7 +42,7 @@ import org.dpppt.android.sdk.internal.backend.models.GaenKey;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
-import org.dpppt.android.sdk.internal.util.DayDate;
+import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
@@ -92,6 +94,16 @@ public class DP3T {
 				e -> {
 					// TODO: publish error status?
 				});
+	}
+
+	public static boolean onActivityResult(Activity activity, int requestCode, int resultCode, @Nullable Intent data) {
+		if (requestCode == DP3T.REQUEST_CODE_START_CONFIRMATION) {
+			if (resultCode == Activity.RESULT_OK) {
+				DP3T.start(activity);
+			}
+			return true;
+		}
+		return false;
 	}
 
 	private static void startInternal(Context context) {
