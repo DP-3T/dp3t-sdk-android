@@ -29,9 +29,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.backend.SignatureException;
-import org.dpppt.android.sdk.models.ApplicationInfo;
-import org.dpppt.android.sdk.models.ExposeeAuthMethod;
-import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.ErrorHelper;
@@ -41,10 +38,13 @@ import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.models.GaenKey;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
-import org.dpppt.android.sdk.models.ExposureDay;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.util.DayDate;
+import org.dpppt.android.sdk.models.ApplicationInfo;
+import org.dpppt.android.sdk.models.ExposeeAuthMethod;
+import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
+import org.dpppt.android.sdk.models.ExposureDay;
 
 import okhttp3.CertificatePinner;
 
@@ -236,6 +236,14 @@ public class DP3T {
 
 		SyncWorker.stopSyncWorker(context);
 		BroadcastHelper.sendUpdateBroadcast(context);
+	}
+
+	public static void resetExposureDays() {
+		// TODO
+	}
+
+	public static void resetInfectionStatus() {
+		// TODO
 	}
 
 	public static void setCertificatePinner(@NonNull CertificatePinner certificatePinner) {
