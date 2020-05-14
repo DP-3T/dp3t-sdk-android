@@ -46,8 +46,7 @@ public class GoogleExposureClient {
 		exposureNotificationClient = Nearby.getExposureNotificationClient(context);
 	}
 
-	public void startWithConfirmation(Activity activity, int resolutionRequestCode,
-			Runnable successCallback, Consumer<Exception> errorCallback) {
+	public void start(Activity activity, int resolutionRequestCode, Runnable successCallback, Consumer<Exception> errorCallback) {
 		exposureNotificationClient.start()
 				.addOnSuccessListener(nothing -> {
 					Logger.i(TAG, "started successfully");
@@ -61,7 +60,7 @@ public class GoogleExposureClient {
 								apiException.getStatus().startResolutionForResult(activity, resolutionRequestCode);
 								return;
 							} catch (IntentSender.SendIntentException e2) {
-								Logger.e(TAG, "Error calling startResolutionForResult, sending to settings");
+								Logger.e(TAG, "Error calling startResolutionForResult()");
 							}
 						}
 					}
@@ -92,7 +91,7 @@ public class GoogleExposureClient {
 								apiException.getStatus().startResolutionForResult(activity, resolutionRequestCode);
 								return;
 							} catch (IntentSender.SendIntentException e2) {
-								Logger.e(TAG, "Error calling startResolutionForResult, sending to settings");
+								Logger.e(TAG, "Error calling startResolutionForResult()");
 							}
 						}
 					}

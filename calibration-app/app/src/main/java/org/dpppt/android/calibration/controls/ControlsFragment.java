@@ -33,6 +33,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
@@ -43,6 +44,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.concurrent.CancellationException;
 
 import org.dpppt.android.calibration.MainApplication;
 import org.dpppt.android.calibration.R;
@@ -233,7 +235,17 @@ public class ControlsFragment extends Fragment {
 			if (isRunning) {
 				DP3T.stop(v.getContext());
 			} else {
-				DP3T.start(getActivity());
+				DP3T.start(getActivity(),
+						() -> {
+							Toast.makeText(v.getContext(), "EN started successfully", Toast.LENGTH_SHORT).show();
+						},
+						(e) -> {
+							if (!(e instanceof CancellationException)) {
+								Toast.makeText(v.getContext(),
+										"EN failed: " + e.getClass().getSimpleName() + ": " + e.getMessage(),
+										Toast.LENGTH_SHORT).show();
+							}
+						});
 			}
 			updateSdkStatus();
 		});
