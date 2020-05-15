@@ -55,6 +55,13 @@ public class MainApplication extends Application {
 				.build();
 		DP3T.setCertificatePinner(certificatePinner);
 		BackendBucketRepository.BATCH_LENGTH = 5 * 60 * 1000L;
+
+		String userAgent = BuildConfig.APPLICATION_ID + ";" +
+				BuildConfig.VERSION_NAME + ";" +
+				BuildConfig.VERSION_CODE + ";" +
+				"Android;" +
+				Build.VERSION.SDK_INT;
+		DP3T.setUserAgent(userAgent);
 	}
 
 	@Override

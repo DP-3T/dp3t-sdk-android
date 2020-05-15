@@ -64,6 +64,7 @@ public class DP3T {
 	public static final int REQUEST_CODE_EXPORT_KEYS = 392;
 
 	private static String appId;
+	private static String userAgent = "dp3t-sdk-android";
 
 	private static Runnable pendingStartSuccessCallback;
 	private static Consumer<Exception> pendingStartErrorCallback;
@@ -302,6 +303,14 @@ public class DP3T {
 
 	public static void setCertificatePinner(@NonNull CertificatePinner certificatePinner) {
 		CertificatePinning.setCertificatePinner(certificatePinner);
+	}
+
+	public static void setUserAgent(String userAgent) {
+		DP3T.userAgent = userAgent;
+	}
+
+	public static String getUserAgent() {
+		return userAgent;
 	}
 
 	public static IntentFilter getUpdateIntentFilter() {
