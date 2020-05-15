@@ -20,7 +20,6 @@ import java.util.List;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.exposurenotification.*;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
@@ -101,9 +100,7 @@ public class GoogleExposureClient {
 				});
 	}
 
-	public void setParams() {
-		// TODO
-		// default values
+	public void setParams(int attenuationThresholdLow, int attenuationThresholdMedium) {
 		exposureConfiguration = new ExposureConfiguration.ExposureConfigurationBuilder()
 				.setMinimumRiskScore(1)
 				.setAttenuationScores(new int[] { 1, 1, 1, 1, 1, 1, 1, 1 })
@@ -111,7 +108,7 @@ public class GoogleExposureClient {
 				.setDaysSinceLastExposureWeight(0)
 				.setDurationWeight(0)
 				.setTransmissionRiskWeight(0)
-				.setDurationAtAttenuationThresholds(new int[] { 20, 40 })
+				.setDurationAtAttenuationThresholds(new int[] { attenuationThresholdLow, attenuationThresholdMedium })
 				.build();
 	}
 
@@ -119,7 +116,7 @@ public class GoogleExposureClient {
 		return exposureConfiguration;
 	}
 
-	public void provideDiagnosisKeys(List<File> keys, String token, OnFailureListener onFailureListener) {
+	public void provideDiagnosisKeys(List<File> keys, String token) throws Exception {
 		if (keys == null || keys.isEmpty()) {
 			return;
 		}
@@ -127,12 +124,29 @@ public class GoogleExposureClient {
 			throw new IllegalStateException("must call setParams()");
 		}
 
+		final Object syncObject = new Object();
+		Exception[] exceptions = new Exception[] { null };
 		exposureNotificationClient.provideDiagnosisKeys(keys, exposureConfiguration, token)
 				.addOnSuccessListener(nothing -> {
 					Logger.d(TAG, "inserted keys successfully");
 					// ok
+					synchronized (syncObject) {
+						syncObject.notify();
+					}
 				})
-				.addOnFailureListener(onFailureListener);
+				.addOnFailureListener(e -> {
+					exceptions[0] = e;
+					synchronized (syncObject) {
+						syncObject.notify();
+					}
+				});
+
+		synchronized (syncObject) {
+			syncObject.wait();
+		}
+		if (exceptions[0] != null) {
+			throw exceptions[0];
+		}
 	}
 
 	public Task<ExposureSummary> getExposureSummary(String token) {

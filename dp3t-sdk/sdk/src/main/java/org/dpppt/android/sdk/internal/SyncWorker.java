@@ -17,7 +17,6 @@ import androidx.work.*;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
@@ -83,7 +82,7 @@ public class SyncWorker extends Worker {
 
 		try {
 			doSync(context);
-		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SignatureException | SQLiteException e) {
+		} catch (Exception e) {
 			Logger.d(TAG, "SyncWorker finished with exception " + e.getMessage());
 			return Result.retry();
 		}
@@ -92,14 +91,14 @@ public class SyncWorker extends Worker {
 	}
 
 	public static void doSync(Context context)
-			throws IOException, StatusCodeException, ServerTimeOffsetException, SQLiteException, SignatureException {
+			throws Exception {
 		try {
 			doSyncInternal(context);
 			Logger.i(TAG, "synced");
 			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
 			SyncErrorState.getInstance().setSyncError(null);
 			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
-		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SignatureException | SQLiteException e) {
+		} catch (Exception e) {
 			Logger.e(TAG, e);
 			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(false);
 			ErrorState syncError;
@@ -120,7 +119,7 @@ public class SyncWorker extends Worker {
 		}
 	}
 
-	private static void doSyncInternal(Context context) throws IOException, StatusCodeException, ServerTimeOffsetException {
+	private static void doSyncInternal(Context context) throws Exception {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		ApplicationInfo appConfig = appConfigManager.getAppConfig();
 
@@ -160,10 +159,7 @@ public class SyncWorker extends Worker {
 				ArrayList<File> fileList = new ArrayList<>();
 				fileList.add(file);
 				String token = zipEntry.getName();
-				googleExposureClient.provideDiagnosisKeys(fileList, token, e -> {
-					Logger.e(TAG, e);
-					// TODO: add service error state
-				});
+				googleExposureClient.provideDiagnosisKeys(fileList, token);
 			}
 
 			appConfigManager.setLastLoadedBatchReleaseTime(batchReleaseTime);

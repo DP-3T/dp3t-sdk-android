@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
+import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 
@@ -27,7 +28,6 @@ public class AppConfigManager {
 		return instance;
 	}
 
-	public static final int CALIBRATION_TEST_DEVICE_NAME_LENGTH = 4;
 
 	private static final String PREFS_NAME = "dp3t_sdk_preferences";
 	private static final String PREF_APPLICATION = "application";
@@ -38,11 +38,20 @@ public class AppConfigManager {
 	private static final String PREF_I_AM_INFECTED = "IAmInfected";
 	private static final String PREF_CALIBRATION_TEST_DEVICE_NAME = "calibrationTestDeviceName";
 
+	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
+	private static final String PREF_ATTENUATION_THRESHOLD_MEDIUM = "attenuationThresholdMedium";
+	private static final int DEFAULT_ATTENUATION_THRESHOLD_LOW = 20;
+	private static final int DEFAULT_ATTENUATION_THRESHOLD_MEDIUM = 40;
+	private static final int DEFAULT_MIN_DURATION_FOR_EXPOSURE = 15;
+	private static final String PREF_MIN_DURATION_FOR_EXPOSURE = "minDurationForExposure";
+
 	private String appId;
 	private SharedPreferences sharedPrefs;
+	private GoogleExposureClient googleExposureClient;
 
 	private AppConfigManager(Context context) {
 		sharedPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+		googleExposureClient = GoogleExposureClient.getInstance(context);
 	}
 
 	public void setAppId(String appId) {
@@ -116,8 +125,29 @@ public class AppConfigManager {
 	}
 
 	public int getMinDurationForExposure() {
-		//TODO load from config request
-		return 15;
+		return sharedPrefs.getInt(PREF_MIN_DURATION_FOR_EXPOSURE, DEFAULT_MIN_DURATION_FOR_EXPOSURE);
+	}
+
+	public void setMinDurationForExposure(int minDuration) {
+		sharedPrefs.edit().putInt(PREF_MIN_DURATION_FOR_EXPOSURE, minDuration).apply();
+	}
+
+	public int getAttenuationThresholdLow() {
+		return sharedPrefs.getInt(PREF_ATTENUATION_THRESHOLD_LOW, DEFAULT_ATTENUATION_THRESHOLD_LOW);
+	}
+
+	public void setAttenuationThresholdLow(int threshold) {
+		sharedPrefs.edit().putInt(PREF_ATTENUATION_THRESHOLD_LOW, threshold).apply();
+		googleExposureClient.setParams(threshold, getAttenuationThresholdMedium());
+	}
+
+	public int getAttenuationThresholdMedium() {
+		return sharedPrefs.getInt(PREF_ATTENUATION_THRESHOLD_MEDIUM, DEFAULT_ATTENUATION_THRESHOLD_MEDIUM);
+	}
+
+	public void setAttenuationThresholdMedium(int threshold) {
+		sharedPrefs.edit().putInt(PREF_ATTENUATION_THRESHOLD_MEDIUM, threshold).apply();
+		googleExposureClient.setParams(getAttenuationThresholdLow(), threshold);
 	}
 
 }

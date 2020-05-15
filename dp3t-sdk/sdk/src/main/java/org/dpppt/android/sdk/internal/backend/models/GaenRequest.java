@@ -37,7 +37,8 @@ public class GaenRequest {
 			keys.add(new GaenKey(toBase64(new byte[16]),
 					DateUtil.getCurrentRollingStartNumber(),
 					0,
-					0));
+					0,
+					1));
 		}
 
 		this.gaenKeys = keys;

@@ -15,7 +15,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.sqlite.SQLiteException;
 import android.location.LocationManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,11 +29,8 @@ import java.util.List;
 import java.util.concurrent.CancellationException;
 
 import org.dpppt.android.sdk.backend.ResponseCallback;
-import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.internal.*;
 import org.dpppt.android.sdk.internal.backend.CertificatePinning;
-import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
-import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
@@ -73,8 +69,10 @@ public class DP3T {
 	private static void executeInit(Context context, PublicKey signaturePublicKey) {
 		SyncWorker.setBucketSignaturePublicKey(signaturePublicKey);
 
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
-		googleExposureClient.setParams();
+		googleExposureClient
+				.setParams(appConfigManager.getAttenuationThresholdLow(), appConfigManager.getAttenuationThresholdMedium());
 
 		BroadcastReceiver bluetoothStateChangeReceiver = new BluetoothStateBroadcastReceiver();
 		IntentFilter bluetoothFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
@@ -156,7 +154,7 @@ public class DP3T {
 		checkInit();
 		try {
 			SyncWorker.doSync(context);
-		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SQLiteException | SignatureException ignored) {
+		} catch (Exception ignored) {
 			// has been handled upstream
 		}
 	}

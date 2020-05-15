@@ -170,7 +170,7 @@ public class ControlsFragment extends Fragment {
 			String deviceId = deanonymizationDeviceId.getText().toString();
 			DP3TCalibrationHelper.setCalibrationTestDeviceName(getContext(), deviceId);
 			GoogleExposureClient.getInstance(getContext())
-					.getTemporaryExposureKeyHistory(getActivity(), 424242, temporaryExposureKeys -> {
+					.getTemporaryExposureKeyHistory(getActivity(), 123, temporaryExposureKeys -> {
 						GaenRequest exposeeListRequest = new GaenRequest(temporaryExposureKeys);
 						new BackendCalibrationReportRepository(getContext())
 								.addGaenExposee(exposeeListRequest, deviceId, new ResponseCallback<Void>() {
