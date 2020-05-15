@@ -80,7 +80,7 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 				.setContentTitle(context.getString(R.string.dp3t_sdk_service_notification_title))
 				.setContentText(errorText)
 				.setStyle(new NotificationCompat.BigTextStyle().bigText(errorText))
-				.setPriority(NotificationCompat.PRIORITY_DEFAULT);
+				.setPriority(NotificationCompat.PRIORITY_LOW);
 
 		return builder.build();
 	}

@@ -11,6 +11,8 @@
 package org.dpppt.android.calibration.util;
 
 import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
+import android.os.PowerManager;
 
 public class RequirementsUtil {
 
@@ -20,6 +22,11 @@ public class RequirementsUtil {
 			return false;
 		}
 		return true;
+	}
+
+	public static boolean isBatteryOptimizationDeactivated(Context context) {
+		PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+		return powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
 	}
 
 }

@@ -16,8 +16,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -142,6 +144,11 @@ public class ControlsFragment extends Fragment {
 		Button refreshButton = view.findViewById(R.id.home_button_sync);
 		refreshButton.setOnClickListener(v -> resyncSdk());
 
+		Button batteryButton = view.findViewById(R.id.home_button_battery_optimization);
+		batteryButton.setOnClickListener(
+				v -> startActivity(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+						Uri.parse("package:" + getContext().getPackageName()))));
+
 		Button buttonClearData = view.findViewById(R.id.home_button_clear_data);
 		buttonClearData.setOnClickListener(v -> {
 			DialogUtil.showConfirmDialog(v.getContext(), R.string.dialog_clear_data_title,
@@ -206,6 +213,12 @@ public class ControlsFragment extends Fragment {
 		bluetoothButton.setEnabled(!bluetoothActivated);
 		bluetoothButton.setText(bluetoothActivated ? R.string.req_bluetooth_active
 												   : R.string.req_bluetooth_inactive);
+
+		boolean batteryOptDeactivated = RequirementsUtil.isBatteryOptimizationDeactivated(context);
+		Button batteryButton = view.findViewById(R.id.home_button_battery_optimization);
+		batteryButton.setEnabled(!batteryOptDeactivated);
+		batteryButton.setText(batteryOptDeactivated ? R.string.req_battery_deactivated
+													: R.string.req_battery_active);
 	}
 
 	private void resyncSdk() {

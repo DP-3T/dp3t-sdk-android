@@ -150,7 +150,7 @@ public class DP3T {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.setTracingEnabled(true);
 		SyncWorker.startSyncWorker(context);
-		BroadcastHelper.sendUpdateBroadcast(context);
+		BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 	}
 
 	public static boolean isTracingEnabled(Context context) {
@@ -288,7 +288,7 @@ public class DP3T {
 		GoogleExposureClient.getInstance(context).stop();
 
 		SyncWorker.stopSyncWorker(context);
-		BroadcastHelper.sendUpdateBroadcast(context);
+		BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 	}
 
 	public static void resetExposureDays(Context context) {
@@ -350,7 +350,7 @@ public class DP3T {
 		private ExposeeAuthMethod exposeeAuthMethod;
 		private ResponseCallback<Void> callback;
 
-		public PendingIAmInfectedRequest(Date onset, ExposeeAuthMethod exposeeAuthMethod, ResponseCallback<Void> callback) {
+		private PendingIAmInfectedRequest(Date onset, ExposeeAuthMethod exposeeAuthMethod, ResponseCallback<Void> callback) {
 			this.onset = onset;
 			this.exposeeAuthMethod = exposeeAuthMethod;
 			this.callback = callback;

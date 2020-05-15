@@ -59,6 +59,7 @@ public class TracingStatus {
 		BLE_NOT_SUPPORTED(R.string.dp3t_sdk_service_notification_error_bluetooth_not_supported),
 		GAEN_NOT_AVAILABLE(R.string.dp3t_sdk_service_notification_error_gaen_not_available),
 		GAEN_UNEXPECTEDLY_DISABLED(R.string.dp3t_sdk_service_notification_error_gaen_unexpectedly_disabled),
+		BATTERY_OPTIMIZER_ENABLED(R.string.dp3t_sdk_service_notification_error_battery_optimization),
 		SYNC_ERROR_SERVER(R.string.dp3t_sdk_service_notification_error_sync_server),
 		SYNC_ERROR_NETWORK(R.string.dp3t_sdk_service_notification_error_sync_network),
 		SYNC_ERROR_DATABASE(R.string.dp3t_sdk_service_notification_error_sync_database),

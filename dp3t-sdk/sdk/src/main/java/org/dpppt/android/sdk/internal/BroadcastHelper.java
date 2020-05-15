@@ -22,7 +22,7 @@ public class BroadcastHelper {
 		context.sendBroadcast(intent);
 	}
 
-	public static void sendErrorUpdateBroadcast(Context context) {
+	public static void sendUpdateAndErrorBroadcast(Context context) {
 		sendUpdateBroadcast(context);
 
 		Intent intent = new Intent(DP3T.ACTION_UPDATE_ERRORS);

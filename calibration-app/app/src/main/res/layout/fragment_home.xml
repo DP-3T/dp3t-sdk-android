@@ -29,8 +29,16 @@
 			style="@style/Sample.Button.Requirements"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:layout_marginBottom="@dimen/spacing_large"
+			android:layout_marginBottom="@dimen/spacing_medium"
 			tools:text="@string/req_bluetooth_inactive" />
+
+		<Button
+			android:id="@+id/home_button_battery_optimization"
+			style="@style/Sample.Button.Requirements"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="@dimen/spacing_large"
+			tools:text="@string/req_battery_active" />
 
 		<TextView
 			android:id="@+id/home_status_text"

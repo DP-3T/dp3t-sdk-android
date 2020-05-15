@@ -28,7 +28,7 @@ public class BluetoothStateBroadcastReceiver extends BroadcastReceiver {
 		int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1);
 		if (state == BluetoothAdapter.STATE_OFF || state == BluetoothAdapter.STATE_ON) {
 			Logger.w(TAG, BluetoothAdapter.ACTION_STATE_CHANGED);
-			BroadcastHelper.sendErrorUpdateBroadcast(context);
+			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 		}
 	}
 

@@ -98,7 +98,7 @@ public class SyncWorker extends Worker {
 			Logger.i(TAG, "synced");
 			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
 			SyncErrorState.getInstance().setSyncError(null);
-			BroadcastHelper.sendErrorUpdateBroadcast(context);
+			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 		} catch (IOException | StatusCodeException | ServerTimeOffsetException | SignatureException | SQLiteException e) {
 			Logger.e(TAG, e);
 			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(false);
@@ -115,7 +115,7 @@ public class SyncWorker extends Worker {
 				syncError = ErrorState.SYNC_ERROR_NETWORK;
 			}
 			SyncErrorState.getInstance().setSyncError(syncError);
-			BroadcastHelper.sendErrorUpdateBroadcast(context);
+			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 			throw e;
 		}
 	}

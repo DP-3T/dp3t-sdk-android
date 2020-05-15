@@ -12,6 +12,7 @@ package org.dpppt.android.sdk.internal;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.PowerManager;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -40,6 +41,13 @@ public class ErrorHelper {
 
 		if (!LocationServiceUtil.isLocationEnabled(context)) {
 			errors.add(ErrorState.LOCATION_SERVICE_DISABLED);
+		}
+
+		PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+		boolean batteryOptimizationsDeactivated =
+				powerManager == null || powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
+		if (!batteryOptimizationsDeactivated) {
+			errors.add(ErrorState.BATTERY_OPTIMIZER_ENABLED);
 		}
 
 		if (!AppConfigManager.getInstance(context).getLastSyncNetworkSuccess()) {

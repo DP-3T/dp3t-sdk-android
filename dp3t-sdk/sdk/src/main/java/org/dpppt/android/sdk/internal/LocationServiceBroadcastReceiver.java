@@ -26,7 +26,7 @@ public class LocationServiceBroadcastReceiver extends BroadcastReceiver {
 			return;
 
 		Logger.w(TAG, intent.getAction());
-		BroadcastHelper.sendErrorUpdateBroadcast(context);
+		BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 	}
 
 }
