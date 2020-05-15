@@ -44,7 +44,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.concurrent.CancellationException;
 
 import org.dpppt.android.calibration.MainApplication;
 import org.dpppt.android.calibration.R;
@@ -236,16 +235,10 @@ public class ControlsFragment extends Fragment {
 				DP3T.stop(v.getContext());
 			} else {
 				DP3T.start(getActivity(),
-						() -> {
-							Toast.makeText(v.getContext(), "EN started successfully", Toast.LENGTH_SHORT).show();
-						},
-						(e) -> {
-							if (!(e instanceof CancellationException)) {
-								Toast.makeText(v.getContext(),
-										"EN failed: " + e.getClass().getSimpleName() + ": " + e.getMessage(),
-										Toast.LENGTH_SHORT).show();
-							}
-						});
+						() -> Toast.makeText(v.getContext(), "EN started", Toast.LENGTH_SHORT).show(),
+						(e) -> Toast.makeText(v.getContext(), "EN failed: " + e.getClass().getSimpleName() + ": " + e.getMessage(),
+								Toast.LENGTH_SHORT).show(),
+						() -> Toast.makeText(v.getContext(), "EN cancelled", Toast.LENGTH_SHORT).show());
 			}
 			updateSdkStatus();
 		});

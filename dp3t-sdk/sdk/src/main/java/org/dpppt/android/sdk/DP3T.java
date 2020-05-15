@@ -66,9 +66,7 @@ public class DP3T {
 	private static String appId;
 	private static String userAgent = "dp3t-sdk-android";
 
-	private static Runnable pendingStartSuccessCallback;
-	private static Consumer<Exception> pendingStartErrorCallback;
-
+	private static PendingStartCallbacks pendingStartCallbacks;
 	private static PendingIAmInfectedRequest pendingIAmInfectedRequest;
 
 	public static void init(Context context, ApplicationInfo applicationInfo, PublicKey signaturePublicKey) {
@@ -104,9 +102,9 @@ public class DP3T {
 		}
 	}
 
-	public static void start(Activity activity, Runnable successCallback, Consumer<Exception> errorCallback) {
-		pendingStartSuccessCallback = successCallback;
-		pendingStartErrorCallback = errorCallback;
+	public static void start(Activity activity, Runnable successCallback, Consumer<Exception> errorCallback,
+			Runnable cancelledCallback) {
+		pendingStartCallbacks = new PendingStartCallbacks(successCallback, errorCallback, cancelledCallback);
 
 		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(activity);
 		googleExposureClient.start(activity, REQUEST_CODE_START_CONFIRMATION,
@@ -122,18 +120,18 @@ public class DP3T {
 	}
 
 	private static void resetStartCallbacks() {
-		pendingStartSuccessCallback = null;
-		pendingStartErrorCallback = null;
+		pendingStartCallbacks = null;
 	}
 
 	public static boolean onActivityResult(Activity activity, int requestCode, int resultCode, @Nullable Intent data) {
 		if (requestCode == REQUEST_CODE_START_CONFIRMATION) {
 			if (resultCode == Activity.RESULT_OK) {
-				start(activity, pendingStartSuccessCallback, pendingStartErrorCallback);
+				start(activity, pendingStartCallbacks.successCallback, pendingStartCallbacks.errorCallback,
+						pendingStartCallbacks.cancelledCallback);
 			} else {
-				Consumer<Exception> startErrorCallback = pendingStartErrorCallback;
+				Runnable cancelledCallback = pendingStartCallbacks.cancelledCallback;
 				resetStartCallbacks();
-				startErrorCallback.accept(new CancellationException("user cancelled start of exposure notifications"));
+				cancelledCallback.run();
 			}
 			return true;
 		} else if (requestCode == REQUEST_CODE_EXPORT_KEYS) {
@@ -295,10 +293,12 @@ public class DP3T {
 
 	public static void resetExposureDays(Context context) {
 		ExposureDayStorage.getInstance(context).clear();
+		BroadcastHelper.sendUpdateBroadcast(context);
 	}
 
 	public static void resetInfectionStatus(Context context) {
 		AppConfigManager.getInstance(context).setIAmInfected(false);
+		BroadcastHelper.sendUpdateBroadcast(context);
 	}
 
 	public static void setCertificatePinner(@NonNull CertificatePinner certificatePinner) {
@@ -330,6 +330,21 @@ public class DP3T {
 	}
 
 
+	private static class PendingStartCallbacks {
+		private final Runnable successCallback;
+		private final Consumer<Exception> errorCallback;
+		private final Runnable cancelledCallback;
+
+		private PendingStartCallbacks(Runnable successCallback, Consumer<Exception> errorCallback,
+				Runnable cancelledCallback) {
+			this.successCallback = successCallback;
+			this.errorCallback = errorCallback;
+			this.cancelledCallback = cancelledCallback;
+		}
+
+	}
+
+
 	private static class PendingIAmInfectedRequest {
 		private Date onset;
 		private ExposeeAuthMethod exposeeAuthMethod;
@@ -340,6 +355,7 @@ public class DP3T {
 			this.exposeeAuthMethod = exposeeAuthMethod;
 			this.callback = callback;
 		}
+
 	}
 
 }
