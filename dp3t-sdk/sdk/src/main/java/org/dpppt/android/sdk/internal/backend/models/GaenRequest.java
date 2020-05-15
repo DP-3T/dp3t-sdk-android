@@ -9,7 +9,14 @@
  */
 package org.dpppt.android.sdk.internal.backend.models;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
+
+import org.dpppt.android.sdk.util.DateUtil;
+
+import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
 public class GaenRequest {
 	List<GaenKey> gaenKeys;
@@ -17,6 +24,26 @@ public class GaenRequest {
 	int delayedKeyDate;
 
 	int fake;
+
+	public GaenRequest(List<TemporaryExposureKey> temporaryExposureKeys) {
+		ArrayList<GaenKey> keys = new ArrayList<>();
+		for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
+			keys.add(new GaenKey(toBase64(temporaryExposureKey.getKeyData()),
+					temporaryExposureKey.getRollingStartIntervalNumber(),
+					temporaryExposureKey.getRollingPeriod(),
+					temporaryExposureKey.getTransmissionRiskLevel()));
+		}
+		while (keys.size() < 14) {
+			keys.add(new GaenKey(toBase64(new byte[16]),
+					DateUtil.getCurrentRollingStartNumber(),
+					0,
+					0));
+		}
+
+		this.gaenKeys = keys;
+		this.delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
+		this.fake = 0;
+	}
 
 	public GaenRequest(List<GaenKey> gaenKeys, int delayedKeyDate) {
 		this(gaenKeys, delayedKeyDate, 0);

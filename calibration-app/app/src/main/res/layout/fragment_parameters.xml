@@ -24,6 +24,48 @@
 			android:layout_height="wrap_content"
 			android:layout_marginTop="@dimen/spacing_large"
 			android:layout_marginBottom="@dimen/spacing_medium"
+			android:text="@string/bucket_thresholds" />
+
+		<androidx.appcompat.widget.AppCompatSeekBar
+			android:id="@+id/parameter_seekbar_attenuation_bucket1"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="@dimen/spacing_small" />
+
+		<EditText
+			android:id="@+id/parameter_seekbar_attenuation_bucket1_value"
+			style="@style/Sample.Text"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal"
+			android:imeOptions="actionDone"
+			android:inputType="textNoSuggestions|numberSigned"
+			android:selectAllOnFocus="true"
+			tools:text="0" />
+
+		<androidx.appcompat.widget.AppCompatSeekBar
+			android:id="@+id/parameter_seekbar_attenuation_bucket2"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="@dimen/spacing_small" />
+
+		<EditText
+			android:id="@+id/parameter_seekbar_attenuation_bucket2_value"
+			style="@style/Sample.Text"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal"
+			android:imeOptions="actionDone"
+			android:inputType="textNoSuggestions|numberSigned"
+			android:selectAllOnFocus="true"
+			tools:text="0" />
+
+		<TextView
+			style="@style/Sample.Text.Title"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="@dimen/spacing_large"
+			android:layout_marginBottom="@dimen/spacing_medium"
 			android:text="@string/version_info" />
 
 		<TextView

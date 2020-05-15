@@ -68,4 +68,5 @@
 	<string name="parameter_scan_mode">Scan Mode</string>
 	<string name="parameter_use_scan_response">Use scan response (active scanning)</string>
 	<string name="version_info">SDK Version Info</string>
+	<string name="bucket_thresholds">Attenuation Bucket Thresholds</string>
 </resources>

@@ -24,7 +24,6 @@ import android.text.Editable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
-import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.util.Log;
@@ -33,7 +32,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -46,9 +44,12 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.CancellationException;
 
 import org.dpppt.android.calibration.MainApplication;
 import org.dpppt.android.calibration.R;
+import org.dpppt.android.calibration.handshakes.BackendCalibrationReportRepository;
 import org.dpppt.android.calibration.util.DialogUtil;
 import org.dpppt.android.calibration.util.RequirementsUtil;
 import org.dpppt.android.sdk.DP3T;
@@ -56,7 +57,11 @@ import org.dpppt.android.sdk.DP3TCalibrationHelper;
 import org.dpppt.android.sdk.InfectionStatus;
 import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.backend.ResponseCallback;
+import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
+import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
+
+import static org.dpppt.android.sdk.DP3T.REQUEST_CODE_EXPORT_KEYS;
 
 public class ControlsFragment extends Fragment {
 
@@ -160,47 +165,32 @@ public class ControlsFragment extends Fragment {
 		});
 
 		EditText deanonymizationDeviceId = view.findViewById(R.id.deanonymization_device_id);
-		Switch deanonymizationSwitch = view.findViewById(R.id.deanonymization_switch);
+		Button deanonymizationButton = view.findViewById(R.id.deanonymization_key_upload_button);
+		deanonymizationButton.setOnClickListener(v -> {
+			String deviceId = deanonymizationDeviceId.getText().toString();
+			DP3TCalibrationHelper.setCalibrationTestDeviceName(getContext(), deviceId);
+			GoogleExposureClient.getInstance(getContext())
+					.getTemporaryExposureKeyHistory(getActivity(), 424242, temporaryExposureKeys -> {
+						GaenRequest exposeeListRequest = new GaenRequest(temporaryExposureKeys);
+						new BackendCalibrationReportRepository(getContext())
+								.addGaenExposee(exposeeListRequest, deviceId, new ResponseCallback<Void>() {
+									@Override
+									public void onSuccess(Void response) {
+										Toast.makeText(getContext(), "Uploaded keys!", Toast.LENGTH_LONG).show();
+									}
+
+									@Override
+									public void onError(Throwable throwable) {
+										Toast.makeText(getContext(), throwable.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+									}
+								});
+					}, e -> {
+						Toast.makeText(getContext(), e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+					});
+		});
 		if (DP3TCalibrationHelper.getCalibrationTestDeviceName(getContext()) != null) {
-			deanonymizationSwitch.setChecked(true);
 			deanonymizationDeviceId.setText(DP3TCalibrationHelper.getCalibrationTestDeviceName(getContext()));
 		}
-		deanonymizationSwitch.setOnCheckedChangeListener((compoundButton, enabled) -> {
-			if (enabled) {
-				setDeviceId(deanonymizationDeviceId.getText().toString());
-			} else {
-				DP3TCalibrationHelper.disableCalibrationTestDeviceName(getContext());
-			}
-		});
-		deanonymizationDeviceId.addTextChangedListener(new TextWatcher() {
-			@Override
-			public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-			}
-
-			@Override
-			public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-			}
-
-			@Override
-			public void afterTextChanged(Editable editable) {
-				if (deanonymizationSwitch.isChecked()) {
-					setDeviceId(editable.toString());
-				}
-			}
-		});
-	}
-
-	private void setDeviceId(String deviceId) {
-		if (deviceId.length() > 4) {
-			deviceId = deviceId.substring(0, 4);
-		} else {
-			while (deviceId.length() < 4) {
-				deviceId = deviceId + " ";
-			}
-		}
-		DP3TCalibrationHelper.setCalibrationTestDeviceName(getContext(), deviceId);
 	}
 
 	private void checkPermissionRequirements() {
@@ -273,14 +263,7 @@ public class ControlsFragment extends Fragment {
 				});
 
 		EditText deanonymizationDeviceId = view.findViewById(R.id.deanonymization_device_id);
-		Switch deanonymizationSwitch = view.findViewById(R.id.deanonymization_switch);
-		if (DP3TCalibrationHelper.getCalibrationTestDeviceName(getContext()) != null) {
-			deanonymizationSwitch.setChecked(true);
-			deanonymizationDeviceId.setText(DP3TCalibrationHelper.getCalibrationTestDeviceName(getContext()));
-		} else {
-			deanonymizationSwitch.setChecked(false);
-			deanonymizationDeviceId.setText("0000");
-		}
+		deanonymizationDeviceId.setText(DP3TCalibrationHelper.getCalibrationTestDeviceName(getContext()));
 	}
 
 	private SpannableString formatStatusString(TracingStatus status) {

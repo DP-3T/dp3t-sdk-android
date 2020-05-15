@@ -30,6 +30,8 @@ import okhttp3.CertificatePinner;
 
 public class MainApplication extends Application {
 
+	public static final String BASE_URL = "https://demo.dpppt.org/";
+
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -47,13 +49,13 @@ public class MainApplication extends Application {
 						"RZ0FFdkxXZHVFWThqcnA4aWNSNEpVSlJaU0JkOFh2UgphR2FLeUg2VlFnTXV2Zk1JcmxrNk92QmtKeH" +
 						"dhbUdNRnFWYW9zOW11di9rWGhZdjF1a1p1R2RjREJBPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t");
 		DP3T.init(context,
-				new ApplicationInfo("org.dpppt.demo", "https://demo.dpppt.org/", "https://demo.dpppt.org/"),
+				new ApplicationInfo("org.dpppt.demo", BASE_URL, BASE_URL),
 				signaturePublicKey);
 
 		CertificatePinner certificatePinner = new CertificatePinner.Builder()
 				.add("demo.dpppt.org", "sha256/YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=")
 				.build();
-		DP3T.setCertificatePinner(certificatePinner);
+		//DP3T.setCertificatePinner(certificatePinner);
 		BackendBucketRepository.BATCH_LENGTH = 5 * 60 * 1000L;
 
 		String userAgent = BuildConfig.APPLICATION_ID + ";" +

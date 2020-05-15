@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright (c) 2020 Ubique Innovation AG <https://www.ubique.ch>
   ~
   ~ This Source Code Form is subject to the terms of the Mozilla Public
@@ -94,21 +93,20 @@
 				android:visibility="gone" />
 		</FrameLayout>
 
-		<Switch
-			android:id="@+id/deanonymization_switch"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginTop="50dp"
-			android:text="@string/deanonymization_test_mode" />
-
 		<EditText
 			android:id="@+id/deanonymization_device_id"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:maxLength="4"
+			android:layout_marginTop="50dp"
+			android:hint="Debug device name"
 			android:maxLines="1"
-			android:text="0000"
 			android:textSize="40dp" />
+
+		<Button
+			android:id="@+id/deanonymization_key_upload_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/deanonymization_test_mode" />
 
 	</LinearLayout>
 </ScrollView>

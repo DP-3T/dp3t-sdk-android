@@ -104,11 +104,6 @@ public class AppConfigManager {
 	}
 
 	public void setCalibrationTestDeviceName(String name) {
-		if (name != null && name.length() != CALIBRATION_TEST_DEVICE_NAME_LENGTH) {
-			throw new IllegalArgumentException(
-					"CalibrationTestDevice Name must have length " + CALIBRATION_TEST_DEVICE_NAME_LENGTH + ", provided string '" +
-							name + "' with length " + name.length());
-		}
 		sharedPrefs.edit().putString(PREF_CALIBRATION_TEST_DEVICE_NAME, name).apply();
 	}
 

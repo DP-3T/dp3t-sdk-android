@@ -24,13 +24,10 @@ import androidx.core.util.Consumer;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CancellationException;
-
-import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.backend.SignatureException;
@@ -38,7 +35,6 @@ import org.dpppt.android.sdk.internal.*;
 import org.dpppt.android.sdk.internal.backend.CertificatePinning;
 import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
-import org.dpppt.android.sdk.internal.backend.models.GaenKey;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
@@ -47,11 +43,8 @@ import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
 import org.dpppt.android.sdk.models.ExposureDay;
-import org.dpppt.android.sdk.util.DateUtil;
 
 import okhttp3.CertificatePinner;
-
-import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
 public class DP3T {
 
@@ -209,22 +202,7 @@ public class DP3T {
 				.getTemporaryExposureKeyHistory(activity, REQUEST_CODE_EXPORT_KEYS,
 						temporaryExposureKeys -> {
 							Logger.i("Keys", temporaryExposureKeys.toString());
-
-							ArrayList<GaenKey> keys = new ArrayList<>();
-							for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
-								keys.add(new GaenKey(toBase64(temporaryExposureKey.getKeyData()),
-										temporaryExposureKey.getRollingStartIntervalNumber(),
-										temporaryExposureKey.getRollingPeriod(),
-										temporaryExposureKey.getTransmissionRiskLevel()));
-							}
-							while (keys.size() < 14) {
-								keys.add(new GaenKey(toBase64(new byte[16]),
-										DateUtil.getCurrentRollingStartNumber(),
-										0,
-										0));
-							}
-							GaenRequest exposeeListRequest = new GaenRequest(keys, DateUtil.getCurrentRollingStartNumber());
-							exposeeListRequest.setGaenKeys(keys);
+							GaenRequest exposeeListRequest = new GaenRequest(temporaryExposureKeys);
 
 							AppConfigManager appConfigManager = AppConfigManager.getInstance(activity);
 							try {
