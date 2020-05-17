@@ -330,6 +330,16 @@ public class DP3T {
 		return new IntentFilter(DP3T.ACTION_UPDATE);
 	}
 
+	public static void setMatchingParameters(Context context, int attenuationThresholdLow, int attenuationThresholdMedium,
+			int minDurationForExposure) {
+		checkInit();
+
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		appConfigManager.setAttenuationThresholdLow(attenuationThresholdLow);
+		appConfigManager.setAttenuationThresholdMedium(attenuationThresholdMedium);
+		appConfigManager.setMinDurationForExposure(minDurationForExposure);
+	}
+
 	public static void clearData(Context context) {
 		checkInit();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);

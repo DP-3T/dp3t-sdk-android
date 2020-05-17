@@ -41,8 +41,8 @@ public class AppConfigManager {
 
 	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
 	private static final String PREF_ATTENUATION_THRESHOLD_MEDIUM = "attenuationThresholdMedium";
-	private static final int DEFAULT_ATTENUATION_THRESHOLD_LOW = 20;
-	private static final int DEFAULT_ATTENUATION_THRESHOLD_MEDIUM = 40;
+	private static final int DEFAULT_ATTENUATION_THRESHOLD_LOW = 50;
+	private static final int DEFAULT_ATTENUATION_THRESHOLD_MEDIUM = 74;
 	private static final int DEFAULT_MIN_DURATION_FOR_EXPOSURE = 15;
 	private static final String PREF_MIN_DURATION_FOR_EXPOSURE = "minDurationForExposure";
 
