@@ -51,6 +51,8 @@ public class SyncWorker extends Worker {
 	private static final String TAG = "SyncWorker";
 	private static final String WORK_TAG = "org.dpppt.android.sdk.internal.SyncWorker";
 
+	private static final long TIME_DELTA_TO_ENSURE_BACKEND_IS_READY = 2 * 60 * 1000;  //2min
+
 	private static PublicKey bucketSignaturePublicKey;
 
 	public static void startSyncWorker(Context context) {
@@ -146,7 +148,7 @@ public class SyncWorker extends Worker {
 		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 
 		for (long batchReleaseTime = nextBatchReleaseTime;
-			 batchReleaseTime < System.currentTimeMillis();
+			 batchReleaseTime < System.currentTimeMillis() - TIME_DELTA_TO_ENSURE_BACKEND_IS_READY;
 			 batchReleaseTime += BATCH_LENGTH) {
 
 			ResponseBody result = backendBucketRepository.getGaenExposees(batchReleaseTime);
