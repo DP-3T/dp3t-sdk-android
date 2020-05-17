@@ -70,7 +70,7 @@ public class HandshakesFragment extends Fragment {
 			try {
 				GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 				long currentTime = System.currentTimeMillis();
-				long batchReleaseTime = new DayDate().subtractDays(-1).getStartOfDayTimestamp();
+				long batchReleaseTime = new DayDate().addDays(1).getStartOfDayTimestamp();
 				BackendUserBucketRepository backendBucketRepository = new BackendUserBucketRepository(context);
 				ResponseBody result = backendBucketRepository.getGaenExposees(batchReleaseTime);
 

@@ -100,6 +100,36 @@ public class GoogleExposureClient {
 				});
 	}
 
+	public List<TemporaryExposureKey> getTemporaryExposureKeyHistorySynchronous() throws Exception {
+		final Object syncObject = new Object();
+		Object[] results = new Object[] { null };
+
+		exposureNotificationClient.getTemporaryExposureKeyHistory()
+				.addOnSuccessListener(list -> {
+					results[0] = list;
+					synchronized (syncObject) {
+						syncObject.notify();
+					}
+				})
+				.addOnFailureListener(e -> {
+					results[0] = e;
+					synchronized (syncObject) {
+						syncObject.notify();
+					}
+				});
+
+		synchronized (syncObject) {
+			syncObject.wait();
+		}
+		if (results[0] instanceof Exception) {
+			throw (Exception) results[0];
+		} else if (results[0] instanceof List) {
+			return (List<TemporaryExposureKey>) results[0];
+		} else {
+			throw new IllegalStateException("either exception or result must be set");
+		}
+	}
+
 	public void setParams(int attenuationThresholdLow, int attenuationThresholdMedium) {
 		exposureConfiguration = new ExposureConfiguration.ExposureConfigurationBuilder()
 				.setMinimumRiskScore(1)

@@ -74,24 +74,38 @@
 			android:layout_height="wrap_content"
 			android:text="@string/button_clear_data" />
 
-		<FrameLayout
+		<LinearLayout
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content">
 
+			<FrameLayout
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginRight="10dp">
+
+				<Button
+					android:id="@+id/home_button_report_infected"
+					style="@style/Sample.Button"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/button_report_infected" />
+
+				<ProgressBar
+					android:id="@+id/home_loading_view_exposed"
+					android:layout_width="@dimen/loading_size_small"
+					android:layout_height="@dimen/loading_size_small"
+					android:layout_gravity="center"
+					android:visibility="gone" />
+			</FrameLayout>
+
 			<Button
-				android:id="@+id/home_button_report_infected"
+				android:id="@+id/home_button_report_fake"
 				style="@style/Sample.Button"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				android:text="@string/button_report_infected" />
-
-			<ProgressBar
-				android:id="@+id/home_loading_view_exposed"
-				android:layout_width="@dimen/loading_size_small"
-				android:layout_height="@dimen/loading_size_small"
-				android:layout_gravity="center"
-				android:visibility="gone" />
-		</FrameLayout>
+				android:layout_marginLeft="10dp"
+				android:text="@string/button_report_fake" />
+		</LinearLayout>
 
 		<EditText
 			android:id="@+id/deanonymization_device_id"

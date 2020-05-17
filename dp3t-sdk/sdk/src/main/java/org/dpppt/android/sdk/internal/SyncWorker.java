@@ -19,25 +19,32 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
 import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.internal.backend.BackendBucketRepository;
 import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
+import org.dpppt.android.sdk.internal.backend.models.GaenKey;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.models.ApplicationInfo;
+import org.dpppt.android.sdk.models.DayDate;
+import org.dpppt.android.sdk.util.DateUtil;
 
 import okhttp3.ResponseBody;
 
 import static org.dpppt.android.sdk.internal.backend.BackendBucketRepository.BATCH_LENGTH;
+import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
 public class SyncWorker extends Worker {
 
@@ -93,6 +100,7 @@ public class SyncWorker extends Worker {
 	public static void doSync(Context context)
 			throws Exception {
 		try {
+			uploadPendingKeys(context);
 			doSyncInternal(context);
 			Logger.i(TAG, "synced");
 			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
@@ -166,6 +174,56 @@ public class SyncWorker extends Worker {
 		}
 
 		appConfigManager.setLastSyncDate(System.currentTimeMillis());
+	}
+
+	private static void uploadPendingKeys(Context context) {
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		PendingKeyUploadStorage pendingKeyUploadStorage = PendingKeyUploadStorage.getInstance(context);
+		PendingKeyUploadStorage.PendingKey pendingKey = null;
+		try {
+			while (pendingKeyUploadStorage.peekRollingStartNumber() < DateUtil.getCurrentRollingStartNumber()) {
+				pendingKey = pendingKeyUploadStorage.popNextPendingKey();
+				if (pendingKey.getRollingStartNumber() < DateUtil.getRollingStartNumberForDate(new DayDate().subtractDays(1))) {
+					//ignore pendingKeys older than one day, upload token will be invalid
+					continue;
+				}
+				GaenKey gaenKey = null;
+				if (!pendingKey.isFake()) {
+					List<TemporaryExposureKey> keys =
+							GoogleExposureClient.getInstance(context).getTemporaryExposureKeyHistorySynchronous();
+
+					for (TemporaryExposureKey key : keys) {
+						if (key.getRollingStartIntervalNumber() == pendingKey.getRollingStartNumber()) {
+							gaenKey = new GaenKey(toBase64(key.getKeyData()),
+									key.getRollingStartIntervalNumber(),
+									key.getRollingPeriod(),
+									key.getTransmissionRiskLevel());
+							break;
+						}
+					}
+					if (gaenKey == null) {
+						//key for specified rollingStartNumber was not found, user must have cleared data
+						continue;
+					}
+				} else {
+					gaenKey = new GaenKey(toBase64(new byte[16]),
+							pendingKey.getRollingStartNumber(),
+							0,
+							0,
+							1);
+				}
+				appConfigManager.getBackendReportRepository(context).addPendingGaenKey(gaenKey, pendingKey.getToken());
+				if (!pendingKey.isFake()) {
+					DP3T.stop(context);
+					appConfigManager.setIAmInfectedIsResettable(true);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			if (pendingKey != null) {
+				pendingKeyUploadStorage.addPendingKey(pendingKey);
+			}
+		}
 	}
 
 }

@@ -20,7 +20,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
-import android.text.Editable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -44,8 +43,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
-import java.util.concurrent.CancellationException;
 
 import org.dpppt.android.calibration.MainApplication;
 import org.dpppt.android.calibration.R;
@@ -60,8 +57,7 @@ import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
-
-import static org.dpppt.android.sdk.DP3T.REQUEST_CODE_EXPORT_KEYS;
+import org.dpppt.android.sdk.util.DateUtil;
 
 public class ControlsFragment extends Fragment {
 
@@ -171,7 +167,8 @@ public class ControlsFragment extends Fragment {
 			DP3TCalibrationHelper.setCalibrationTestDeviceName(getContext(), deviceId);
 			GoogleExposureClient.getInstance(getContext())
 					.getTemporaryExposureKeyHistory(getActivity(), 123, temporaryExposureKeys -> {
-						GaenRequest exposeeListRequest = new GaenRequest(temporaryExposureKeys);
+						GaenRequest exposeeListRequest =
+								new GaenRequest(temporaryExposureKeys, DateUtil.getCurrentRollingStartNumber());
 						new BackendCalibrationReportRepository(getContext())
 								.addGaenExposee(exposeeListRequest, deviceId, new ResponseCallback<Void>() {
 									@Override
@@ -260,6 +257,12 @@ public class ControlsFragment extends Fragment {
 							ExposedDialogFragment.newInstance(minCal.getTimeInMillis(), REGEX_VALIDITY_AUTH_CODE);
 					exposedDialog.setTargetFragment(this, REQUEST_CODE_REPORT_EXPOSED);
 					exposedDialog.show(getParentFragmentManager(), ExposedDialogFragment.class.getCanonicalName());
+				});
+
+		Button buttonReportFake = view.findViewById(R.id.home_button_report_fake);
+		buttonReportFake.setOnClickListener(
+				v -> {
+					DP3T.sendFakeInfectedRequest(getContext(), null);
 				});
 
 		EditText deanonymizationDeviceId = view.findViewById(R.id.deanonymization_device_id);

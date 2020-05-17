@@ -9,6 +9,8 @@
  */
 package org.dpppt.android.sdk.util;
 
+import org.dpppt.android.sdk.models.DayDate;
+
 public class DateUtil {
 
 	public static int getCurrentRollingStartNumber() {
@@ -17,6 +19,10 @@ public class DateUtil {
 
 	public static int getRollingStartNumberForDate(long date) {
 		return (int) (date / 1000 / 60 / 60 / 24) * 24 * 6;
+	}
+
+	public static int getRollingStartNumberForDate(DayDate onsetDate) {
+		return getRollingStartNumberForDate(onsetDate.getStartOfDayTimestamp());
 	}
 
 }

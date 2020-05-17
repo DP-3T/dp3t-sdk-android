@@ -52,10 +52,12 @@ public class MainApplication extends Application {
 				new ApplicationInfo("org.dpppt.demo", BASE_URL, BASE_URL),
 				signaturePublicKey);
 
-		CertificatePinner certificatePinner = new CertificatePinner.Builder()
-				.add("demo.dpppt.org", "sha256/YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=")
-				.build();
-		//DP3T.setCertificatePinner(certificatePinner);
+		if (!BuildConfig.DEBUG) {
+			CertificatePinner certificatePinner = new CertificatePinner.Builder()
+					.add("demo.dpppt.org", "sha256/YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=")
+					.build();
+			DP3T.setCertificatePinner(certificatePinner);
+		}
 		BackendBucketRepository.BATCH_LENGTH = 5 * 60 * 1000L;
 
 		String userAgent = BuildConfig.APPLICATION_ID + ";" +

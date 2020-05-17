@@ -52,4 +52,8 @@ public class GaenKey {
 		return this.transmissionRiskLevel;
 	}
 
+	public boolean isFake() {
+		return fake == 1;
+	}
+
 }

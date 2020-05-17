@@ -25,7 +25,7 @@ public class GaenRequest {
 
 	int fake;
 
-	public GaenRequest(List<TemporaryExposureKey> temporaryExposureKeys) {
+	public GaenRequest(List<TemporaryExposureKey> temporaryExposureKeys, int delayedKeyDate) {
 		ArrayList<GaenKey> keys = new ArrayList<>();
 		for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
 			keys.add(new GaenKey(toBase64(temporaryExposureKey.getKeyData()),
@@ -42,18 +42,8 @@ public class GaenRequest {
 		}
 
 		this.gaenKeys = keys;
-		this.delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
-		this.fake = 0;
-	}
-
-	public GaenRequest(List<GaenKey> gaenKeys, int delayedKeyDate) {
-		this(gaenKeys, delayedKeyDate, 0);
-	}
-
-	public GaenRequest(List<GaenKey> gaenKeys, int delayedKeyDate, int fake) {
-		this.gaenKeys = gaenKeys;
 		this.delayedKeyDate = delayedKeyDate;
-		this.fake = fake;
+		this.fake = 0;
 	}
 
 	public List<GaenKey> getGaenKeys() {

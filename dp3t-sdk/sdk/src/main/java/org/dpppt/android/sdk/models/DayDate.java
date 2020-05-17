@@ -103,11 +103,15 @@ public class DayDate implements Comparable {
 		return Objects.hash(timestampRepresentation);
 	}
 
-	public DayDate subtractDays(int days) {
+	public DayDate addDays(int days) {
 		Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
 		cal.setTimeInMillis(timestampRepresentation);
-		cal.add(Calendar.DATE, -days);
+		cal.add(Calendar.DATE, days);
 		return new DayDate(cal.getTimeInMillis());
+	}
+
+	public DayDate subtractDays(int days) {
+		return addDays(-days);
 	}
 
 	@Override

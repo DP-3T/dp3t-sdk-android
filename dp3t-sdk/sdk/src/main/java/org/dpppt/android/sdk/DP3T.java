@@ -20,13 +20,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Consumer;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CancellationException;
+
+import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.*;
@@ -37,8 +38,8 @@ import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposeeAuthMethod;
-import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
 import org.dpppt.android.sdk.models.ExposureDay;
+import org.dpppt.android.sdk.util.DateUtil;
 
 import okhttp3.CertificatePinner;
 
@@ -199,20 +200,31 @@ public class DP3T {
 		GoogleExposureClient.getInstance(activity)
 				.getTemporaryExposureKeyHistory(activity, REQUEST_CODE_EXPORT_KEYS,
 						temporaryExposureKeys -> {
-							Logger.i("Keys", temporaryExposureKeys.toString());
-							GaenRequest exposeeListRequest = new GaenRequest(temporaryExposureKeys);
+							List<TemporaryExposureKey> filteredKeys = new ArrayList<>();
+							for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
+								if (temporaryExposureKey.getRollingStartIntervalNumber() >=
+										DateUtil.getRollingStartNumberForDate(onsetDate)) {
+									filteredKeys.add(temporaryExposureKey);
+								}
+							}
+							int delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
+							GaenRequest exposeeListRequest = new GaenRequest(filteredKeys, delayedKeyDate);
 
 							AppConfigManager appConfigManager = AppConfigManager.getInstance(activity);
 							try {
 								appConfigManager.getBackendReportRepository(activity)
 										.addGaenExposee(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
-												new ResponseCallback<Void>() {
+												new ResponseCallback<String>() {
 													@Override
-													public void onSuccess(Void response) {
+													public void onSuccess(String authToken) {
+														PendingKeyUploadStorage.PendingKey delayedKey =
+																new PendingKeyUploadStorage.PendingKey(
+																		delayedKeyDate,
+																		authToken,
+																		0);
+														PendingKeyUploadStorage.getInstance(activity).addPendingKey(delayedKey);
 														appConfigManager.setIAmInfected(true);
-														//TODO can we reset?
-														stop(activity);
-														pendingIAmInfectedRequest.callback.onSuccess(response);
+														pendingIAmInfectedRequest.callback.onSuccess(null);
 														pendingIAmInfectedRequest = null;
 													}
 
@@ -238,21 +250,36 @@ public class DP3T {
 		pendingIAmInfectedRequest = null;
 	}
 
-	public static void sendFakeInfectedRequest(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod)
-			throws NoSuchAlgorithmException, IOException {
+	public static void sendFakeInfectedRequest(Context context, ExposeeAuthMethod exposeeAuthMethod) {
 		checkInit();
 
-		DayDate onsetDate = new DayDate(onset.getTime());
-		ExposeeAuthMethodJson jsonAuthMethod = null;
-		if (exposeeAuthMethod instanceof ExposeeAuthMethodJson) {
-			jsonAuthMethod = (ExposeeAuthMethodJson) exposeeAuthMethod;
-		}
+		int delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
+		GaenRequest exposeeListRequest = new GaenRequest(new ArrayList<>(), delayedKeyDate);
+		exposeeListRequest.setFake(1);
 
-		// TODO: fake request
-		/*ExposeeRequest exposeeRequest = new ExposeeRequest(toBase64(CryptoModule.getInstance(context).getNewRandomKey()),
-				onsetDate.getStartOfDayTimestamp(), 1, jsonAuthMethod);
-		AppConfigManager.getInstance(context).getBackendReportRepository(context)
-				.addExposeeSync(exposeeRequest, exposeeAuthMethod);*/
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		try {
+			appConfigManager.getBackendReportRepository(context)
+					.addGaenExposee(exposeeListRequest, exposeeAuthMethod,
+							new ResponseCallback<String>() {
+								@Override
+								public void onSuccess(String authToken) {
+									PendingKeyUploadStorage.PendingKey delayedKey = new PendingKeyUploadStorage.PendingKey(
+											delayedKeyDate,
+											authToken,
+											1);
+									PendingKeyUploadStorage.getInstance(context).addPendingKey(delayedKey);
+									Logger.d(TAG, "successfully sent fake request");
+								}
+
+								@Override
+								public void onError(Throwable throwable) {
+									Logger.d(TAG, "failed to send fake request");
+								}
+							});
+		} catch (IllegalStateException e) {
+			Logger.d(TAG, "failed to send fake request: " + e.getLocalizedMessage());
+		}
 	}
 
 	public static void stop(Context context) {
@@ -272,9 +299,19 @@ public class DP3T {
 		BroadcastHelper.sendUpdateBroadcast(context);
 	}
 
+	public static boolean getIAmInfectedIsResettable(Context context) {
+		return AppConfigManager.getInstance(context).getIAmInfectedIsResettable();
+	}
+
 	public static void resetInfectionStatus(Context context) {
-		AppConfigManager.getInstance(context).setIAmInfected(false);
-		BroadcastHelper.sendUpdateBroadcast(context);
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		if (appConfigManager.getIAmInfectedIsResettable()) {
+			appConfigManager.setIAmInfected(false);
+			appConfigManager.setIAmInfectedIsResettable(false);
+			BroadcastHelper.sendUpdateBroadcast(context);
+		} else {
+			throw new IllegalStateException("InfectionStatus can only be reseted if getIAmInfectedIsResettable() returns true");
+		}
 	}
 
 	public static void setCertificatePinner(@NonNull CertificatePinner certificatePinner) {
@@ -302,6 +339,7 @@ public class DP3T {
 
 		appConfigManager.clearPreferences();
 		ExposureDayStorage.getInstance(context).clear();
+		PendingKeyUploadStorage.getInstance(context).clear();
 		Logger.clear();
 	}
 

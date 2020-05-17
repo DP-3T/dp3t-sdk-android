@@ -36,6 +36,7 @@ public class AppConfigManager {
 	private static final String PREF_LAST_SYNC_DATE = "lastSyncDate";
 	private static final String PREF_LAST_SYNC_NET_SUCCESS = "lastSyncNetSuccess";
 	private static final String PREF_I_AM_INFECTED = "IAmInfected";
+	private static final String PREF_I_AM_INFECTED_IS_RESETTABLE = "IAmInfectedIsResettable";
 	private static final String PREF_CALIBRATION_TEST_DEVICE_NAME = "calibrationTestDeviceName";
 
 	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
@@ -105,6 +106,14 @@ public class AppConfigManager {
 
 	public void setIAmInfected(boolean infected) {
 		sharedPrefs.edit().putBoolean(PREF_I_AM_INFECTED, infected).apply();
+	}
+
+	public void setIAmInfectedIsResettable(boolean resettable) {
+		sharedPrefs.edit().putBoolean(PREF_I_AM_INFECTED_IS_RESETTABLE, resettable).apply();
+	}
+
+	public boolean getIAmInfectedIsResettable() {
+		return sharedPrefs.getBoolean(PREF_I_AM_INFECTED_IS_RESETTABLE, false);
 	}
 
 	public BackendReportRepository getBackendReportRepository(Context context) throws IllegalStateException {
