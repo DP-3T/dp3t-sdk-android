@@ -35,7 +35,7 @@ public class GoogleExposureClient {
 
 	private ExposureConfiguration exposureConfiguration;
 
-	public static GoogleExposureClient getInstance(Context context) {
+	public static synchronized GoogleExposureClient getInstance(Context context) {
 		if (instance == null) {
 			instance = new GoogleExposureClient(context.getApplicationContext());
 		}

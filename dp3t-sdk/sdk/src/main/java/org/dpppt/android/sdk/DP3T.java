@@ -34,8 +34,9 @@ import org.dpppt.android.sdk.internal.*;
 import org.dpppt.android.sdk.internal.backend.CertificatePinning;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
+import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
-import org.dpppt.android.sdk.internal.nearby.GaenAvailabilityHelper;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposeeAuthMethod;
@@ -87,6 +88,9 @@ public class DP3T {
 		BroadcastReceiver tracingErrorsChangeReceiver = new TracingErrorsBroadcastReceiver();
 		IntentFilter tracingErrorsFilter = new IntentFilter(DP3T.ACTION_UPDATE_ERRORS);
 		context.registerReceiver(tracingErrorsChangeReceiver, tracingErrorsFilter);
+
+		GaenStateHelper.invalidateGaenAvailability(context);
+		GaenStateHelper.invalidateGaenEnabled(context);
 	}
 
 	private static void checkInit() throws IllegalStateException {
@@ -103,6 +107,7 @@ public class DP3T {
 		googleExposureClient.start(activity, REQUEST_CODE_START_CONFIRMATION,
 				() -> {
 					resetStartCallbacks();
+					GaenStateCache.setGaenEnabled(true, activity);
 					startInternal(activity);
 					successCallback.run();
 				},
@@ -164,7 +169,8 @@ public class DP3T {
 	public static TracingStatus getStatus(Context context) {
 		checkInit();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		Collection<TracingStatus.ErrorState> errorStates = ErrorHelper.checkTracingErrorStatus(context);
+		boolean isTracingEnabled = appConfigManager.isTracingEnabled();
+		Collection<TracingStatus.ErrorState> errorStates = ErrorHelper.checkTracingErrorStatus(context, isTracingEnabled);
 		InfectionStatus infectionStatus;
 		List<ExposureDay> exposureDays = ExposureDayStorage.getInstance(context).getExposureDays();
 		if (appConfigManager.getIAmInfected()) {
@@ -175,7 +181,7 @@ public class DP3T {
 			infectionStatus = InfectionStatus.HEALTHY;
 		}
 		return new TracingStatus(
-				appConfigManager.isTracingEnabled(),
+				isTracingEnabled,
 				appConfigManager.getLastSyncDate(),
 				infectionStatus,
 				exposureDays,
@@ -184,7 +190,7 @@ public class DP3T {
 	}
 
 	public static void checkGaenAvailability(Context context, Consumer<GaenAvailability> availabilityCallback) {
-		GaenAvailabilityHelper.checkGaenAvailability(context, availabilityCallback);
+		GaenStateHelper.checkGaenAvailability(context, availabilityCallback);
 	}
 
 	public static void sendIAmInfected(Activity activity, Date onset, ExposeeAuthMethod exposeeAuthMethod,
@@ -297,6 +303,8 @@ public class DP3T {
 
 		SyncWorker.stopSyncWorker(context);
 		BroadcastHelper.sendUpdateAndErrorBroadcast(context);
+
+		GaenStateHelper.invalidateGaenEnabled(context);
 	}
 
 	public static void resetExposureDays(Context context) {

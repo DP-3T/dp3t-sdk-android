@@ -36,6 +36,7 @@ import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.backend.models.GaenKey;
 import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.DayDate;
@@ -88,6 +89,9 @@ public class SyncWorker extends Worker {
 	public Result doWork() {
 		Logger.d(TAG, "start SyncWorker");
 		Context context = getApplicationContext();
+
+		GaenStateHelper.invalidateGaenAvailability(context);
+		GaenStateHelper.invalidateGaenEnabled(context);
 
 		try {
 			doSync(context);

@@ -18,16 +18,18 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.dpppt.android.sdk.GaenAvailability;
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
 import org.dpppt.android.sdk.internal.util.LocationServiceUtil;
 
 public class ErrorHelper {
 
 	private static final String TAG = "ErrorHelper";
 
-	public static Collection<ErrorState> checkTracingErrorStatus(Context context) {
+	public static Collection<ErrorState> checkTracingErrorStatus(Context context, boolean isTracingEnabled) {
 		Set<ErrorState> errors = new HashSet<>();
 
 		if (!context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
@@ -59,9 +61,13 @@ public class ErrorHelper {
 			errors.add(syncError);
 		}
 
-		// TODO: add error if EN framework is not available
+		if (GaenStateCache.getGaenAvailability() != GaenAvailability.AVAILABLE) {
+			errors.add(ErrorState.GAEN_NOT_AVAILABLE);
+		}
 
-		// TODO: add error if sdk tracing is enabled, but system is disabled
+		if (isTracingEnabled && !GaenStateCache.isGaenEnabled()) {
+			errors.add(ErrorState.GAEN_UNEXPECTEDLY_DISABLED);
+		}
 
 		return errors;
 	}

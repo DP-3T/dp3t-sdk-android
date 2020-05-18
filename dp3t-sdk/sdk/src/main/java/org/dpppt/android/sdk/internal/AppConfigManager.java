@@ -23,11 +23,10 @@ public class AppConfigManager {
 
 	public static synchronized AppConfigManager getInstance(Context context) {
 		if (instance == null) {
-			instance = new AppConfigManager(context);
+			instance = new AppConfigManager(context.getApplicationContext());
 		}
 		return instance;
 	}
-
 
 	private static final String PREFS_NAME = "dp3t_sdk_preferences";
 	private static final String PREF_APPLICATION = "application";
