@@ -35,6 +35,7 @@ import org.dpppt.android.sdk.internal.backend.CertificatePinning;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
+import org.dpppt.android.sdk.internal.nearby.GaenAvailabilityHelper;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposeeAuthMethod;
@@ -180,6 +181,10 @@ public class DP3T {
 				exposureDays,
 				errorStates
 		);
+	}
+
+	public static void checkGaenAvailability(Context context, Consumer<GaenAvailability> availabilityCallback) {
+		GaenAvailabilityHelper.checkGaenAvailability(context, availabilityCallback);
 	}
 
 	public static void sendIAmInfected(Activity activity, Date onset, ExposeeAuthMethod exposeeAuthMethod,

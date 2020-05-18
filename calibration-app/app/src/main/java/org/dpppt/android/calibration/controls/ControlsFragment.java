@@ -51,6 +51,7 @@ import org.dpppt.android.calibration.util.DialogUtil;
 import org.dpppt.android.calibration.util.RequirementsUtil;
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.DP3TCalibrationHelper;
+import org.dpppt.android.sdk.GaenAvailability;
 import org.dpppt.android.sdk.InfectionStatus;
 import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.backend.ResponseCallback;
@@ -194,6 +195,23 @@ public class ControlsFragment extends Fragment {
 		View view = getView();
 		Context context = getContext();
 		if (view == null || context == null) return;
+
+		Button gaenButton = view.findViewById(R.id.home_button_gaen);
+		DP3T.checkGaenAvailability(getContext(), gaenAvailability -> {
+			boolean available = gaenAvailability == GaenAvailability.AVAILABLE;
+			gaenButton.setEnabled(!available);
+			gaenButton.setText(available ? R.string.req_gaen_availabe : R.string.req_gaen_unavailabe);
+
+			gaenButton.setOnClickListener(v -> {
+				final String playServicesPackageName = "com.google.android.gms";
+				try {
+					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + playServicesPackageName)));
+				} catch (android.content.ActivityNotFoundException e) {
+					startActivity(new Intent(Intent.ACTION_VIEW,
+							Uri.parse("https://play.google.com/store/apps/details?id=" + playServicesPackageName)));
+				}
+			});
+		});
 
 		boolean bluetoothActivated = RequirementsUtil.isBluetoothEnabled();
 		Button bluetoothButton = view.findViewById(R.id.home_button_bluetooth);

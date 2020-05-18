@@ -24,6 +24,14 @@
 		android:paddingBottom="@dimen/spacing_large">
 
 		<Button
+			android:id="@+id/home_button_gaen"
+			style="@style/Sample.Button.Requirements"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="@dimen/spacing_medium"
+			tools:text="@string/req_gaen_unavailabe" />
+
+		<Button
 			android:id="@+id/home_button_bluetooth"
 			style="@style/Sample.Button.Requirements"
 			android:layout_width="wrap_content"

@@ -70,4 +70,6 @@
 	<string name="version_info">SDK Version Info</string>
 	<string name="bucket_thresholds">Attenuation Bucket Thresholds</string>
 	<string name="button_report_fake">report fake</string>
+	<string name="req_gaen_unavailabe">EN not available</string>
+	<string name="req_gaen_availabe">EN available</string>
 </resources>
