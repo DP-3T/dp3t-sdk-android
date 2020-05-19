@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.security.PublicKey;
 
 import org.dpppt.android.sdk.backend.SignatureException;
+import org.dpppt.android.sdk.backend.SignatureVerificationInterceptor;
+import org.dpppt.android.sdk.models.DayDate;
 
 import okhttp3.ResponseBody;
 import retrofit2.Response;
@@ -32,19 +34,19 @@ public class BackendBucketRepository implements Repository {
 				.baseUrl(bucketBaseUrl)
 				.client(getClientBuilder(context)
 						.addInterceptor(new TimingVerificationInterceptor())
-						// TODO .addInterceptor(new SignatureVerificationInterceptor(publicKey))
+						.addInterceptor(new SignatureVerificationInterceptor(publicKey))
 						.build())
 				.build();
 
 		bucketService = bucketRetrofit.create(BucketService.class);
 	}
 
-	public ResponseBody getGaenExposees(long batchReleaseTime)
+	public Response<ResponseBody> getGaenExposees(DayDate keyDate, Long lastLoadedTime)
 			throws IOException, StatusCodeException, ServerTimeOffsetException, SignatureException {
 		Response<ResponseBody> response;
-		response = bucketService.getGaenExposees(batchReleaseTime).execute();
+		response = bucketService.getGaenExposees(keyDate.getStartOfDayTimestamp(), lastLoadedTime).execute();
 		if (response.isSuccessful() && response.body() != null) {
-			return response.body();
+			return response;
 		} else {
 			throw new StatusCodeException(response.raw());
 		}

@@ -12,10 +12,15 @@ package org.dpppt.android.sdk.internal;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.ApplicationInfo;
+import org.dpppt.android.sdk.models.DayDate;
 
 public class AppConfigManager {
 
@@ -31,12 +36,13 @@ public class AppConfigManager {
 	private static final String PREFS_NAME = "dp3t_sdk_preferences";
 	private static final String PREF_APPLICATION = "application";
 	private static final String PREF_TRACING_ENABLED = "tracingEnabled";
-	private static final String PREF_LAST_LOADED_BATCH_RELEASE_TIME = "lastLoadedBatchReleaseTime";
 	private static final String PREF_LAST_SYNC_DATE = "lastSyncDate";
 	private static final String PREF_LAST_SYNC_NET_SUCCESS = "lastSyncNetSuccess";
 	private static final String PREF_I_AM_INFECTED = "IAmInfected";
 	private static final String PREF_I_AM_INFECTED_IS_RESETTABLE = "IAmInfectedIsResettable";
 	private static final String PREF_CALIBRATION_TEST_DEVICE_NAME = "calibrationTestDeviceName";
+	private static final String PREF_LAST_LOADED_TIMES = "lastLoadedTimes";
+	private static final String PREF_LAST_EXPOSURE_CLIENT_CALLS = "lastExposureClientCalls";
 
 	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
 	private static final String PREF_ATTENUATION_THRESHOLD_MEDIUM = "attenuationThresholdMedium";
@@ -73,14 +79,6 @@ public class AppConfigManager {
 
 	public boolean isTracingEnabled() {
 		return sharedPrefs.getBoolean(PREF_TRACING_ENABLED, false);
-	}
-
-	public void setLastLoadedBatchReleaseTime(long lastLoadedBatchReleaseTime) {
-		sharedPrefs.edit().putLong(PREF_LAST_LOADED_BATCH_RELEASE_TIME, lastLoadedBatchReleaseTime).apply();
-	}
-
-	public long getLastLoadedBatchReleaseTime() {
-		return sharedPrefs.getLong(PREF_LAST_LOADED_BATCH_RELEASE_TIME, -1);
 	}
 
 	public void setLastSyncDate(long lastSyncDate) {
@@ -157,5 +155,44 @@ public class AppConfigManager {
 		sharedPrefs.edit().putInt(PREF_ATTENUATION_THRESHOLD_MEDIUM, threshold).apply();
 		googleExposureClient.setParams(getAttenuationThresholdLow(), threshold);
 	}
+
+	public HashMap<DayDate, Long> getLastLoadedTimes() {
+		return convertToDateMap(Json.fromJson(sharedPrefs.getString(PREF_LAST_LOADED_TIMES, "{}"), StringLongMap.class));
+	}
+
+	public HashMap<DayDate, Long> getLastExposureClientCalls() {
+		return convertToDateMap(Json.fromJson(sharedPrefs.getString(PREF_LAST_EXPOSURE_CLIENT_CALLS, "{}"), StringLongMap.class));
+	}
+
+	public void setLastLoadedTimes(HashMap<DayDate, Long> lastLoadedTimes) {
+		sharedPrefs.edit().putString(PREF_LAST_LOADED_TIMES, Json.toJson(convertFromDateMap(lastLoadedTimes))).apply();
+	}
+
+	public void setLastExposureClientCalls(HashMap<DayDate, Long> lastExposureClientCalls) {
+		sharedPrefs.edit().putString(PREF_LAST_EXPOSURE_CLIENT_CALLS, Json.toJson(convertFromDateMap(lastExposureClientCalls)))
+				.apply();
+	}
+
+	private HashMap<DayDate, Long> convertToDateMap(HashMap<String, Long> map) {
+		HashMap<DayDate, Long> result = new HashMap<>();
+		for (Map.Entry<String, Long> stringLongEntry : map.entrySet()) {
+			try {
+				result.put(new DayDate(stringLongEntry.getKey()), stringLongEntry.getValue());
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+		}
+		return result;
+	}
+
+	private HashMap<String, Long> convertFromDateMap(HashMap<DayDate, Long> map) {
+		HashMap<String, Long> result = new HashMap<>();
+		for (Map.Entry<DayDate, Long> stringLongEntry : map.entrySet()) {
+			result.put(stringLongEntry.getKey().formatAsString(), stringLongEntry.getValue());
+		}
+		return result;
+	}
+
+	private static class StringLongMap extends HashMap<String, Long> { }
 
 }

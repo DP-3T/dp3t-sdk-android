@@ -17,16 +17,15 @@ import androidx.work.*;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.dpppt.android.sdk.BuildConfig;
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
 import org.dpppt.android.sdk.backend.SignatureException;
@@ -43,16 +42,14 @@ import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.util.DateUtil;
 
 import okhttp3.ResponseBody;
+import retrofit2.Response;
 
-import static org.dpppt.android.sdk.internal.backend.BackendBucketRepository.BATCH_LENGTH;
 import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
 public class SyncWorker extends Worker {
 
 	private static final String TAG = "SyncWorker";
 	private static final String WORK_TAG = "org.dpppt.android.sdk.internal.SyncWorker";
-
-	private static final long TIME_DELTA_TO_ENSURE_BACKEND_IS_READY = 2 * 60 * 1000;  //2min
 
 	private static PublicKey bucketSignaturePublicKey;
 
@@ -126,7 +123,7 @@ public class SyncWorker extends Worker {
 				syncError = ErrorState.SYNC_ERROR_DATABASE;
 			} else {
 				syncError = ErrorState.SYNC_ERROR_NETWORK;
-			}
+			}  //TODO check API exception sync errors
 			SyncErrorState.getInstance().setSyncError(syncError);
 			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 			throw e;
@@ -137,49 +134,96 @@ public class SyncWorker extends Worker {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		ApplicationInfo appConfig = appConfigManager.getAppConfig();
 
-		long lastLoadedBatchReleaseTime = appConfigManager.getLastLoadedBatchReleaseTime();
-		long nextBatchReleaseTime;
-		if (lastLoadedBatchReleaseTime <= 0 || lastLoadedBatchReleaseTime % BATCH_LENGTH != 0) {
-			long now = System.currentTimeMillis();
-			nextBatchReleaseTime = now - (now % BATCH_LENGTH);
-		} else {
-			nextBatchReleaseTime = lastLoadedBatchReleaseTime + BATCH_LENGTH;
-		}
+		Exception lastException = null;
+		HashMap<DayDate, Long> lastLoadedTimes = appConfigManager.getLastLoadedTimes();
+		HashMap<DayDate, Long> lastExposureClientCalls = appConfigManager.getLastExposureClientCalls();
 
 		BackendBucketRepository backendBucketRepository =
 				new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
-
 		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 
-		for (long batchReleaseTime = nextBatchReleaseTime;
-			 batchReleaseTime < System.currentTimeMillis() - TIME_DELTA_TO_ENSURE_BACKEND_IS_READY;
-			 batchReleaseTime += BATCH_LENGTH) {
+		DayDate lastDateToCheck = new DayDate();
+		DayDate dateToLoad = lastDateToCheck.subtractDays(9);
+		while (dateToLoad.isBeforeOrEquals(lastDateToCheck)) {
 
-			ResponseBody result = backendBucketRepository.getGaenExposees(batchReleaseTime);
+			if (lastExposureClientCalls.get(dateToLoad) == null ||
+					lastExposureClientCalls.get(dateToLoad) < getLastDesiredSyncTime(dateToLoad)) {
+				try {
+					Response<ResponseBody> result =
+							backendBucketRepository.getGaenExposees(dateToLoad, lastLoadedTimes.get(dateToLoad));
 
-			ZipInputStream zis = new ZipInputStream(result.byteStream());
-			ZipEntry zipEntry;
-			while ((zipEntry = zis.getNextEntry()) != null) {
-				File file = new File(context.getCacheDir(), batchReleaseTime + "_" + zipEntry.getName());
-				BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
-				byte[] bytesIn = new byte[1024];
-				int read = 0;
-				while ((read = zis.read(bytesIn)) != -1) {
-					bos.write(bytesIn, 0, read);
+					if (result.code() != 204) {
+						File file = new File(context.getCacheDir(),
+								dateToLoad.formatAsString() + "_" + lastLoadedTimes.get(dateToLoad) + ".zip");
+						BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
+						byte[] bytesIn = new byte[1024];
+						int read = 0;
+						InputStream bodyStream = result.body().byteStream();
+						while ((read = bodyStream.read(bytesIn)) != -1) {
+							bos.write(bytesIn, 0, read);
+						}
+						bos.close();
+
+						ArrayList<File> fileList = new ArrayList<>();
+						fileList.add(file);
+						String token = dateToLoad.formatAsString();
+						lastExposureClientCalls.put(dateToLoad, System.currentTimeMillis());
+						googleExposureClient.provideDiagnosisKeys(fileList, token);
+					}
+
+					lastLoadedTimes.put(dateToLoad, Long.parseLong(result.headers().get("x-published-until")));
+				} catch (Exception e) {
+					e.printStackTrace();
+					lastException = e;
 				}
-				bos.close();
-				zis.closeEntry();
-
-				ArrayList<File> fileList = new ArrayList<>();
-				fileList.add(file);
-				String token = zipEntry.getName();
-				googleExposureClient.provideDiagnosisKeys(fileList, token);
 			}
 
-			appConfigManager.setLastLoadedBatchReleaseTime(batchReleaseTime);
+			dateToLoad = dateToLoad.addDays(1);
 		}
 
-		appConfigManager.setLastSyncDate(System.currentTimeMillis());
+		DayDate lastDateToKeep = new DayDate().subtractDays(10);
+		Iterator<DayDate> dateIterator = lastLoadedTimes.keySet().iterator();
+		while (dateIterator.hasNext()) {
+			if (dateIterator.next().isBefore(lastDateToKeep)) {
+				dateIterator.remove();
+			}
+		}
+		dateIterator = lastExposureClientCalls.keySet().iterator();
+		while (dateIterator.hasNext()) {
+			if (dateIterator.next().isBefore(lastDateToKeep)) {
+				dateIterator.remove();
+			}
+		}
+
+		appConfigManager.setLastLoadedTimes(lastLoadedTimes);
+		appConfigManager.setLastExposureClientCalls(lastExposureClientCalls);
+
+		if (lastException != null) {
+			throw lastException;
+		} else {
+			appConfigManager.setLastSyncDate(System.currentTimeMillis());
+		}
+	}
+
+	private static long getLastDesiredSyncTime(DayDate dateToLoad) {
+		if (BuildConfig.FLAVOR.equals("calibration")) {
+			long now = System.currentTimeMillis();
+			return now - (now % (5 * 60 * 1000l));
+		} else {
+			Calendar cal = new GregorianCalendar();
+			if (cal.get(Calendar.HOUR_OF_DAY) < 6) {
+				cal.add(Calendar.DATE, -1);
+				cal.set(Calendar.HOUR_OF_DAY, 20);
+			} else if (cal.get(Calendar.HOUR_OF_DAY) < 20) {
+				cal.set(Calendar.HOUR_OF_DAY, 6);
+			} else {
+				cal.set(Calendar.HOUR_OF_DAY, 20);
+			}
+			cal.set(Calendar.MINUTE, 0);
+			cal.set(Calendar.SECOND, 0);
+			cal.set(Calendar.MILLISECOND, 0);
+			return cal.getTimeInMillis();
+		}
 	}
 
 	private static void uploadPendingKeys(Context context) {

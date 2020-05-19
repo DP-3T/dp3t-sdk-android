@@ -7,7 +7,6 @@
  *
  * SPDX-License-Identifier: MPL-2.0
  */
-
 package org.dpppt.android.sdk.backend;
 
 import androidx.annotation.NonNull;
@@ -39,6 +38,10 @@ public class SignatureVerificationInterceptor implements Interceptor {
 		Response response = chain.proceed(chain.request());
 
 		if (!response.isSuccessful()) {
+			return response;
+		}
+
+		if (response.cacheResponse() != null) {
 			return response;
 		}
 

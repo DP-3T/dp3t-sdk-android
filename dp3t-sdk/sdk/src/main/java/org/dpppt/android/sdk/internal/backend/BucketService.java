@@ -13,10 +13,11 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 interface BucketService {
 
-	@GET("v1/gaen/exposed/{batchReleaseTime}")
-	Call<ResponseBody> getGaenExposees(@Path("batchReleaseTime") long batchReleaseTime);
+	@GET("v1/gaen/exposed/{keyDate}")
+	Call<ResponseBody> getGaenExposees(@Path("keyDate") long keyDate, @Query("publishedafter") Long publishedAfter);
 
 }
