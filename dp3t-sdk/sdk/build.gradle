@@ -12,7 +12,6 @@ plugins {
 	id 'com.android.library'
 	id 'maven-publish'
 	id 'com.jfrog.bintray'
-	id 'com.google.protobuf'
 }
 
 android {
@@ -51,21 +50,6 @@ android {
 	compileOptions {
 		sourceCompatibility = 1.8
 		targetCompatibility = 1.8
-	}
-}
-
-protobuf {
-	protoc {
-		artifact = 'com.google.protobuf:protoc:3.11.4'
-	}
-	generateProtoTasks {
-		all().each { task ->
-			task.builtins {
-				java {
-					option "lite"
-				}
-			}
-		}
 	}
 }
 
@@ -128,10 +112,6 @@ dependencies {
 
 	implementation 'com.squareup.retrofit2:retrofit:2.8.1'
 	implementation 'com.squareup.retrofit2:converter-gson:2.8.1'
-	implementation('com.squareup.retrofit2:converter-protobuf:2.8.1') {
-		exclude group: 'com.google.protobuf', module: 'protobuf-java'
-	}
-	implementation 'com.google.protobuf:protobuf-javalite:3.11.4'
 
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.1'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.1'

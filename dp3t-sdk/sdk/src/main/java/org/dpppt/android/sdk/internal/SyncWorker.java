@@ -23,7 +23,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
-import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.dpppt.android.sdk.BuildConfig;
 import org.dpppt.android.sdk.DP3T;
@@ -116,7 +115,7 @@ public class SyncWorker extends Worker {
 				syncError = ErrorState.SYNC_ERROR_TIMING;
 			} else if (e instanceof SignatureException) {
 				syncError = ErrorState.SYNC_ERROR_SIGNATURE;
-			} else if (e instanceof StatusCodeException || e instanceof InvalidProtocolBufferException) {
+			} else if (e instanceof StatusCodeException) {
 				syncError = ErrorState.SYNC_ERROR_SERVER;
 			} else if (e instanceof SQLiteException) {
 				syncError = ErrorState.SYNC_ERROR_DATABASE;
