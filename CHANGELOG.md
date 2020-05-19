@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.4.0 (19.5.2020)
+
+- switched to GAEN framework
+
 ## Version 0.2.6 (8.5.2020)
 
 - Change signing of test calibration app

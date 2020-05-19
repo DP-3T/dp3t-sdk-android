@@ -12,7 +12,6 @@ plugins {
 	id 'com.android.library'
 	id 'maven-publish'
 	id 'com.jfrog.bintray'
-	id 'com.google.protobuf'
 }
 
 android {
@@ -21,8 +20,8 @@ android {
 	defaultConfig {
 		minSdkVersion 23
 		targetSdkVersion 29
-		versionCode 26
-		versionName "0.2.6"
+		versionCode 36
+		versionName "0.4.0"
 		testInstrumentationRunnerArgument 'androidx.benchmark.suppressErrors', 'EMULATOR,LOW-BATTERY,ACTIVITY-MISSING,DEBUGGABLE,UNLOCKED,UNSUSTAINED-ACTIVITY-MISSING'
 		testInstrumentationRunner "androidx.benchmark.junit4.AndroidBenchmarkRunner"
 
@@ -51,21 +50,6 @@ android {
 	compileOptions {
 		sourceCompatibility = 1.8
 		targetCompatibility = 1.8
-	}
-}
-
-protobuf {
-	protoc {
-		artifact = 'com.google.protobuf:protoc:3.11.4'
-	}
-	generateProtoTasks {
-		all().each { task ->
-			task.builtins {
-				java {
-					option "lite"
-				}
-			}
-		}
 	}
 }
 
@@ -120,7 +104,7 @@ bintray {
 }
 
 dependencies {
-	implementation fileTree(dir: 'libs', include: ['*.jar'])
+	implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
 
 	implementation 'androidx.core:core:1.2.0'
 	implementation 'androidx.security:security-crypto:1.0.0-rc01'
@@ -128,10 +112,6 @@ dependencies {
 
 	implementation 'com.squareup.retrofit2:retrofit:2.8.1'
 	implementation 'com.squareup.retrofit2:converter-gson:2.8.1'
-	implementation('com.squareup.retrofit2:converter-protobuf:2.8.1') {
-		exclude group: 'com.google.protobuf', module: 'protobuf-java'
-	}
-	implementation 'com.google.protobuf:protobuf-javalite:3.11.4'
 
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.1'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.1'
@@ -139,6 +119,9 @@ dependencies {
 		exclude group: 'org.json', module: 'json'
 	}
 	implementation 'org.bouncycastle:bcprov-jdk15on:1.65'
+
+	implementation 'com.google.android.gms:play-services-tasks:17.0.2'
+	implementation 'com.google.android.gms:play-services-base:17.2.1'
 
 	testImplementation 'junit:junit:4.12'
 

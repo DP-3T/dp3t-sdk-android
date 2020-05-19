@@ -26,6 +26,7 @@ import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.internal.util.Base64Util;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 
@@ -75,7 +76,7 @@ public class SignatureUtil {
 					.parseClaimsJws(jws);
 			String hash64 = claimsJws.getBody().get(JWS_CLAIM_CONTENT_HASH, String.class);
 			return Base64Util.fromBase64(hash64);
-		} catch (io.jsonwebtoken.security.SignatureException e) {
+		} catch (io.jsonwebtoken.security.SignatureException | ExpiredJwtException e) {
 			throw new SignatureException(e.getMessage(), e);
 		}
 	}

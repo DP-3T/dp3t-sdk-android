@@ -58,7 +58,7 @@
 	<string name="tab_logs">logs</string>
 	<string name="raw_handshakes">raw handshakes</string>
 	<string name="merged_handshakes">merged handshakes</string>
-	<string name="deanonymization_test_mode">Deanonymization Test Mode</string>
+	<string name="deanonymization_test_mode">Upload keys for debugging</string>
 	<string name="parameter_scan_interval_title">Scan interval</string>
 	<string name="parameter_scan_duration_title">Scan duration</string>
 	<string name="parameter_info_unit_seconds">in seconds</string>
@@ -68,4 +68,8 @@
 	<string name="parameter_scan_mode">Scan Mode</string>
 	<string name="parameter_use_scan_response">Use scan response (active scanning)</string>
 	<string name="version_info">SDK Version Info</string>
+	<string name="bucket_thresholds">Attenuation Bucket Thresholds</string>
+	<string name="button_report_fake">report fake</string>
+	<string name="req_gaen_unavailabe">EN not available</string>
+	<string name="req_gaen_availabe">EN available</string>
 </resources>
