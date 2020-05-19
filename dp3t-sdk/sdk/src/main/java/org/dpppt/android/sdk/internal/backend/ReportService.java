@@ -7,10 +7,10 @@
  *
  * SPDX-License-Identifier: MPL-2.0
  */
-
 package org.dpppt.android.sdk.internal.backend;
 
-import org.dpppt.android.sdk.internal.backend.models.ExposeeRequest;
+import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
+import org.dpppt.android.sdk.internal.backend.models.GaenSecondDay;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -21,7 +21,11 @@ import retrofit2.http.POST;
 interface ReportService {
 
 	@Headers("Accept: application/json")
-	@POST("v1/exposed")
-	Call<Void> addExposee(@Body ExposeeRequest exposeeRequest, @Header("Authorization") String authorizationHeader);
+	@POST("v1/gaen/exposed")
+	Call<Void> addGaenExposee(@Body GaenRequest exposeeRequest, @Header("Authorization") String authorizationHeader);
+
+	@Headers("Accept: application/json")
+	@POST("v1/gaen/exposednextday")
+	Call<Void> addPendingGaenKey(@Body GaenSecondDay delayedKey, @Header("Authorization") String authorizationHeader);
 
 }

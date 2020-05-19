@@ -8,6 +8,5 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-rootProject.name = 'DP3T Calibration App'
 include ':app', ':dp3t-sdk'
 project(':dp3t-sdk').projectDir = new File('../dp3t-sdk/sdk')

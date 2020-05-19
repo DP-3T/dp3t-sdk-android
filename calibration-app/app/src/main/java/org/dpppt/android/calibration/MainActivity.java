@@ -7,11 +7,12 @@
  *
  * SPDX-License-Identifier: MPL-2.0
  */
-
 package org.dpppt.android.calibration;
 
-import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
 import android.os.Bundle;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -19,6 +20,7 @@ import org.dpppt.android.calibration.controls.ControlsFragment;
 import org.dpppt.android.calibration.handshakes.HandshakesFragment;
 import org.dpppt.android.calibration.logs.LogsFragment;
 import org.dpppt.android.calibration.parameters.ParametersFragment;
+import org.dpppt.android.sdk.DP3T;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -65,6 +67,15 @@ public class MainActivity extends AppCompatActivity {
 			}
 			return true;
 		});
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+		boolean handled = DP3T.onActivityResult(this, requestCode, resultCode, data);
+
+		if (!handled) {
+			super.onActivityResult(requestCode, resultCode, data);
+		}
 	}
 
 }

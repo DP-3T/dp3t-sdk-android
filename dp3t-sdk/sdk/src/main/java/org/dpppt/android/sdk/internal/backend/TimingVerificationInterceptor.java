@@ -15,6 +15,9 @@ import androidx.annotation.NonNull;
 import java.io.IOException;
 import java.util.Date;
 
+import org.dpppt.android.sdk.internal.logger.Logger;
+
+import okhttp3.Headers;
 import okhttp3.Interceptor;
 import okhttp3.Response;
 
@@ -22,23 +25,36 @@ public class TimingVerificationInterceptor implements Interceptor {
 
 	private static final long ALLOWED_SERVER_TIME_DIFF = 60 * 1000L;
 
+	private static final String TAG = "TimingVerification";
+
 	@NonNull
 	@Override
 	public Response intercept(@NonNull Chain chain) throws IOException {
 		Response response = chain.proceed(chain.request());
 
 		Response networkResponse = response.networkResponse();
-		Date serverTime = response.headers().getDate("Date");
-
-		if (serverTime == null || networkResponse == null) {
+		if (networkResponse == null) {
 			return response;
 		}
 
-		String ageString = response.header("Age");
+		Date serverTime = networkResponse.headers().getDate("Date");
+		if (serverTime == null) {
+			return response;
+		}
+
+		String ageString = networkResponse.header("Age");
 		long age = ageString != null ? 1000 * Long.parseLong(ageString) : 0;
 		long liveServerTime = serverTime.getTime() + age;
 
 		if (Math.abs(networkResponse.receivedResponseAtMillis() - liveServerTime) > ALLOWED_SERVER_TIME_DIFF) {
+			StringBuilder log = new StringBuilder(1111);
+			log.append(networkResponse.toString()).append("\n");
+			Headers headers = networkResponse.headers();
+			for (int i = 0, count = headers.size(); i < count; i++) {
+				log.append(headers.name(i)).append(": ").append(headers.value(i)).append("\n");
+			}
+			Logger.e(TAG, log.toString());
+
 			throw new ServerTimeOffsetException();
 		}
 

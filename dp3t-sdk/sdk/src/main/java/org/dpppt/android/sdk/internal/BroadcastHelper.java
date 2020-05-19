@@ -17,17 +17,15 @@ import org.dpppt.android.sdk.DP3T;
 
 public class BroadcastHelper {
 
-	public static final String ACTION_UPDATE_ERRORS = "org.dpppt.android.sdk.internal.ACTION_UPDATE_ERRORS";
-
 	public static void sendUpdateBroadcast(Context context) {
-		Intent intent = new Intent(DP3T.UPDATE_INTENT_ACTION);
+		Intent intent = new Intent(DP3T.ACTION_UPDATE);
 		context.sendBroadcast(intent);
 	}
 
-	public static void sendErrorUpdateBroadcast(Context context) {
+	public static void sendUpdateAndErrorBroadcast(Context context) {
 		sendUpdateBroadcast(context);
 
-		Intent intent = new Intent(ACTION_UPDATE_ERRORS);
+		Intent intent = new Intent(DP3T.ACTION_UPDATE_ERRORS);
 		context.sendBroadcast(intent);
 	}
 
