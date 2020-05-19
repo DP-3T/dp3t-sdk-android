@@ -6,6 +6,7 @@
 package org.dpppt.android.sdk.internal.logger;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.util.Collections;
 import java.util.List;
@@ -28,11 +29,11 @@ public class Logger {
 	}
 
 	public static void e(String tag, String message) {
-		//ignore for production
+		Log.e(tag, message);
 	}
 
 	public static void e(String tag, Throwable throwable) {
-		//ignore for production
+		Log.e(tag, throwable.getClass().getCanonicalName(), throwable);
 	}
 
 	public static void clear() {
