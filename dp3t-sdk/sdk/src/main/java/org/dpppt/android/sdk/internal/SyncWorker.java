@@ -87,9 +87,6 @@ public class SyncWorker extends Worker {
 		Logger.d(TAG, "start SyncWorker");
 		Context context = getApplicationContext();
 
-		GaenStateHelper.invalidateGaenAvailability(context);
-		GaenStateHelper.invalidateGaenEnabled(context);
-
 		try {
 			doSync(context);
 		} catch (Exception e) {
@@ -100,8 +97,10 @@ public class SyncWorker extends Worker {
 		return Result.success();
 	}
 
-	public static void doSync(Context context)
-			throws Exception {
+	public static void doSync(Context context) throws Exception {
+		GaenStateHelper.invalidateGaenAvailability(context);
+		GaenStateHelper.invalidateGaenEnabled(context);
+
 		try {
 			uploadPendingKeys(context);
 			doSyncInternal(context);
