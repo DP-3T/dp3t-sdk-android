@@ -45,7 +45,7 @@ public class BackendBucketRepository implements Repository {
 			throws IOException, StatusCodeException, ServerTimeOffsetException, SignatureException {
 		Response<ResponseBody> response;
 		response = bucketService.getGaenExposees(keyDate.getStartOfDayTimestamp(), lastLoadedTime).execute();
-		if (response.isSuccessful() && response.body() != null) {
+		if (response.isSuccessful()) {
 			return response;
 		} else {
 			throw new StatusCodeException(response.raw());
