@@ -29,7 +29,7 @@ public class ErrorHelper {
 
 	private static final String TAG = "ErrorHelper";
 
-	public static Collection<ErrorState> checkTracingErrorStatus(Context context, boolean isTracingEnabled) {
+	public static Collection<ErrorState> checkTracingErrorStatus(Context context, AppConfigManager appConfigManager) {
 		Set<ErrorState> errors = new HashSet<>();
 
 		if (!context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
@@ -53,19 +53,24 @@ public class ErrorHelper {
 		}
 
 		if (!AppConfigManager.getInstance(context).getLastSyncNetworkSuccess()) {
-			ErrorState syncError = SyncErrorState.getInstance().getSyncError();
+			SyncErrorState syncErrorState = SyncErrorState.getInstance();
+			ErrorState syncError = syncErrorState.getSyncError();
 			if (syncError == null) {
 				Logger.w(TAG, "lost sync error state");
 				syncError = ErrorState.SYNC_ERROR_NETWORK;
 			}
-			errors.add(syncError);
+			boolean showNetworkError =
+					appConfigManager.getLastSyncDate() < System.currentTimeMillis() - syncErrorState.getNetworkErrorGracePeriod();
+			if (syncError != ErrorState.SYNC_ERROR_NETWORK || showNetworkError) {
+				errors.add(syncError);
+			}
 		}
 
 		if (GaenStateCache.getGaenAvailability() != GaenAvailability.AVAILABLE) {
 			errors.add(ErrorState.GAEN_NOT_AVAILABLE);
 		}
 
-		if (isTracingEnabled && !GaenStateCache.isGaenEnabled()) {
+		if (appConfigManager.isTracingEnabled() && !GaenStateCache.isGaenEnabled()) {
 			errors.add(ErrorState.GAEN_UNEXPECTEDLY_DISABLED);
 		}
 

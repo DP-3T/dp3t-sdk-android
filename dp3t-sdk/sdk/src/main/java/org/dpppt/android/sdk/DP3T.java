@@ -32,6 +32,7 @@ import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.*;
 import org.dpppt.android.sdk.internal.backend.CertificatePinning;
+import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
@@ -169,8 +170,7 @@ public class DP3T {
 	public static TracingStatus getStatus(Context context) {
 		checkInit();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		boolean isTracingEnabled = appConfigManager.isTracingEnabled();
-		Collection<TracingStatus.ErrorState> errorStates = ErrorHelper.checkTracingErrorStatus(context, isTracingEnabled);
+		Collection<TracingStatus.ErrorState> errorStates = ErrorHelper.checkTracingErrorStatus(context, appConfigManager);
 		InfectionStatus infectionStatus;
 		List<ExposureDay> exposureDays = ExposureDayStorage.getInstance(context).getExposureDays();
 		if (appConfigManager.getIAmInfected()) {
@@ -181,7 +181,7 @@ public class DP3T {
 			infectionStatus = InfectionStatus.HEALTHY;
 		}
 		return new TracingStatus(
-				isTracingEnabled,
+				appConfigManager.isTracingEnabled(),
 				appConfigManager.getLastSyncDate(),
 				infectionStatus,
 				exposureDays,
@@ -323,7 +323,7 @@ public class DP3T {
 			appConfigManager.setIAmInfectedIsResettable(false);
 			BroadcastHelper.sendUpdateBroadcast(context);
 		} else {
-			throw new IllegalStateException("InfectionStatus can only be reseted if getIAmInfectedIsResettable() returns true");
+			throw new IllegalStateException("InfectionStatus can only be reset if getIAmInfectedIsResettable() returns true");
 		}
 	}
 
@@ -337,6 +337,10 @@ public class DP3T {
 
 	public static String getUserAgent() {
 		return userAgent;
+	}
+
+	public static void setNetworkErrorGracePeriod(long gracePeriodMillis) {
+		SyncErrorState.getInstance().setNetworkErrorGracePeriod(gracePeriodMillis);
 	}
 
 	public static IntentFilter getUpdateIntentFilter() {
