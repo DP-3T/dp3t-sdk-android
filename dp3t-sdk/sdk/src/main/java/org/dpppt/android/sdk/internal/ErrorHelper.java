@@ -59,18 +59,19 @@ public class ErrorHelper {
 				Logger.w(TAG, "lost sync error state");
 				syncError = ErrorState.SYNC_ERROR_NETWORK;
 			}
-			boolean showNetworkError =
+			boolean allowNetworkError =
 					appConfigManager.getLastSyncDate() < System.currentTimeMillis() - syncErrorState.getNetworkErrorGracePeriod();
-			if (syncError != ErrorState.SYNC_ERROR_NETWORK || showNetworkError) {
+			if (syncError != ErrorState.SYNC_ERROR_NETWORK || allowNetworkError) {
 				errors.add(syncError);
 			}
 		}
 
-		if (GaenStateCache.getGaenAvailability() != GaenAvailability.AVAILABLE) {
+		GaenAvailability gaenAvailability = GaenStateCache.getGaenAvailability();
+		if (gaenAvailability != null && gaenAvailability != GaenAvailability.AVAILABLE) {
 			errors.add(ErrorState.GAEN_NOT_AVAILABLE);
 		}
 
-		if (appConfigManager.isTracingEnabled() && !GaenStateCache.isGaenEnabled()) {
+		if (appConfigManager.isTracingEnabled() && Boolean.FALSE.equals(GaenStateCache.isGaenEnabled())) {
 			errors.add(ErrorState.GAEN_UNEXPECTEDLY_DISABLED);
 		}
 
