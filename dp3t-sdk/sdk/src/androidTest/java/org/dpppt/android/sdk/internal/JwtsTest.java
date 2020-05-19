@@ -26,8 +26,8 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public class JwtsTest {
 
-	@Test
-	public void verifyValidSignature() throws NoSuchAlgorithmException, InvalidKeySpecException {
+	@Test(expected = SignatureException.class)
+	public void verifyExpired() throws NoSuchAlgorithmException, InvalidKeySpecException {
 		String jws = "eyJhbGciOiJFUzI1NiJ9.eyJjb250ZW50LWhhc2giOiJsTzd3TDBkOFl5MFBSaU" +
 				"w5NGhUa2txMkRXNUxXVjlPNi9zRWNZVDJHZ2t3PSIsImhhc2gtYWxnIjoic2hhLTI1Ni" +
 				"IsImlzcyI6ImRwM3QiLCJpYXQiOjE1ODgwODk2MDAsImV4cCI6MTU4OTkwNDAwMCwiYm" +
