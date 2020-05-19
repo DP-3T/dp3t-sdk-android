@@ -10,7 +10,7 @@ DP-3T is a free-standing effort started at EPFL and ETHZ that produced this prot
 
 
 ## Introduction
-This is the first implementation of the DP-3T protocol using the Exposure Notification Framework of Apple/Google. Only approved government public health authorities can access the APIs. Therefore, using this SDK will result in an API error unless either your account is whitelisted as test account or your app is approved by Google and signed with the production certificate.
+This is the first implementation of the DP-3T protocol using the [Exposure Notification](https://www.google.com/covid19/exposurenotifications/) Framework of Apple/Google. Only approved government public health authorities can access the APIs. Therefore, using this SDK will result in an API error unless either your account is whitelisted as test account or your app is approved by Google and signed with the production certificate.
 
 Our prestandard solution that is not using the Apple/Google framework can be found under the [tag prestandard](https://github.com/DP-3T/dp3t-sdk-android/tree/prestandard).
 
