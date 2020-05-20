@@ -86,11 +86,9 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 	}
 
 	private String getNotificationErrorText(Context context, Collection<TracingStatus.ErrorState> errors) {
-		StringBuilder sb = new StringBuilder(context.getString(R.string.dp3t_sdk_service_notification_errors)).append("\n");
-		String sep = "";
+		StringBuilder sb = new StringBuilder(context.getString(R.string.dp3t_sdk_service_notification_errors));
 		for (TracingStatus.ErrorState error : errors) {
-			sb.append(sep).append(context.getString(error.getErrorString()));
-			sep = ", ";
+			sb.append("\n").append(context.getString(error.getErrorString()));
 		}
 		return sb.toString();
 	}
