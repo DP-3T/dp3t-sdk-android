@@ -358,12 +358,14 @@ public class DP3T {
 	}
 
 	public static void setMatchingParameters(Context context, int attenuationThresholdLow, int attenuationThresholdMedium,
-			int minDurationForExposure) {
+			float attenuationFactorLow, float attenuationFactorMedium, int minDurationForExposure) {
 		checkInit();
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.setAttenuationThresholdLow(attenuationThresholdLow);
 		appConfigManager.setAttenuationThresholdMedium(attenuationThresholdMedium);
+		appConfigManager.setAttenuationFactorLow(attenuationFactorLow);
+		appConfigManager.setAttenuationFactorMedium(attenuationFactorMedium);
 		appConfigManager.setMinDurationForExposure(minDurationForExposure);
 	}
 

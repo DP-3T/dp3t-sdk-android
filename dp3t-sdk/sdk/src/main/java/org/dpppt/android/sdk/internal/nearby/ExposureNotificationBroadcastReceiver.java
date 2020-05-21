@@ -8,6 +8,7 @@ import com.google.android.gms.nearby.exposurenotification.ExposureNotificationCl
 import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
 
 import org.dpppt.android.sdk.internal.AppConfigManager;
+import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.ExposureDayStorage;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.models.DayDate;
@@ -24,16 +25,25 @@ public class ExposureNotificationBroadcastReceiver extends BroadcastReceiver {
 			ExposureSummary exposureSummary = intent.getParcelableExtra(ExposureNotificationClient.EXTRA_EXPOSURE_SUMMARY);
 			Logger.i(TAG, "received update for " + intent.getStringExtra(ExposureNotificationClient.EXTRA_TOKEN) + " " +
 					exposureSummary.toString());
-
-			if (exposureSummary.getAttenuationDurationsInMinutes()[0] >
-					AppConfigManager.getInstance(context).getMinDurationForExposure()) {
+			if (isExposureLimitReached(context, exposureSummary)) {
 				DayDate dayOfExposure = new DayDate().subtractDays(exposureSummary.getDaysSinceLastExposure());
 				ExposureDay exposureDay = new ExposureDay(-1, dayOfExposure, System.currentTimeMillis());
 				ExposureDayStorage.getInstance(context).addExposureDay(context, exposureDay);
 			}
 		} else if (ExposureNotificationClient.ACTION_EXPOSURE_NOTIFICATION_SETTINGS.equals(action)) {
-			//TODO handle settings change
+			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 		}
+	}
+
+	protected boolean isExposureLimitReached(Context context, ExposureSummary exposureSummary) {
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		return computeExposureDuration(appConfigManager, exposureSummary.getAttenuationDurationsInMinutes()) >=
+				appConfigManager.getMinDurationForExposure();
+	}
+
+	private float computeExposureDuration(AppConfigManager appConfigManager, int[] attenuationDurationsInMinutes) {
+		return attenuationDurationsInMinutes[0] * appConfigManager.getAttenuationFactorLow() +
+				attenuationDurationsInMinutes[1] * appConfigManager.getAttenuationFactorMedium();
 	}
 
 }
