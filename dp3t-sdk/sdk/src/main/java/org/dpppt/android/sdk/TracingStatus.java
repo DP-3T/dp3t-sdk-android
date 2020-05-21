@@ -79,7 +79,14 @@ public class TracingStatus {
 			this.errorCode = errorCode;
 		}
 
+		public String getErrorCode() {
+			return errorCode != null ? errorCode : "";
+		}
+
 		public String getErrorString(Context context) {
+			if (errorString == -1) {
+				return null;
+			}
 			String text = context.getString(errorString);
 			if (errorCode != null) {
 				text += "(" + errorCode + ")";
