@@ -15,6 +15,7 @@ public class ExposureDay {
 	private int id;
 	private DayDate exposedDate;
 	private long reportDate;
+	private boolean deleted;
 
 	public ExposureDay(int id, DayDate exposedDate, long reportDate) {
 		this.id = id;
@@ -44,6 +45,14 @@ public class ExposureDay {
 
 	public void setReportDate(long reportDate) {
 		this.reportDate = reportDate;
+	}
+
+	public boolean isDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
 	}
 
 }

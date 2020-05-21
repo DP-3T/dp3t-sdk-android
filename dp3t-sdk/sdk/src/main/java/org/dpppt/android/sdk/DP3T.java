@@ -308,7 +308,7 @@ public class DP3T {
 	}
 
 	public static void resetExposureDays(Context context) {
-		ExposureDayStorage.getInstance(context).clear();
+		ExposureDayStorage.getInstance(context).resetExposureDays();
 		BroadcastHelper.sendUpdateBroadcast(context);
 	}
 
