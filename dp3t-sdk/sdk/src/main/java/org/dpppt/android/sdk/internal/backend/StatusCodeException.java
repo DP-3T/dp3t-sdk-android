@@ -27,4 +27,9 @@ public class StatusCodeException extends Exception {
 	public String getMessage() {
 		return "Code: " + response.code() + " Message: " + response.message();
 	}
+
+	public int getCode() {
+		return response.code();
+	}
+
 }
