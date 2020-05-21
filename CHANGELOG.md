@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.4.3 (22.5.2020)
+
+- more flexibility for errorState
+
 ## Version 0.4.2 (21.5.2020)
 
 - add new formula for exposure detection
