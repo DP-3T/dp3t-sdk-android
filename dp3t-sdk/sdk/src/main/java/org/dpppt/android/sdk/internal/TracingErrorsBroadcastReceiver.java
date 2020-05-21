@@ -54,10 +54,6 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 	private Notification createStatusNotification(Context context, TracingStatus status) {
 		Set<TracingStatus.ErrorState> notificationErrors = new HashSet<>(status.getErrors());
 
-		// TODO: in case google really wants to handle bluetooth and location errors itself, uncomment the following lines
-		//notificationErrors.remove(TracingStatus.ErrorState.LOCATION_SERVICE_DISABLED);
-		//notificationErrors.remove(TracingStatus.ErrorState.BLE_DISABLED);
-
 		if (!status.isTracingEnabled() || notificationErrors.isEmpty()) {
 			return null;
 		}
