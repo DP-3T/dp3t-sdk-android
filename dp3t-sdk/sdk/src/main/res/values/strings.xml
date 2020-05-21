@@ -23,6 +23,7 @@
 	<string name="dp3t_sdk_service_notification_error_sync_database">failed to load new infection data (database error)</string>
 	<string name="dp3t_sdk_service_notification_error_sync_timing">device time does not match server time</string>
 	<string name="dp3t_sdk_service_notification_error_sync_signature">failed to load new infection data (invalid signature)</string>
+	<string name="dp3t_sdk_service_notification_error_sync_api">failed to load new infection data</string>
 	<string name="dp3t_sdk_service_notification_error_gaen_not_available">google exposure notifications are not available on this device</string>
 	<string name="dp3t_sdk_service_notification_error_gaen_unexpectedly_disabled">google exposure notifications disabled, but was expected to be active</string>
 	<string name="dp3t_sdk_service_notification_error_battery_optimization">battery optimization enabled</string>

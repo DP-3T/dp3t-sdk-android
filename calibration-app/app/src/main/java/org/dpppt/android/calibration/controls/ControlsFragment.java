@@ -309,7 +309,7 @@ public class ControlsFragment extends Fragment {
 			int start = builder.length();
 			builder.append("\n");
 			for (TracingStatus.ErrorState error : errors) {
-				builder.append("\n").append(error.toString());
+				builder.append("\n").append(error.getErrorString(getContext()));
 			}
 			builder.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.red, null)),
 					start, builder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);

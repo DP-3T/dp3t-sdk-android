@@ -22,10 +22,12 @@ import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 
 import org.dpppt.android.sdk.BuildConfig;
 import org.dpppt.android.sdk.DP3T;
+import org.dpppt.android.sdk.R;
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
 import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.internal.backend.BackendBucketRepository;
@@ -119,9 +121,12 @@ public class SyncWorker extends Worker {
 				syncError = ErrorState.SYNC_ERROR_SERVER;
 			} else if (e instanceof SQLiteException) {
 				syncError = ErrorState.SYNC_ERROR_DATABASE;
+			} else if (e instanceof ApiException) {
+				syncError = new ErrorState(R.string.dp3t_sdk_service_notification_error_sync_api,
+						" (AGAEN" + ((ApiException) e).getStatusCode() + ")");
 			} else {
 				syncError = ErrorState.SYNC_ERROR_NETWORK;
-			}  //TODO check API exception sync errors
+			}
 			SyncErrorState.getInstance().setSyncError(syncError);
 			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 			throw e;
@@ -165,8 +170,8 @@ public class SyncWorker extends Worker {
 						ArrayList<File> fileList = new ArrayList<>();
 						fileList.add(file);
 						String token = dateToLoad.formatAsString();
-						lastExposureClientCalls.put(dateToLoad, System.currentTimeMillis());
 						googleExposureClient.provideDiagnosisKeys(fileList, token);
+						lastExposureClientCalls.put(dateToLoad, System.currentTimeMillis());
 					}
 
 					lastLoadedTimes.put(dateToLoad, Long.parseLong(result.headers().get("x-published-until")));
