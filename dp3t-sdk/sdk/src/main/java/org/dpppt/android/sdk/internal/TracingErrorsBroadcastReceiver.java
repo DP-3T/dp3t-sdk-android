@@ -54,10 +54,6 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 	private Notification createStatusNotification(Context context, TracingStatus status) {
 		Set<TracingStatus.ErrorState> notificationErrors = new HashSet<>(status.getErrors());
 
-		// TODO: in case google really wants to handle bluetooth and location errors itself, uncomment the following lines
-		//notificationErrors.remove(TracingStatus.ErrorState.LOCATION_SERVICE_DISABLED);
-		//notificationErrors.remove(TracingStatus.ErrorState.BLE_DISABLED);
-
 		if (!status.isTracingEnabled() || notificationErrors.isEmpty()) {
 			return null;
 		}
@@ -79,8 +75,9 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 				.setContentIntent(contentIntent)
 				.setContentTitle(context.getString(R.string.dp3t_sdk_service_notification_title))
 				.setContentText(errorText)
+				.setOnlyAlertOnce(true)
 				.setStyle(new NotificationCompat.BigTextStyle().bigText(errorText))
-				.setPriority(NotificationCompat.PRIORITY_LOW);
+				.setPriority(NotificationCompat.PRIORITY_MAX);
 
 		return builder.build();
 	}
@@ -88,7 +85,7 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 	private String getNotificationErrorText(Context context, Collection<TracingStatus.ErrorState> errors) {
 		StringBuilder sb = new StringBuilder(context.getString(R.string.dp3t_sdk_service_notification_errors));
 		for (TracingStatus.ErrorState error : errors) {
-			sb.append("\n").append(context.getString(error.getErrorString()));
+			sb.append("\n").append(error.getErrorString(context));
 		}
 		return sb.toString();
 	}
