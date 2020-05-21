@@ -75,8 +75,9 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 				.setContentIntent(contentIntent)
 				.setContentTitle(context.getString(R.string.dp3t_sdk_service_notification_title))
 				.setContentText(errorText)
+				.setOnlyAlertOnce(true)
 				.setStyle(new NotificationCompat.BigTextStyle().bigText(errorText))
-				.setPriority(NotificationCompat.PRIORITY_LOW);
+				.setPriority(NotificationCompat.PRIORITY_MAX);
 
 		return builder.build();
 	}
