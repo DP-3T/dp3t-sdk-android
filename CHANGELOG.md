@@ -1,5 +1,10 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.4.1 (21.5.2020)
+
+- improved error notification handling
+- make sure exposure days are only flagged as deleted to prevent renotification
+
 ## Version 0.4.0 (19.5.2020)
 
 - switched to GAEN framework

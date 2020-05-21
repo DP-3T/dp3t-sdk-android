@@ -11,7 +11,6 @@ package org.dpppt.android.sdk;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -56,6 +55,8 @@ public class DP3T {
 	public static final int REQUEST_CODE_START_CONFIRMATION = 391;
 	public static final int REQUEST_CODE_EXPORT_KEYS = 392;
 
+	private static boolean initialized = false;
+
 	private static String appId;
 	private static String userAgent = "dp3t-sdk-android";
 
@@ -66,36 +67,45 @@ public class DP3T {
 		DP3T.appId = applicationInfo.getAppId();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.setManualApplicationInfo(applicationInfo);
-
-		executeInit(context.getApplicationContext(), signaturePublicKey);
-	}
-
-	private static void executeInit(Context context, PublicKey signaturePublicKey) {
 		SyncWorker.setBucketSignaturePublicKey(signaturePublicKey);
 
-		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 		googleExposureClient
 				.setParams(appConfigManager.getAttenuationThresholdLow(), appConfigManager.getAttenuationThresholdMedium());
 
-		BroadcastReceiver bluetoothStateChangeReceiver = new BluetoothStateBroadcastReceiver();
-		IntentFilter bluetoothFilter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-		context.registerReceiver(bluetoothStateChangeReceiver, bluetoothFilter);
+		executeInit(context.getApplicationContext());
 
-		BroadcastReceiver locationServiceStateChangeReceiver = new LocationServiceBroadcastReceiver();
-		IntentFilter locationServiceFilter = new IntentFilter(LocationManager.MODE_CHANGED_ACTION);
-		context.registerReceiver(locationServiceStateChangeReceiver, locationServiceFilter);
+		initialized = true;
+	}
 
-		BroadcastReceiver tracingErrorsChangeReceiver = new TracingErrorsBroadcastReceiver();
-		IntentFilter tracingErrorsFilter = new IntentFilter(DP3T.ACTION_UPDATE_ERRORS);
-		context.registerReceiver(tracingErrorsChangeReceiver, tracingErrorsFilter);
+	private static void executeInit(Context context) {
+		if (initialized) {
+			return;
+		}
+
+		context.registerReceiver(
+				new BluetoothStateBroadcastReceiver(),
+				new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+		);
+		context.registerReceiver(
+				new LocationServiceBroadcastReceiver(),
+				new IntentFilter(LocationManager.MODE_CHANGED_ACTION)
+		);
+		context.registerReceiver(
+				new BatteryOptimizationBroadcastReceiver(),
+				new IntentFilter(BatteryOptimizationBroadcastReceiver.ACTION_POWER_SAVE_WHITELIST_CHANGED)
+		);
+		context.registerReceiver(
+				new TracingErrorsBroadcastReceiver(),
+				new IntentFilter(DP3T.ACTION_UPDATE_ERRORS)
+		);
 
 		GaenStateHelper.invalidateGaenAvailability(context);
 		GaenStateHelper.invalidateGaenEnabled(context);
 	}
 
 	private static void checkInit() throws IllegalStateException {
-		if (appId == null) {
+		if (!initialized) {
 			throw new IllegalStateException("You have to call DP3T.init() in your Application.onCreate()");
 		}
 	}
@@ -308,7 +318,7 @@ public class DP3T {
 	}
 
 	public static void resetExposureDays(Context context) {
-		ExposureDayStorage.getInstance(context).clear();
+		ExposureDayStorage.getInstance(context).resetExposureDays();
 		BroadcastHelper.sendUpdateBroadcast(context);
 	}
 
