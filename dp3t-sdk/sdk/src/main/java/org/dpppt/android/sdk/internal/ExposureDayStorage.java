@@ -55,7 +55,7 @@ public class ExposureDayStorage {
 		}
 	}
 
-	public ExposureDayList getExposureDays() {
+	private ExposureDayList getExposureDaysInternal() {
 		ExposureDayList list =
 				Json.safeFromJson(esp.getString(PREF_KEY_EEXPOSURE_DAYS, "[]"), ExposureDayList.class, ExposureDayList::new);
 
@@ -72,8 +72,19 @@ public class ExposureDayStorage {
 		return list;
 	}
 
+	public ArrayList<ExposureDay> getExposureDays() {
+		ExposureDayList list = getExposureDaysInternal();
+		Iterator<ExposureDay> iterator = list.iterator();
+		while (iterator.hasNext()) {
+			if (iterator.next().isDeleted()) {
+				iterator.remove();
+			}
+		}
+		return list;
+	}
+
 	public void addExposureDay(Context context, ExposureDay exposureDay) {
-		ExposureDayList previousExposureDays = getExposureDays();
+		ExposureDayList previousExposureDays = getExposureDaysInternal();
 		for (ExposureDay previousExposureDay : previousExposureDays) {
 			if (previousExposureDay.getExposedDate().equals(exposureDay.getExposedDate())) {
 				return;//exposure day was already added
@@ -89,6 +100,16 @@ public class ExposureDayStorage {
 				.apply();
 
 		BroadcastHelper.sendUpdateBroadcast(context);
+	}
+
+	public void resetExposureDays() {
+		ExposureDayList previousExposureDays = getExposureDaysInternal();
+		for (ExposureDay previousExposureDay : previousExposureDays) {
+			previousExposureDay.setDeleted(true);
+		}
+		esp.edit()
+				.putString(PREF_KEY_EEXPOSURE_DAYS, Json.toJson(previousExposureDays))
+				.apply();
 	}
 
 	public void clear() {
