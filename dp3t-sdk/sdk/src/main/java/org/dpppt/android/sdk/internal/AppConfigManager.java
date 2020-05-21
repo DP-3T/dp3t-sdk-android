@@ -46,8 +46,12 @@ public class AppConfigManager {
 
 	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
 	private static final String PREF_ATTENUATION_THRESHOLD_MEDIUM = "attenuationThresholdMedium";
+	private static final String PREF_ATTENUATION_FACTOR_LOW = "attenuationFactorLow";
+	private static final String PREF_ATTENUATION_FACTOR_MEDIUM = "attenuationFactorMedium";
 	private static final int DEFAULT_ATTENUATION_THRESHOLD_LOW = 50;
-	private static final int DEFAULT_ATTENUATION_THRESHOLD_MEDIUM = 74;
+	private static final int DEFAULT_ATTENUATION_THRESHOLD_MEDIUM = 60;
+	private static final float DEFAULT_ATTENUATION_FACTOR_LOW = 1.0f;
+	private static final float DEFAULT_ATTENUATION_FACTOR_MEDIUM = 0.5f;
 	private static final int DEFAULT_MIN_DURATION_FOR_EXPOSURE = 15;
 	private static final String PREF_MIN_DURATION_FOR_EXPOSURE = "minDurationForExposure";
 
@@ -156,6 +160,22 @@ public class AppConfigManager {
 		googleExposureClient.setParams(getAttenuationThresholdLow(), threshold);
 	}
 
+	public float getAttenuationFactorLow() {
+		return sharedPrefs.getFloat(PREF_ATTENUATION_FACTOR_LOW, DEFAULT_ATTENUATION_FACTOR_LOW);
+	}
+
+	public void setAttenuationFactorLow(float factor) {
+		sharedPrefs.edit().putFloat(PREF_ATTENUATION_FACTOR_LOW, factor).apply();
+	}
+
+	public float getAttenuationFactorMedium() {
+		return sharedPrefs.getFloat(PREF_ATTENUATION_FACTOR_MEDIUM, DEFAULT_ATTENUATION_FACTOR_MEDIUM);
+	}
+
+	public void setAttenuationFactorMedium(float factor) {
+		sharedPrefs.edit().putFloat(PREF_ATTENUATION_FACTOR_MEDIUM, factor).apply();
+	}
+
 	public HashMap<DayDate, Long> getLastLoadedTimes() {
 		return convertToDateMap(Json.fromJson(sharedPrefs.getString(PREF_LAST_LOADED_TIMES, "{}"), StringLongMap.class));
 	}
@@ -171,6 +191,10 @@ public class AppConfigManager {
 	public void setLastExposureClientCalls(HashMap<DayDate, Long> lastExposureClientCalls) {
 		sharedPrefs.edit().putString(PREF_LAST_EXPOSURE_CLIENT_CALLS, Json.toJson(convertFromDateMap(lastExposureClientCalls)))
 				.apply();
+	}
+
+	public void clear() {
+		sharedPrefs.edit().clear().apply();
 	}
 
 	private HashMap<DayDate, Long> convertToDateMap(HashMap<String, Long> map) {

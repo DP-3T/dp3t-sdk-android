@@ -32,6 +32,7 @@ public class ExposureDayStorageTest {
 	@Test
 	public void testInsertion() {
 		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
+		eds.clear();
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis()));
 		assert (eds.getExposureDays().size() == 1);
 	}
@@ -39,6 +40,7 @@ public class ExposureDayStorageTest {
 	@Test
 	public void testMultiInsertion() {
 		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
+		eds.clear();
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis() - 10));
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis()));
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis() - 20));
@@ -50,6 +52,7 @@ public class ExposureDayStorageTest {
 	@Test
 	public void testReset() {
 		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
+		eds.clear();
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis()));
 		eds.resetExposureDays();
 		assert (eds.getExposureDays().size() == 0);
@@ -58,6 +61,7 @@ public class ExposureDayStorageTest {
 	@Test
 	public void testResetReadd() {
 		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
+		eds.clear();
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis() - 10));
 		eds.resetExposureDays();
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis()));
@@ -67,6 +71,7 @@ public class ExposureDayStorageTest {
 	@Test
 	public void testResetAddNewDay() {
 		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
+		eds.clear();
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis() - 10));
 		eds.resetExposureDays();
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis()));
