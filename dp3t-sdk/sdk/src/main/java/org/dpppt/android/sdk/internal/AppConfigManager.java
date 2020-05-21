@@ -193,6 +193,10 @@ public class AppConfigManager {
 				.apply();
 	}
 
+	public void clear() {
+		sharedPrefs.edit().clear().apply();
+	}
+
 	private HashMap<DayDate, Long> convertToDateMap(HashMap<String, Long> map) {
 		HashMap<DayDate, Long> result = new HashMap<>();
 		for (Map.Entry<String, Long> stringLongEntry : map.entrySet()) {
