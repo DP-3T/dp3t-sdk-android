@@ -1,5 +1,10 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.4.4 (22.5.2020)
+
+- do not show sync error if syncing/tracing is disabled
+- set sync times to 6am and 6pm local time
+
 ## Version 0.4.3 (22.5.2020)
 
 - more flexibility for errorState
