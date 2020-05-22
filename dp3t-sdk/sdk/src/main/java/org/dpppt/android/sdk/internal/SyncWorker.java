@@ -216,11 +216,11 @@ public class SyncWorker extends Worker {
 			Calendar cal = new GregorianCalendar();
 			if (cal.get(Calendar.HOUR_OF_DAY) < 6) {
 				cal.add(Calendar.DATE, -1);
-				cal.set(Calendar.HOUR_OF_DAY, 20);
-			} else if (cal.get(Calendar.HOUR_OF_DAY) < 20) {
+				cal.set(Calendar.HOUR_OF_DAY, 18);
+			} else if (cal.get(Calendar.HOUR_OF_DAY) < 18) {
 				cal.set(Calendar.HOUR_OF_DAY, 6);
 			} else {
-				cal.set(Calendar.HOUR_OF_DAY, 20);
+				cal.set(Calendar.HOUR_OF_DAY, 18);
 			}
 			cal.set(Calendar.MINUTE, 0);
 			cal.set(Calendar.SECOND, 0);
