@@ -50,6 +50,7 @@ public class SyncWorker extends Worker {
 
 	private static final String TAG = "SyncWorker";
 	private static final String WORK_TAG = "org.dpppt.android.sdk.internal.SyncWorker";
+	private static final String KEYFILE_PREFIX = "keyfile_";
 
 	private static PublicKey bucketSignaturePublicKey;
 
@@ -97,7 +98,7 @@ public class SyncWorker extends Worker {
 		return Result.success();
 	}
 
-	public static void doSync(Context context) throws Exception {
+	public static synchronized void doSync(Context context) throws Exception {
 		GaenStateHelper.invalidateGaenAvailability(context);
 		GaenStateHelper.invalidateGaenEnabled(context);
 
@@ -157,7 +158,7 @@ public class SyncWorker extends Worker {
 
 					if (result.code() != 204) {
 						File file = new File(context.getCacheDir(),
-								dateToLoad.formatAsString() + "_" + lastLoadedTimes.get(dateToLoad) + ".zip");
+								KEYFILE_PREFIX + dateToLoad.formatAsString() + "_" + lastLoadedTimes.get(dateToLoad) + ".zip");
 						BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
 						byte[] bytesIn = new byte[1024];
 						int read = 0;
@@ -198,6 +199,8 @@ public class SyncWorker extends Worker {
 			}
 		}
 
+		cleanupOldKeyFiles(context);
+
 		appConfigManager.setLastLoadedTimes(lastLoadedTimes);
 		appConfigManager.setLastExposureClientCalls(lastExposureClientCalls);
 
@@ -205,6 +208,14 @@ public class SyncWorker extends Worker {
 			throw lastException;
 		} else {
 			appConfigManager.setLastSyncDate(System.currentTimeMillis());
+		}
+	}
+
+	private static void cleanupOldKeyFiles(Context context) {
+		for (File file : context.getCacheDir().listFiles()) {
+			if (file.getName().startsWith(KEYFILE_PREFIX)) {
+				file.delete();
+			}
 		}
 	}
 
