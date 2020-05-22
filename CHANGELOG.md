@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.5.0 (22.5.2020)
+
+- cleanup keyfiles after insertion
+
 ## Version 0.4.4 (22.5.2020)
 
 - do not show sync error if syncing/tracing is disabled
