@@ -58,8 +58,9 @@ public class ErrorHelper {
 			if (syncError == null) {
 				Logger.w(TAG, "lost sync error state");
 				syncError = ErrorState.SYNC_ERROR_NETWORK;
+				syncError.setErrorCode("LOST");
 			}
-			boolean allowNetworkError =
+			boolean allowNetworkError = appConfigManager.isTracingEnabled() &&
 					appConfigManager.getLastSyncDate() < System.currentTimeMillis() - syncErrorState.getNetworkErrorGracePeriod();
 			if (syncError != ErrorState.SYNC_ERROR_NETWORK || allowNetworkError) {
 				errors.add(syncError);
