@@ -11,6 +11,8 @@ package org.dpppt.android.sdk.internal;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
+
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKeys;
 
@@ -27,7 +29,7 @@ public class PendingKeyUploadStorage {
 
 	private static PendingKeyUploadStorage instance;
 
-	private SharedPreferences esp;
+	private SharedPreferences sp;
 
 	public static synchronized PendingKeyUploadStorage getInstance(Context context) {
 		if (instance == null) {
@@ -38,24 +40,28 @@ public class PendingKeyUploadStorage {
 
 	private PendingKeyUploadStorage(Context context) {
 		try {
-			String KEY_ALIAS = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
-			esp = EncryptedSharedPreferences.create("dp3t_pendingkeyupload_store",
-					KEY_ALIAS,
-					context,
-					EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-					EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
+			if ( Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+				String KEY_ALIAS = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
+				sp = EncryptedSharedPreferences.create("dp3t_pendingkeyupload_store",
+						KEY_ALIAS,
+						context,
+						EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+						EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
+			} else {
+				sp = context.getSharedPreferences("dp3t_pendingkeyupload_store_not_encrypted", Context.MODE_PRIVATE);
+			}
 		} catch (GeneralSecurityException | IOException ex) {
 			ex.printStackTrace();
 		}
 	}
 
 	private PendingKeyList getPendingKeys() {
-		return Json.fromJson(esp.getString(PREF_KEY_PENDING_KEYS, "[]"), PendingKeyList.class);
+		return Json.fromJson(sp.getString(PREF_KEY_PENDING_KEYS, "[]"), PendingKeyList.class);
 	}
 
 	private void setPendingKeys(PendingKeyList list) {
 		Collections.sort(list, (a, b) -> Integer.compare(a.getRollingStartNumber(), b.getRollingStartNumber()));
-		esp.edit().putString(PREF_KEY_PENDING_KEYS, Json.toJson(list)).apply();
+		sp.edit().putString(PREF_KEY_PENDING_KEYS, Json.toJson(list)).apply();
 	}
 
 	public int peekRollingStartNumber() {
@@ -89,7 +95,7 @@ public class PendingKeyUploadStorage {
 	}
 
 	public void clear() {
-		esp.edit().clear().apply();
+		sp.edit().clear().apply();
 	}
 
 	public static class PendingKey {

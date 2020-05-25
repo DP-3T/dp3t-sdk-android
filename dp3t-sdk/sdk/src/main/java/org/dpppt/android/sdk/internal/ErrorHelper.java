@@ -46,8 +46,14 @@ public class ErrorHelper {
 		}
 
 		PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-		boolean batteryOptimizationsDeactivated =
-				powerManager == null || powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
+		boolean batteryOptimizationsDeactivated;
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+			batteryOptimizationsDeactivated = powerManager == null ||
+					powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
+		} else {
+			// This phone is too old to do it, so we lie and say they did.
+			batteryOptimizationsDeactivated = true;
+		}
 		if (!batteryOptimizationsDeactivated) {
 			errors.add(ErrorState.BATTERY_OPTIMIZER_ENABLED);
 		}

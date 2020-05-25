@@ -311,7 +311,7 @@ public class ControlsFragment extends Fragment {
 			for (TracingStatus.ErrorState error : errors) {
 				builder.append("\n").append(error.getErrorString(getContext()));
 			}
-			builder.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.red, null)),
+			builder.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.red)),
 					start, builder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 		}
 

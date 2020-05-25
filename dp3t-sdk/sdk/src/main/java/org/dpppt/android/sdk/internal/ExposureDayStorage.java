@@ -11,6 +11,8 @@ package org.dpppt.android.sdk.internal;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
+
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKeys;
 
@@ -33,7 +35,7 @@ public class ExposureDayStorage {
 
 	private static ExposureDayStorage instance;
 
-	private SharedPreferences esp;
+	private SharedPreferences sp;
 
 	public static synchronized ExposureDayStorage getInstance(Context context) {
 		if (instance == null) {
@@ -44,12 +46,16 @@ public class ExposureDayStorage {
 
 	private ExposureDayStorage(Context context) {
 		try {
-			String KEY_ALIAS = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
-			esp = EncryptedSharedPreferences.create("dp3t_exposuredays_store",
-					KEY_ALIAS,
-					context,
-					EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-					EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+				String KEY_ALIAS = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
+				sp = EncryptedSharedPreferences.create("dp3t_exposuredays_store",
+						KEY_ALIAS,
+						context,
+						EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+						EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
+			} else {
+				sp = context.getSharedPreferences("dp3t_exposuredays_store_not_encrypted", Context.MODE_PRIVATE);
+			}
 		} catch (GeneralSecurityException | IOException ex) {
 			ex.printStackTrace();
 		}
@@ -57,7 +63,7 @@ public class ExposureDayStorage {
 
 	private ExposureDayList getExposureDaysInternal() {
 		ExposureDayList list =
-				Json.safeFromJson(esp.getString(PREF_KEY_EEXPOSURE_DAYS, "[]"), ExposureDayList.class, ExposureDayList::new);
+				Json.safeFromJson(sp.getString(PREF_KEY_EEXPOSURE_DAYS, "[]"), ExposureDayList.class, ExposureDayList::new);
 
 		DayDate maxAgeForExposureDay = new DayDate().subtractDays(NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS);
 		Iterator<ExposureDay> iterator = list.iterator();
@@ -91,10 +97,10 @@ public class ExposureDayStorage {
 			}
 		}
 
-		int id = esp.getInt(PREF_KEY_LAST_ID, 0) + 1;
+		int id = sp.getInt(PREF_KEY_LAST_ID, 0) + 1;
 		exposureDay.setId(id);
 		previousExposureDays.add(exposureDay);
-		esp.edit()
+		sp.edit()
 				.putInt(PREF_KEY_LAST_ID, id)
 				.putString(PREF_KEY_EEXPOSURE_DAYS, Json.toJson(previousExposureDays))
 				.apply();
@@ -107,13 +113,13 @@ public class ExposureDayStorage {
 		for (ExposureDay previousExposureDay : previousExposureDays) {
 			previousExposureDay.setDeleted(true);
 		}
-		esp.edit()
+		sp.edit()
 				.putString(PREF_KEY_EEXPOSURE_DAYS, Json.toJson(previousExposureDays))
 				.apply();
 	}
 
 	public void clear() {
-		esp.edit()
+		sp.edit()
 				.putString(PREF_KEY_EEXPOSURE_DAYS, Json.toJson(new ExposureDayList()))
 				.apply();
 	}
