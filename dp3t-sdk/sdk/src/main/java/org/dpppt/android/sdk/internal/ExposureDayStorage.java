@@ -53,6 +53,21 @@ public class ExposureDayStorage {
 						context,
 						EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
 						EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
+
+				// See if there's data from API < 23 to migrate to secure storage.
+				SharedPreferences spOld = context.getSharedPreferences("dp3t_exposuredays_store_not_encrypted", Context.MODE_PRIVATE);
+				boolean needClear = false;
+				if (spOld.contains(PREF_KEY_LAST_ID)) {
+					sp.edit().putString(PREF_KEY_LAST_ID, spOld.getString(PREF_KEY_LAST_ID, "")).apply();
+					needClear = true;
+				}
+				if (spOld.contains(PREF_KEY_EEXPOSURE_DAYS)) {
+					sp.edit().putString(PREF_KEY_EEXPOSURE_DAYS, spOld.getString(PREF_KEY_EEXPOSURE_DAYS, "")).apply();
+					needClear = true;
+				}
+				if (needClear) {
+					spOld.edit().clear().apply();
+				}
 			} else {
 				sp = context.getSharedPreferences("dp3t_exposuredays_store_not_encrypted", Context.MODE_PRIVATE);
 			}

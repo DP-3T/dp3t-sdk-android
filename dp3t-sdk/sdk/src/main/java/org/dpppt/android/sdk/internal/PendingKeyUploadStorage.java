@@ -47,6 +47,13 @@ public class PendingKeyUploadStorage {
 						context,
 						EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
 						EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
+
+				// Check if there are values in old pref file that need to be migrated to secure storage.
+				SharedPreferences spOld = context.getSharedPreferences("dp3t_pendingkeyupload_store_not_encrypted", Context.MODE_PRIVATE);
+				if (spOld.contains(PREF_KEY_PENDING_KEYS)) {
+					sp.edit().putString(PREF_KEY_PENDING_KEYS, spOld.getString(PREF_KEY_PENDING_KEYS, "")).apply();
+					spOld.edit().clear().apply();
+				}
 			} else {
 				sp = context.getSharedPreferences("dp3t_pendingkeyupload_store_not_encrypted", Context.MODE_PRIVATE);
 			}
