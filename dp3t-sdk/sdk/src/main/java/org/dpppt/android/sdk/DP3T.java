@@ -118,7 +118,7 @@ public class DP3T {
 		googleExposureClient.start(activity, REQUEST_CODE_START_CONFIRMATION,
 				() -> {
 					resetStartCallbacks();
-					GaenStateCache.setGaenEnabled(true, activity);
+					GaenStateCache.setGaenEnabled(true, null, activity);
 					startInternal(activity);
 					successCallback.run();
 				},

@@ -18,6 +18,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.android.gms.common.api.ApiException;
+
 import org.dpppt.android.sdk.GaenAvailability;
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
@@ -73,7 +75,16 @@ public class ErrorHelper {
 		}
 
 		if (appConfigManager.isTracingEnabled() && Boolean.FALSE.equals(GaenStateCache.isGaenEnabled())) {
-			errors.add(ErrorState.GAEN_UNEXPECTEDLY_DISABLED);
+			ErrorState errorState = ErrorState.GAEN_UNEXPECTEDLY_DISABLED;
+			Exception exception = GaenStateCache.getApiException();
+			if (exception == null) {
+				errorState.setErrorCode("GAUD-00");
+			} else if (exception instanceof ApiException) {
+				errorState.setErrorCode("GAUD-" + ((ApiException) exception).getStatusCode());
+			} else {
+				errorState.setErrorCode("GAUD-" + exception.getMessage());
+			}
+			errors.add(errorState);
 		}
 
 		return errors;
