@@ -150,8 +150,19 @@ public class SyncWorker extends Worker {
 		DayDate dateToLoad = lastDateToCheck.subtractDays(9);
 		while (dateToLoad.isBeforeOrEquals(lastDateToCheck)) {
 
-			if (lastSyncCallTimes.get(dateToLoad) == null ||
-					lastSyncCallTimes.get(dateToLoad) < getLastDesiredSyncTime(dateToLoad)) {
+			Long lastSynCallTime = lastSyncCallTimes.get(dateToLoad);
+			if (lastSynCallTime == null) {
+				// if there is no last sync call time recorded, set it to 5:59:59.999 on the current day, to make sure the first
+				// sync happens after 6am, otherwise we risk running into the 20 calls ratelimit.
+				Calendar cal = new GregorianCalendar();
+				cal.set(Calendar.HOUR_OF_DAY, 5);
+				cal.set(Calendar.MINUTE, 59);
+				cal.set(Calendar.SECOND, 59);
+				cal.set(Calendar.MILLISECOND, 999);
+				lastSynCallTime = cal.getTimeInMillis();
+			}
+
+			if (lastSynCallTime < getLastDesiredSyncTime(dateToLoad)) {
 				try {
 					Response<ResponseBody> result =
 							backendBucketRepository.getGaenExposees(dateToLoad, lastLoadedTimes.get(dateToLoad));
