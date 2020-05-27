@@ -17,55 +17,52 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Logger {
+public final class Logger {
 
-	private static Logger instance = null;
-
-	private final LogLevel minLevel;
-	private final LogDatabase database;
+	private static LoggerImpl instance = null;
+	private static LogLevel minLevel;
 
 	public static void init(Context context, LogLevel level) {
-		instance = new Logger(context, level);
+		minLevel = level;
+		instance = new LoggerImpl(context);
 	}
 
-	private Logger(Context context, LogLevel level) {
-		this.minLevel = level;
-		this.database = new LogDatabase(context);
-	}
+	private Logger() { }
 
 	public static void d(String tag, String message) {
-		if (instance != null) {
-			instance.log(LogLevel.DEBUG, tag, message);
-		}
+		log(LogLevel.DEBUG, tag, message);
 	}
 
 	public static void i(String tag, String message) {
-		if (instance != null) {
-			instance.log(LogLevel.INFO, tag, message);
-		}
+		log(LogLevel.INFO, tag, message);
 	}
 
 	public static void w(String tag, String message) {
-		if (instance != null) {
-			instance.log(LogLevel.WARNING, tag, message);
-		}
+		log(LogLevel.WARNING, tag, message);
 	}
 
 	public static void e(String tag, String message) {
-		if (instance != null) {
-			instance.log(LogLevel.ERROR, tag, message);
-		}
+		log(LogLevel.ERROR, tag, message);
 	}
 
 	public static void e(String tag, Throwable throwable) {
+		if (LogLevel.ERROR.getImportance() < minLevel.getImportance()) {
+			return;
+		}
 		StringWriter sw = new StringWriter();
 		throwable.printStackTrace(new PrintWriter(sw));
-		e(tag, sw.toString());
+		log(LogLevel.ERROR, tag, sw.toString());
+	}
+
+	private static void log(LogLevel level, String tag, String message) {
+		if (instance != null && level.getImportance() >= minLevel.getImportance()) {
+			instance.log(level, tag, message);
+		}
 	}
 
 	public static List<LogEntry> getLogs(long sinceTime) {
 		if (instance != null) {
-			return instance.database.getLogsSince(sinceTime);
+			return instance.getLogs(sinceTime);
 		} else {
 			return new ArrayList<>();
 		}
@@ -73,25 +70,14 @@ public class Logger {
 
 	public static void clear() {
 		if (instance != null) {
-			instance.database.clear();
+			instance.clear();
 		}
 	}
 
 	public static List<String> getTags() {
 		if (instance != null) {
-			return instance.database.getTags();
+			return instance.getTags();
 		}
 		return Collections.emptyList();
 	}
-
-	private void log(LogLevel level, String tag, String message) {
-		if (level.getImportance() < minLevel.getImportance()) {
-			return;
-		}
-
-		level.getLogcat().log(tag, message);
-
-		database.log(level.getKey(), tag, message, System.currentTimeMillis());
-	}
-
 }

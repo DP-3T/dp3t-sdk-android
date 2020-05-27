@@ -7,6 +7,7 @@ import android.content.Intent;
 import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
 import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
 
+import org.dpppt.android.sdk.BuildConfig;
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.ExposureDayStorage;
@@ -23,8 +24,12 @@ public class ExposureNotificationBroadcastReceiver extends BroadcastReceiver {
 		String action = intent.getAction();
 		if (ExposureNotificationClient.ACTION_EXPOSURE_STATE_UPDATED.equals(action)) {
 			ExposureSummary exposureSummary = intent.getParcelableExtra(ExposureNotificationClient.EXTRA_EXPOSURE_SUMMARY);
-			Logger.i(TAG, "received update for " + intent.getStringExtra(ExposureNotificationClient.EXTRA_TOKEN) + " " +
-					exposureSummary.toString());
+
+			if (BuildConfig.FLAVOR.equals("calibration")) {
+				Logger.i(TAG, "received update for " + intent.getStringExtra(ExposureNotificationClient.EXTRA_TOKEN) + " " +
+						exposureSummary.toString());
+			}
+
 			if (isExposureLimitReached(context, exposureSummary)) {
 				DayDate dayOfExposure = new DayDate().subtractDays(exposureSummary.getDaysSinceLastExposure());
 				ExposureDay exposureDay = new ExposureDay(-1, dayOfExposure, System.currentTimeMillis());
