@@ -42,7 +42,7 @@ public class AppConfigManager {
 	private static final String PREF_I_AM_INFECTED_IS_RESETTABLE = "IAmInfectedIsResettable";
 	private static final String PREF_CALIBRATION_TEST_DEVICE_NAME = "calibrationTestDeviceName";
 	private static final String PREF_LAST_LOADED_TIMES = "lastLoadedTimes";
-	private static final String PREF_LAST_EXPOSURE_CLIENT_CALLS = "lastExposureClientCalls";
+	private static final String PREF_LAST_SYNC_CALL_TIMES = "lastExposureClientCalls";
 
 	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
 	private static final String PREF_ATTENUATION_THRESHOLD_MEDIUM = "attenuationThresholdMedium";
@@ -180,16 +180,16 @@ public class AppConfigManager {
 		return convertToDateMap(Json.fromJson(sharedPrefs.getString(PREF_LAST_LOADED_TIMES, "{}"), StringLongMap.class));
 	}
 
-	public HashMap<DayDate, Long> getLastExposureClientCalls() {
-		return convertToDateMap(Json.fromJson(sharedPrefs.getString(PREF_LAST_EXPOSURE_CLIENT_CALLS, "{}"), StringLongMap.class));
+	public HashMap<DayDate, Long> getLastSyncCallTimes() {
+		return convertToDateMap(Json.fromJson(sharedPrefs.getString(PREF_LAST_SYNC_CALL_TIMES, "{}"), StringLongMap.class));
 	}
 
 	public void setLastLoadedTimes(HashMap<DayDate, Long> lastLoadedTimes) {
 		sharedPrefs.edit().putString(PREF_LAST_LOADED_TIMES, Json.toJson(convertFromDateMap(lastLoadedTimes))).apply();
 	}
 
-	public void setLastExposureClientCalls(HashMap<DayDate, Long> lastExposureClientCalls) {
-		sharedPrefs.edit().putString(PREF_LAST_EXPOSURE_CLIENT_CALLS, Json.toJson(convertFromDateMap(lastExposureClientCalls)))
+	public void setLastSyncCallTimes(HashMap<DayDate, Long> lastExposureClientCalls) {
+		sharedPrefs.edit().putString(PREF_LAST_SYNC_CALL_TIMES, Json.toJson(convertFromDateMap(lastExposureClientCalls)))
 				.apply();
 	}
 
