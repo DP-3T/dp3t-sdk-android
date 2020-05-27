@@ -140,7 +140,7 @@ public class SyncWorker extends Worker {
 
 		Exception lastException = null;
 		HashMap<DayDate, Long> lastLoadedTimes = appConfigManager.getLastLoadedTimes();
-		HashMap<DayDate, Long> lastExposureClientCalls = appConfigManager.getLastExposureClientCalls();
+		HashMap<DayDate, Long> lastSyncCallTimes = appConfigManager.getLastSyncCallTimes();
 
 		BackendBucketRepository backendBucketRepository =
 				new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
@@ -150,8 +150,19 @@ public class SyncWorker extends Worker {
 		DayDate dateToLoad = lastDateToCheck.subtractDays(9);
 		while (dateToLoad.isBeforeOrEquals(lastDateToCheck)) {
 
-			if (lastExposureClientCalls.get(dateToLoad) == null ||
-					lastExposureClientCalls.get(dateToLoad) < getLastDesiredSyncTime(dateToLoad)) {
+			Long lastSynCallTime = lastSyncCallTimes.get(dateToLoad);
+			if (lastSynCallTime == null) {
+				// if there is no last sync call time recorded, set it to 5:59:59.999 on the current day, to make sure the first
+				// sync happens after 6am, otherwise we risk running into the 20 calls ratelimit.
+				Calendar cal = new GregorianCalendar();
+				cal.set(Calendar.HOUR_OF_DAY, 5);
+				cal.set(Calendar.MINUTE, 59);
+				cal.set(Calendar.SECOND, 59);
+				cal.set(Calendar.MILLISECOND, 999);
+				lastSynCallTime = cal.getTimeInMillis();
+			}
+
+			if (lastSynCallTime < getLastDesiredSyncTime(dateToLoad)) {
 				try {
 					Response<ResponseBody> result =
 							backendBucketRepository.getGaenExposees(dateToLoad, lastLoadedTimes.get(dateToLoad));
@@ -172,9 +183,8 @@ public class SyncWorker extends Worker {
 						fileList.add(file);
 						String token = dateToLoad.formatAsString();
 						googleExposureClient.provideDiagnosisKeys(fileList, token);
-						lastExposureClientCalls.put(dateToLoad, System.currentTimeMillis());
 					}
-
+					lastSyncCallTimes.put(dateToLoad, System.currentTimeMillis());
 					lastLoadedTimes.put(dateToLoad, Long.parseLong(result.headers().get("x-published-until")));
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -192,7 +202,7 @@ public class SyncWorker extends Worker {
 				dateIterator.remove();
 			}
 		}
-		dateIterator = lastExposureClientCalls.keySet().iterator();
+		dateIterator = lastSyncCallTimes.keySet().iterator();
 		while (dateIterator.hasNext()) {
 			if (dateIterator.next().isBefore(lastDateToKeep)) {
 				dateIterator.remove();
@@ -202,7 +212,7 @@ public class SyncWorker extends Worker {
 		cleanupOldKeyFiles(context);
 
 		appConfigManager.setLastLoadedTimes(lastLoadedTimes);
-		appConfigManager.setLastExposureClientCalls(lastExposureClientCalls);
+		appConfigManager.setLastSyncCallTimes(lastSyncCallTimes);
 
 		if (lastException != null) {
 			throw lastException;

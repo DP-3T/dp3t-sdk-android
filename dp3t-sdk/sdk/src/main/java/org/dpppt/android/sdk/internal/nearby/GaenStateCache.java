@@ -1,7 +1,6 @@
 package org.dpppt.android.sdk.internal.nearby;
 
 import android.content.Context;
-
 import androidx.annotation.Nullable;
 
 import org.dpppt.android.sdk.GaenAvailability;
@@ -11,6 +10,7 @@ public class GaenStateCache {
 
 	private static GaenAvailability gaenAvailability = null;
 	private static Boolean gaenEnabled = null;
+	private static Exception apiException = null;
 
 	public static GaenAvailability getGaenAvailability() {
 		return gaenAvailability;
@@ -28,7 +28,12 @@ public class GaenStateCache {
 		return gaenEnabled;
 	}
 
-	public static void setGaenEnabled(boolean gaenEnabled, Context context) {
+	public static Exception getApiException() {
+		return apiException;
+	}
+
+	public static void setGaenEnabled(boolean gaenEnabled, Exception exception, Context context) {
+		GaenStateCache.apiException = exception;
 		if (!Boolean.valueOf(gaenEnabled).equals(GaenStateCache.gaenEnabled)) {
 			GaenStateCache.gaenEnabled = gaenEnabled;
 			BroadcastHelper.sendUpdateAndErrorBroadcast(context);

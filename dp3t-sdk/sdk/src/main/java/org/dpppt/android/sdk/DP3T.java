@@ -118,7 +118,7 @@ public class DP3T {
 		googleExposureClient.start(activity, REQUEST_CODE_START_CONFIRMATION,
 				() -> {
 					resetStartCallbacks();
-					GaenStateCache.setGaenEnabled(true, activity);
+					GaenStateCache.setGaenEnabled(true, null, activity);
 					startInternal(activity);
 					successCallback.run();
 				},
@@ -134,6 +134,9 @@ public class DP3T {
 
 	public static boolean onActivityResult(Activity activity, int requestCode, int resultCode, @Nullable Intent data) {
 		if (requestCode == REQUEST_CODE_START_CONFIRMATION) {
+			if (pendingStartCallbacks == null) {
+				return false;
+			}
 			if (resultCode == Activity.RESULT_OK) {
 				start(activity, pendingStartCallbacks.successCallback, pendingStartCallbacks.errorCallback,
 						pendingStartCallbacks.cancelledCallback);
