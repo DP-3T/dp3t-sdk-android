@@ -18,9 +18,12 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
 
 import org.dpppt.android.sdk.GaenAvailability;
+import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.PackageManagerUtil;
 
 public class GaenStateHelper {
+
+	private static final String TAG = "GaenStateHelper";
 
 	public static void invalidateGaenAvailability(Context context) {
 		checkGaenAvailability(context, null);
@@ -54,7 +57,8 @@ public class GaenStateHelper {
 		}
 	}
 
-	private static void publishGaenAvailability(Context context, Consumer<GaenAvailability> callback, GaenAvailability availability) {
+	private static void publishGaenAvailability(Context context, Consumer<GaenAvailability> callback,
+			GaenAvailability availability) {
 		GaenStateCache.setGaenAvailability(availability, context);
 		if (callback != null) {
 			callback.accept(availability);
@@ -67,12 +71,15 @@ public class GaenStateHelper {
 
 	public static void checkGaenEnabled(Context context, Consumer<Boolean> callback) {
 		GoogleExposureClient.getInstance(context).isEnabled()
-				.addOnSuccessListener(enabled -> publishGaenEnabled(context, callback, enabled))
-				.addOnFailureListener(e -> publishGaenEnabled(context, callback, false));
+				.addOnSuccessListener(enabled -> publishGaenEnabled(context, callback, enabled, null))
+				.addOnFailureListener(e -> {
+					Logger.e(TAG, "Exception during isEnabled call: " + e.getLocalizedMessage());
+					publishGaenEnabled(context, callback, false, e);
+				});
 	}
 
-	private static void publishGaenEnabled(Context context, Consumer<Boolean> callback, boolean enabled) {
-		GaenStateCache.setGaenEnabled(enabled, context);
+	private static void publishGaenEnabled(Context context, Consumer<Boolean> callback, boolean enabled, Exception exception) {
+		GaenStateCache.setGaenEnabled(enabled, exception, context);
 		if (callback != null) {
 			callback.accept(enabled);
 		}
