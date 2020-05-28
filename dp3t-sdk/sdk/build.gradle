@@ -109,6 +109,7 @@ sonarqube {
 		property "sonar.projectKey", "DP-3T_dp3t-sdk-android"
 		property "sonar.organization", "dp-3t"
 		property "sonar.host.url", "https://sonarcloud.io"
+		property "sonar.projectName", "dp3t-sdk-android"
 	}
 }
 
