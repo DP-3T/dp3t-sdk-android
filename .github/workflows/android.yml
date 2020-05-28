@@ -52,4 +52,4 @@ jobs:
       with:
         java-version: 1.8
     - name: Sonar Analysis
-      run: cd dp3t-sdk; ./gradlew sonarqube -Psonar.login=${{secrets.SONAR_LOGIN}}
+      run: cd dp3t-sdk; ./gradlew sonarqube -Psonar.login=${{secrets.SONAR_LOGIN}} -Dsonar.verbose=true
