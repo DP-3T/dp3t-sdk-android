@@ -19,6 +19,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.junit.Assert.assertEquals;
+
 @RunWith(AndroidJUnit4.class)
 public class ExposureDayStorageTest {
 
@@ -34,7 +36,7 @@ public class ExposureDayStorageTest {
 		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
 		eds.clear();
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis()));
-		assert (eds.getExposureDays().size() == 1);
+		assertEquals(1, eds.getExposureDays().size());
 	}
 
 	@Test
@@ -46,7 +48,7 @@ public class ExposureDayStorageTest {
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis() - 20));
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis()));
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis()));
-		assert (eds.getExposureDays().size() == 2);
+		assertEquals(2, eds.getExposureDays().size());
 	}
 
 	@Test
@@ -55,7 +57,7 @@ public class ExposureDayStorageTest {
 		eds.clear();
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis()));
 		eds.resetExposureDays();
-		assert (eds.getExposureDays().size() == 0);
+		assertEquals(0, eds.getExposureDays().size());
 	}
 
 	@Test
@@ -65,7 +67,7 @@ public class ExposureDayStorageTest {
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis() - 10));
 		eds.resetExposureDays();
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis()));
-		assert (eds.getExposureDays().size() == 0);
+		assertEquals(0, eds.getExposureDays().size());
 	}
 
 	@Test
@@ -75,7 +77,7 @@ public class ExposureDayStorageTest {
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis() - 10));
 		eds.resetExposureDays();
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis()));
-		assert (eds.getExposureDays().size() == 1);
+		assertEquals(1, eds.getExposureDays().size());
 	}
 
 }
