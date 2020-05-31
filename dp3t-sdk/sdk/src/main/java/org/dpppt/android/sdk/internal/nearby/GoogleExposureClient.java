@@ -108,13 +108,13 @@ public class GoogleExposureClient {
 				.addOnSuccessListener(list -> {
 					results[0] = list;
 					synchronized (syncObject) {
-						syncObject.notify();
+						syncObject.notifyAll();
 					}
 				})
 				.addOnFailureListener(e -> {
 					results[0] = e;
 					synchronized (syncObject) {
-						syncObject.notify();
+						syncObject.notifyAll();
 					}
 				});
 
@@ -161,13 +161,13 @@ public class GoogleExposureClient {
 					Logger.d(TAG, "inserted keys successfully");
 					// ok
 					synchronized (syncObject) {
-						syncObject.notify();
+						syncObject.notifyAll();
 					}
 				})
 				.addOnFailureListener(e -> {
 					exceptions[0] = e;
 					synchronized (syncObject) {
-						syncObject.notify();
+						syncObject.notifyAll();
 					}
 				});
 

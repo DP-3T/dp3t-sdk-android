@@ -15,11 +15,11 @@ import java.util.*;
 
 public class DayDate implements Comparable {
 
-	private static final SimpleDateFormat dayDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-
-	static {
-		dayDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-	}
+	private final SimpleDateFormat dayDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH) {
+		{
+			setTimeZone(TimeZone.getTimeZone("UTC"));
+		}
+	};
 
 	private long timestampRepresentation;
 

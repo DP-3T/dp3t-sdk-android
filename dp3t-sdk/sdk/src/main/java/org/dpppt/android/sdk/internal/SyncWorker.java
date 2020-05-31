@@ -170,14 +170,14 @@ public class SyncWorker extends Worker {
 					if (result.code() != 204) {
 						File file = new File(context.getCacheDir(),
 								KEYFILE_PREFIX + dateToLoad.formatAsString() + "_" + lastLoadedTimes.get(dateToLoad) + ".zip");
-						BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
-						byte[] bytesIn = new byte[1024];
-						int read = 0;
-						InputStream bodyStream = result.body().byteStream();
-						while ((read = bodyStream.read(bytesIn)) != -1) {
-							bos.write(bytesIn, 0, read);
+						try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file))) {
+							byte[] bytesIn = new byte[1024];
+							int read = 0;
+							InputStream bodyStream = result.body().byteStream();
+							while ((read = bodyStream.read(bytesIn)) != -1) {
+								bos.write(bytesIn, 0, read);
+							}
 						}
-						bos.close();
 
 						ArrayList<File> fileList = new ArrayList<>();
 						fileList.add(file);
