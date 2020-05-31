@@ -15,12 +15,6 @@ import java.util.*;
 
 public class DayDate implements Comparable {
 
-	private final SimpleDateFormat dayDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH) {
-		{
-			setTimeZone(TimeZone.getTimeZone("UTC"));
-		}
-	};
-
 	private long timestampRepresentation;
 
 	public DayDate() {
@@ -28,9 +22,7 @@ public class DayDate implements Comparable {
 	}
 
 	public DayDate(String dayDate) throws ParseException {
-		synchronized (dayDateFormat) {
-			timestampRepresentation = convertToDay(dayDateFormat.parse(dayDate).getTime());
-		}
+		timestampRepresentation = convertToDay(getDayDateFormat().parse(dayDate).getTime());
 	}
 
 	public DayDate(long timestamp) {
@@ -38,9 +30,7 @@ public class DayDate implements Comparable {
 	}
 
 	public String formatAsString() {
-		synchronized (dayDateFormat) {
-			return dayDateFormat.format(new Date(timestampRepresentation));
-		}
+		return getDayDateFormat().format(new Date(timestampRepresentation));
 	}
 
 	public DayDate getNextDay() {
@@ -128,6 +118,12 @@ public class DayDate implements Comparable {
 		} else {
 			return -1;
 		}
+	}
+
+	private SimpleDateFormat getDayDateFormat() {
+		SimpleDateFormat dayDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+		dayDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+		return dayDateFormat;
 	}
 
 }
