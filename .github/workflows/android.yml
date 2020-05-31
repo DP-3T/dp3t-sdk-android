@@ -52,4 +52,6 @@ jobs:
       with:
         java-version: 1.8
     - name: Sonar Analysis
-      run: cd dp3t-sdk; ./gradlew sonarqube -Dsonar.login=${{secrets.SONAR_LOGIN}} 
+      run: cd dp3t-sdk; ./gradlew sonarqube -Dsonar.login=${{secrets.SONAR_LOGIN}}
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
