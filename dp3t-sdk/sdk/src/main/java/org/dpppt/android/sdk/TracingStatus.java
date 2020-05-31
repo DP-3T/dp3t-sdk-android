@@ -75,6 +75,8 @@ public class TracingStatus {
 			this.errorString = errorString;
 		}
 
+		@SuppressWarnings("java:S3066")
+		//it is ok in our case to set the errorCode to the always latest value, it is only used as debug information
 		public void setErrorCode(String errorCode) {
 			this.errorCode = errorCode;
 		}

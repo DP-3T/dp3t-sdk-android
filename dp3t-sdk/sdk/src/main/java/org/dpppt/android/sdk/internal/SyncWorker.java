@@ -224,7 +224,9 @@ public class SyncWorker extends Worker {
 	private static void cleanupOldKeyFiles(Context context) {
 		for (File file : context.getCacheDir().listFiles()) {
 			if (file.getName().startsWith(KEYFILE_PREFIX)) {
-				file.delete();
+				if (!file.delete()) {
+					Logger.w(TAG, "Unable to delete file " + file.getName());
+				}
 			}
 		}
 	}
