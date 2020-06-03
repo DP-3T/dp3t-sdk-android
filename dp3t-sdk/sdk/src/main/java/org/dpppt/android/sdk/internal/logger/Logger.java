@@ -13,14 +13,13 @@ import android.content.Context;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public final class Logger {
 
 	private static LoggerImpl instance = null;
-	private static LogLevel minLevel;
+	private static LogLevel minLevel = LogLevel.OFF;
 
 	public static void init(Context context, LogLevel level) {
 		minLevel = level;
@@ -46,10 +45,20 @@ public final class Logger {
 	}
 
 	public static void e(String tag, Throwable throwable) {
-		if (LogLevel.ERROR.getImportance() < minLevel.getImportance()) {
+		if (instance == null || LogLevel.ERROR.getImportance() < minLevel.getImportance()) {
 			return;
 		}
 		StringWriter sw = new StringWriter();
+		throwable.printStackTrace(new PrintWriter(sw));
+		log(LogLevel.ERROR, tag, sw.toString());
+	}
+
+	public static void e(String tag, String message, Throwable throwable) {
+		if (instance == null || LogLevel.ERROR.getImportance() < minLevel.getImportance()) {
+			return;
+		}
+		StringWriter sw = new StringWriter();
+		sw.append(message).append(": ");
 		throwable.printStackTrace(new PrintWriter(sw));
 		log(LogLevel.ERROR, tag, sw.toString());
 	}
@@ -64,7 +73,7 @@ public final class Logger {
 		if (instance != null) {
 			return instance.getLogs(sinceTime);
 		} else {
-			return new ArrayList<>();
+			return Collections.emptyList();
 		}
 	}
 
@@ -77,7 +86,8 @@ public final class Logger {
 	public static List<String> getTags() {
 		if (instance != null) {
 			return instance.getTags();
+		} else {
+			return Collections.emptyList();
 		}
-		return Collections.emptyList();
 	}
 }

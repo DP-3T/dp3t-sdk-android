@@ -110,7 +110,7 @@ public class SyncWorker extends Worker {
 			SyncErrorState.getInstance().setSyncError(null);
 			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 		} catch (Exception e) {
-			Logger.e(TAG, e);
+			Logger.e(TAG, "sync", e);
 			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(false);
 			ErrorState syncError;
 			if (e instanceof ServerTimeOffsetException) {

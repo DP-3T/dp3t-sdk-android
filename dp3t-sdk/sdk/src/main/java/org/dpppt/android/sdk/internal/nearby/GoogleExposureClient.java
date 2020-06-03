@@ -49,7 +49,7 @@ public class GoogleExposureClient {
 	public void start(Activity activity, int resolutionRequestCode, Runnable successCallback, Consumer<Exception> errorCallback) {
 		exposureNotificationClient.start()
 				.addOnSuccessListener(nothing -> {
-					Logger.i(TAG, "started successfully");
+					Logger.i(TAG, "start: started successfully");
 					successCallback.run();
 				})
 				.addOnFailureListener(e -> {
@@ -57,22 +57,23 @@ public class GoogleExposureClient {
 						ApiException apiException = (ApiException) e;
 						if (apiException.getStatusCode() == ExposureNotificationStatusCodes.RESOLUTION_REQUIRED) {
 							try {
+								Logger.i(TAG, "start: resolution required");
 								apiException.getStatus().startResolutionForResult(activity, resolutionRequestCode);
 								return;
 							} catch (IntentSender.SendIntentException e2) {
-								Logger.e(TAG, "Error calling startResolutionForResult()");
+								Logger.e(TAG, "start: error calling startResolutionForResult()");
 							}
 						}
 					}
-					Logger.e(TAG, e);
+					Logger.e(TAG, "start", e);
 					errorCallback.accept(e);
 				});
 	}
 
 	public void stop() {
 		exposureNotificationClient.stop()
-				.addOnSuccessListener(nothing -> Logger.i(TAG, "stopped successfully"))
-				.addOnFailureListener(e -> Logger.e(TAG, e));
+				.addOnSuccessListener(nothing -> Logger.i(TAG, "stop: stopped successfully"))
+				.addOnFailureListener(e -> Logger.e(TAG, "stop", e));
 	}
 
 	public Task<Boolean> isEnabled() {
@@ -82,20 +83,24 @@ public class GoogleExposureClient {
 	public void getTemporaryExposureKeyHistory(Activity activity, int resolutionRequestCode,
 			OnSuccessListener<List<TemporaryExposureKey>> successCallback, Consumer<Exception> errorCallback) {
 		exposureNotificationClient.getTemporaryExposureKeyHistory()
-				.addOnSuccessListener(successCallback)
+				.addOnSuccessListener(temporaryExposureKeys -> {
+					Logger.d(TAG, "getTemporaryExposureKeyHistory: success");
+					successCallback.onSuccess(temporaryExposureKeys);
+				})
 				.addOnFailureListener(e -> {
 					if (e instanceof ApiException) {
 						ApiException apiException = (ApiException) e;
 						if (apiException.getStatusCode() == ExposureNotificationStatusCodes.RESOLUTION_REQUIRED) {
 							try {
+								Logger.i(TAG, "getTemporaryExposureKeyHistory: resolution required");
 								apiException.getStatus().startResolutionForResult(activity, resolutionRequestCode);
 								return;
 							} catch (IntentSender.SendIntentException e2) {
-								Logger.e(TAG, "Error calling startResolutionForResult()");
+								Logger.e(TAG, "getTemporaryExposureKeyHistory: error calling startResolutionForResult()");
 							}
 						}
 					}
-					Logger.e(TAG, e);
+					Logger.e(TAG, "getTemporaryExposureKeyHistory", e);
 					errorCallback.accept(e);
 				});
 	}
@@ -158,13 +163,13 @@ public class GoogleExposureClient {
 		Exception[] exceptions = new Exception[] { null };
 		exposureNotificationClient.provideDiagnosisKeys(keys, exposureConfiguration, token)
 				.addOnSuccessListener(nothing -> {
-					Logger.d(TAG, "inserted keys successfully");
-					// ok
+					Logger.d(TAG, "provideDiagnosisKeys: inserted keys successfully");
 					synchronized (syncObject) {
 						syncObject.notifyAll();
 					}
 				})
 				.addOnFailureListener(e -> {
+					Logger.e(TAG, "provideDiagnosisKeys", e);
 					exceptions[0] = e;
 					synchronized (syncObject) {
 						syncObject.notifyAll();
