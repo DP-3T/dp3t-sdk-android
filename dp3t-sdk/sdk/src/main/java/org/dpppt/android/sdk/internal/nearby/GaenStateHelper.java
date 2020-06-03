@@ -33,6 +33,7 @@ public class GaenStateHelper {
 		Intent enSettingsIntent = new Intent(ExposureNotificationClient.ACTION_EXPOSURE_NOTIFICATION_SETTINGS);
 		boolean enModuleAvailable = enSettingsIntent.resolveActivity(context.getPackageManager()) != null;
 		if (enModuleAvailable) {
+			Logger.d(TAG, "checkGaenAvailability: EN available");
 			publishGaenAvailability(context, callback, GaenAvailability.AVAILABLE);
 			return;
 		}
@@ -41,9 +42,11 @@ public class GaenStateHelper {
 		if (googlePlayServicesAvailable == ConnectionResult.SERVICE_MISSING ||
 				googlePlayServicesAvailable == ConnectionResult.SERVICE_DISABLED ||
 				googlePlayServicesAvailable == ConnectionResult.SERVICE_INVALID) {
+			Logger.e(TAG, "checkGaenAvailability: googlePlayServicesAvailable=" + googlePlayServicesAvailable);
 			publishGaenAvailability(context, callback, GaenAvailability.UNAVAILABLE);
 			return;
 		} else if (googlePlayServicesAvailable == ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED) {
+			Logger.w(TAG, "checkGaenAvailability: update required (isGooglePlayServicesAvailable)");
 			publishGaenAvailability(context, callback, GaenAvailability.UPDATE_REQUIRED);
 			return;
 		}
@@ -51,8 +54,10 @@ public class GaenStateHelper {
 		boolean playServicesInstalled =
 				PackageManagerUtil.isPackageInstalled(GoogleApiAvailability.GOOGLE_PLAY_SERVICES_PACKAGE, context);
 		if (playServicesInstalled) {
+			Logger.w(TAG, "checkGaenAvailability: update required (isPackageInstalled)");
 			publishGaenAvailability(context, callback, GaenAvailability.UPDATE_REQUIRED);
 		} else {
+			Logger.w(TAG, "checkGaenAvailability: not installed");
 			publishGaenAvailability(context, callback, GaenAvailability.UNAVAILABLE);
 		}
 	}
@@ -71,9 +76,12 @@ public class GaenStateHelper {
 
 	public static void checkGaenEnabled(Context context, Consumer<Boolean> callback) {
 		GoogleExposureClient.getInstance(context).isEnabled()
-				.addOnSuccessListener(enabled -> publishGaenEnabled(context, callback, enabled, null))
+				.addOnSuccessListener(enabled -> {
+					Logger.d(TAG, "checkGaenEnabled: enabled=" + enabled);
+					publishGaenEnabled(context, callback, enabled, null);
+				})
 				.addOnFailureListener(e -> {
-					Logger.e(TAG, "Exception during isEnabled call: " + e.getLocalizedMessage());
+					Logger.e(TAG, "checkGaenEnabled", e);
 					publishGaenEnabled(context, callback, false, e);
 				});
 	}

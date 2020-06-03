@@ -28,7 +28,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.dpppt.android.calibration.R;
-import org.dpppt.android.sdk.internal.nearby.FileVerifier;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.models.DayDate;
 
@@ -86,8 +85,6 @@ public class HandshakesFragment extends Fragment {
 					}
 					bos.close();
 					zis.closeEntry();
-
-					FileVerifier.verify(file);
 
 					String token = zipEntry.getName() + " " + currentTime + "_" +
 							googleExposureClient.getExposureConfiguration().toString().hashCode();

@@ -1,5 +1,10 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.5.2 (3.6.2020)
+
+- more logs
+- code cleanup
+
 ## Version 0.5.1 (27.5.2020)
 
 - reduce number of sync requests and prevent rate limit issue

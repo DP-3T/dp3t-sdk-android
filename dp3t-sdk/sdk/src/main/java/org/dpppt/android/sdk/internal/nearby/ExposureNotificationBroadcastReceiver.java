@@ -22,6 +22,8 @@ public class ExposureNotificationBroadcastReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		String action = intent.getAction();
+		Logger.i(TAG, "received " + action);
+
 		if (ExposureNotificationClient.ACTION_EXPOSURE_STATE_UPDATED.equals(action)) {
 			ExposureSummary exposureSummary = intent.getParcelableExtra(ExposureNotificationClient.EXTRA_EXPOSURE_SUMMARY);
 
@@ -31,9 +33,12 @@ public class ExposureNotificationBroadcastReceiver extends BroadcastReceiver {
 			}
 
 			if (isExposureLimitReached(context, exposureSummary)) {
+				Logger.d(TAG, "exposure limit reached");
 				DayDate dayOfExposure = new DayDate().subtractDays(exposureSummary.getDaysSinceLastExposure());
 				ExposureDay exposureDay = new ExposureDay(-1, dayOfExposure, System.currentTimeMillis());
 				ExposureDayStorage.getInstance(context).addExposureDay(context, exposureDay);
+			} else {
+				Logger.d(TAG, "exposure limit not reached");
 			}
 		} else if (ExposureNotificationClient.ACTION_EXPOSURE_NOTIFICATION_SETTINGS.equals(action)) {
 			BroadcastHelper.sendUpdateAndErrorBroadcast(context);

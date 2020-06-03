@@ -110,7 +110,7 @@ public class SyncWorker extends Worker {
 			SyncErrorState.getInstance().setSyncError(null);
 			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 		} catch (Exception e) {
-			Logger.e(TAG, e);
+			Logger.e(TAG, "sync", e);
 			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(false);
 			ErrorState syncError;
 			if (e instanceof ServerTimeOffsetException) {
@@ -123,7 +123,7 @@ public class SyncWorker extends Worker {
 			} else if (e instanceof SQLiteException) {
 				syncError = ErrorState.SYNC_ERROR_DATABASE;
 			} else if (e instanceof ApiException) {
-				syncError = ErrorState.SYNC_ERROR_API_EXCPETION;
+				syncError = ErrorState.SYNC_ERROR_API_EXCEPTION;
 				syncError.setErrorCode("AGAEN" + ((ApiException) e).getStatusCode());
 			} else {
 				syncError = ErrorState.SYNC_ERROR_NETWORK;
@@ -149,7 +149,6 @@ public class SyncWorker extends Worker {
 		DayDate lastDateToCheck = new DayDate();
 		DayDate dateToLoad = lastDateToCheck.subtractDays(9);
 		while (dateToLoad.isBeforeOrEquals(lastDateToCheck)) {
-
 			Long lastSynCallTime = lastSyncCallTimes.get(dateToLoad);
 			if (lastSynCallTime == null) {
 				// if there is no last sync call time recorded, set it to 5:59:59.999 on the current day, to make sure the first
@@ -170,14 +169,14 @@ public class SyncWorker extends Worker {
 					if (result.code() != 204) {
 						File file = new File(context.getCacheDir(),
 								KEYFILE_PREFIX + dateToLoad.formatAsString() + "_" + lastLoadedTimes.get(dateToLoad) + ".zip");
-						BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
-						byte[] bytesIn = new byte[1024];
-						int read = 0;
-						InputStream bodyStream = result.body().byteStream();
-						while ((read = bodyStream.read(bytesIn)) != -1) {
-							bos.write(bytesIn, 0, read);
+						try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file))) {
+							byte[] bytesIn = new byte[1024];
+							int read = 0;
+							InputStream bodyStream = result.body().byteStream();
+							while ((read = bodyStream.read(bytesIn)) != -1) {
+								bos.write(bytesIn, 0, read);
+							}
 						}
-						bos.close();
 
 						ArrayList<File> fileList = new ArrayList<>();
 						fileList.add(file);
@@ -224,7 +223,9 @@ public class SyncWorker extends Worker {
 	private static void cleanupOldKeyFiles(Context context) {
 		for (File file : context.getCacheDir().listFiles()) {
 			if (file.getName().startsWith(KEYFILE_PREFIX)) {
-				file.delete();
+				if (!file.delete()) {
+					Logger.w(TAG, "Unable to delete file " + file.getName());
+				}
 			}
 		}
 	}
@@ -232,7 +233,7 @@ public class SyncWorker extends Worker {
 	private static long getLastDesiredSyncTime(DayDate dateToLoad) {
 		if (BuildConfig.FLAVOR.equals("calibration")) {
 			long now = System.currentTimeMillis();
-			return now - (now % (5 * 60 * 1000l));
+			return now - (now % (5 * 60 * 1000L));
 		} else {
 			Calendar cal = new GregorianCalendar();
 			if (cal.get(Calendar.HOUR_OF_DAY) < 6) {

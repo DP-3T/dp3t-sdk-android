@@ -66,7 +66,7 @@ public class TracingStatus {
 		SYNC_ERROR_DATABASE(R.string.dp3t_sdk_service_notification_error_sync_database),
 		SYNC_ERROR_TIMING(R.string.dp3t_sdk_service_notification_error_sync_timing),
 		SYNC_ERROR_SIGNATURE(R.string.dp3t_sdk_service_notification_error_sync_signature),
-		SYNC_ERROR_API_EXCPETION(R.string.dp3t_sdk_service_notification_error_sync_api);
+		SYNC_ERROR_API_EXCEPTION(R.string.dp3t_sdk_service_notification_error_sync_api);
 
 		@StringRes private int errorString;
 		private String errorCode;
@@ -75,6 +75,8 @@ public class TracingStatus {
 			this.errorString = errorString;
 		}
 
+		@SuppressWarnings("java:S3066")
+		//it is ok in our case to set the errorCode to the always latest value, it is only used as debug information
 		public void setErrorCode(String errorCode) {
 			this.errorCode = errorCode;
 		}
@@ -89,7 +91,7 @@ public class TracingStatus {
 			}
 			String text = context.getString(errorString);
 			if (errorCode != null) {
-				text += "(" + errorCode + ")";
+				text += " (" + errorCode + ")";
 			}
 			return text;
 		}

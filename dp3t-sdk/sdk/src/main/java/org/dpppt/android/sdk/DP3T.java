@@ -135,12 +135,14 @@ public class DP3T {
 	public static boolean onActivityResult(Activity activity, int requestCode, int resultCode, @Nullable Intent data) {
 		if (requestCode == REQUEST_CODE_START_CONFIRMATION) {
 			if (pendingStartCallbacks == null) {
+				Logger.w(TAG, "onActivityResult: start confirmation, missing callback");
 				return false;
 			}
 			if (resultCode == Activity.RESULT_OK) {
 				start(activity, pendingStartCallbacks.successCallback, pendingStartCallbacks.errorCallback,
 						pendingStartCallbacks.cancelledCallback);
 			} else {
+				Logger.w(TAG, "onActivityResult: start confirmation, resultCode=" + resultCode);
 				Runnable cancelledCallback = pendingStartCallbacks.cancelledCallback;
 				resetStartCallbacks();
 				cancelledCallback.run();
@@ -269,8 +271,8 @@ public class DP3T {
 		if (pendingIAmInfectedRequest == null) {
 			throw new IllegalStateException("pendingIAmInfectedRequest must be set before calling reportFailedIAmInfected()");
 		}
+		Logger.e(TAG, "reportFailedIAmInfected", e);
 		pendingIAmInfectedRequest.callback.onError(e);
-		Logger.e(TAG, e);
 		pendingIAmInfectedRequest = null;
 	}
 
@@ -391,8 +393,7 @@ public class DP3T {
 		private final Consumer<Exception> errorCallback;
 		private final Runnable cancelledCallback;
 
-		private PendingStartCallbacks(Runnable successCallback, Consumer<Exception> errorCallback,
-				Runnable cancelledCallback) {
+		private PendingStartCallbacks(Runnable successCallback, Consumer<Exception> errorCallback, Runnable cancelledCallback) {
 			this.successCallback = successCallback;
 			this.errorCallback = errorCallback;
 			this.cancelledCallback = cancelledCallback;
