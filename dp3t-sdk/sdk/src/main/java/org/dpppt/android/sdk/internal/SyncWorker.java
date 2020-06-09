@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.SSLException;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
@@ -125,8 +126,11 @@ public class SyncWorker extends Worker {
 			} else if (e instanceof ApiException) {
 				syncError = ErrorState.SYNC_ERROR_API_EXCEPTION;
 				syncError.setErrorCode("AGAEN" + ((ApiException) e).getStatusCode());
+			} else if (e instanceof SSLException) {
+				syncError = ErrorState.SYNC_ERROR_SSLTLS;
 			} else {
 				syncError = ErrorState.SYNC_ERROR_NETWORK;
+				syncError.setErrorCode(null);
 			}
 			SyncErrorState.getInstance().setSyncError(syncError);
 			BroadcastHelper.sendUpdateAndErrorBroadcast(context);

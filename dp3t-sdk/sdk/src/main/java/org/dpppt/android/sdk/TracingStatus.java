@@ -63,6 +63,7 @@ public class TracingStatus {
 		BATTERY_OPTIMIZER_ENABLED(R.string.dp3t_sdk_service_notification_error_battery_optimization),
 		SYNC_ERROR_SERVER(R.string.dp3t_sdk_service_notification_error_sync_server),
 		SYNC_ERROR_NETWORK(R.string.dp3t_sdk_service_notification_error_sync_network),
+		SYNC_ERROR_SSLTLS(R.string.dp3t_sdk_service_notification_error_sync_ssltls),
 		SYNC_ERROR_DATABASE(R.string.dp3t_sdk_service_notification_error_sync_database),
 		SYNC_ERROR_TIMING(R.string.dp3t_sdk_service_notification_error_sync_timing),
 		SYNC_ERROR_SIGNATURE(R.string.dp3t_sdk_service_notification_error_sync_signature),
