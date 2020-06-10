@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Latest
+
+- new sync error state for ssl/tls errors
+
 ## Version 0.5.2 (3.6.2020)
 
 - more logs
