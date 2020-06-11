@@ -31,9 +31,9 @@ import org.dpppt.android.sdk.internal.backend.CertificatePinning;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
-import org.dpppt.android.sdk.internal.history.HistoryEntryType;
 import org.dpppt.android.sdk.internal.history.HistoryDatabase;
 import org.dpppt.android.sdk.internal.history.HistoryEntry;
+import org.dpppt.android.sdk.internal.history.HistoryEntryType;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
 import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
@@ -413,7 +413,7 @@ public class DP3T {
 		Logger.clear();
 	}
 
-	public static void clientOpened(Context context) {
+	public static void addClientOpenedToHistory(Context context) {
 		HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
 		Calendar calendar = new GregorianCalendar();
 		historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.OPEN_APP, null, true, calendar.getTimeInMillis()));
@@ -421,10 +421,11 @@ public class DP3T {
 		historyDatabase.clearBefore(calendar.getTimeInMillis());
 	}
 
-	public static void fakeWorkerScheduled(Context context) {
+	public static void addWorkerStartedToHistory(Context context, String workerName) {
 		if (AppConfigManager.getInstance(context).getDevHistory()) {
 			HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
-			historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.SCHEDULED_WORKER, "Fake", true, System.currentTimeMillis()));
+			historyDatabase
+					.addEntry(new HistoryEntry(HistoryEntryType.WORKER_STARTED, workerName, true, System.currentTimeMillis()));
 		}
 	}
 

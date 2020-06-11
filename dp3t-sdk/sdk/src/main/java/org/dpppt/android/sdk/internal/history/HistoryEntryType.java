@@ -5,7 +5,7 @@ import android.util.SparseArray;
 public enum HistoryEntryType {
 	OPEN_APP(0),
 	SYNC(1),
-	SCHEDULED_WORKER(2),
+	WORKER_STARTED(2),
 	FAKE_REQUEST(3),
 	NEXT_DAY_KEY_UPLOAD_REQUEST(4);
 

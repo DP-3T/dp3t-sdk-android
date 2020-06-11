@@ -70,11 +70,6 @@ public class SyncWorker extends Worker {
 		WorkManager workManager = WorkManager.getInstance(context);
 		workManager.enqueueUniquePeriodicWork(WORK_TAG, ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest);
 
-		if (AppConfigManager.getInstance(context).getDevHistory()) {
-			HistoryDatabase.getInstance(context)
-					.addEntry(new HistoryEntry(HistoryEntryType.SCHEDULED_WORKER, "Sync", true, System.currentTimeMillis()));
-		}
-
 		Logger.d(TAG, "scheduled SyncWorker");
 	}
 
@@ -96,6 +91,11 @@ public class SyncWorker extends Worker {
 	public Result doWork() {
 		Logger.d(TAG, "start SyncWorker");
 		Context context = getApplicationContext();
+
+		if (AppConfigManager.getInstance(context).getDevHistory()) {
+			HistoryDatabase.getInstance(context)
+					.addEntry(new HistoryEntry(HistoryEntryType.WORKER_STARTED, "Sync", true, System.currentTimeMillis()));
+		}
 
 		try {
 			doSync(context);
