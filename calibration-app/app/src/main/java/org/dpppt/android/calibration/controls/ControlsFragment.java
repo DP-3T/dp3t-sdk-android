@@ -19,6 +19,7 @@ import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -38,6 +39,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 
+import java.io.FileNotFoundException;
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -55,15 +58,22 @@ import org.dpppt.android.sdk.GaenAvailability;
 import org.dpppt.android.sdk.InfectionStatus;
 import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.backend.ResponseCallback;
+import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
+import org.dpppt.android.sdk.internal.export.FileUploadRepository;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
 import org.dpppt.android.sdk.util.DateUtil;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ControlsFragment extends Fragment {
 
 	private static final String TAG = ControlsFragment.class.getCanonicalName();
 
+	private static final int REQUEST_CODE_SAVE_DB = 2;
 	private static final int REQUEST_CODE_REPORT_EXPOSED = 3;
 	private static final int REQUEST_CODE_ENABLE_BLE = 4;
 
@@ -131,6 +141,24 @@ public class ControlsFragment extends Fragment {
 				String authCodeBase64 = data.getStringExtra(ExposedDialogFragment.RESULT_EXTRA_AUTH_CODE_INPUT_BASE64);
 				sendInfectedUpdate(new Date(onsetDate), authCodeBase64);
 			}
+		} else if (requestCode == REQUEST_CODE_SAVE_DB && resultCode == Activity.RESULT_OK && data != null) {
+			Uri uri = data.getData();
+			try {
+				OutputStream targetOut = getContext().getContentResolver().openOutputStream(uri);
+				DP3TCalibrationHelper.exportDatabase(
+						getContext(), targetOut,
+						() -> new Handler(Looper.getMainLooper()).post(() -> {
+							Toast.makeText(requireContext(), "Export completed!", Toast.LENGTH_LONG).show();
+							setExportDbLoadingViewVisible(false);
+						}),
+						e -> new Handler(Looper.getMainLooper()).post(() -> {
+							e.printStackTrace();
+							Toast.makeText(requireContext(), "Export failed!", Toast.LENGTH_LONG).show();
+						})
+				);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
 		} else if (requestCode == REQUEST_CODE_ENABLE_BLE) {
 			// handled by bluetoothReceiver
 		}
@@ -161,7 +189,39 @@ public class ControlsFragment extends Fragment {
 					});
 		});
 
+		Button buttonSaveDb = view.findViewById(R.id.home_button_export_db);
+		buttonSaveDb.setOnClickListener(v -> {
+			Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+			intent.setType("application/sqlite");
+			intent.putExtra(Intent.EXTRA_TITLE, "dp3t_sample_db.sqlite");
+			startActivityForResult(intent, REQUEST_CODE_SAVE_DB);
+			setExportDbLoadingViewVisible(true);
+		});
+
 		EditText deanonymizationDeviceId = view.findViewById(R.id.deanonymization_device_id);
+		Button uploadDB = view.findViewById(R.id.home_button_upload_db);
+		uploadDB.setOnClickListener(v -> {
+			String deviceId = deanonymizationDeviceId.getText().toString();
+			DP3TCalibrationHelper.setCalibrationTestDeviceName(getContext(), deviceId);
+			setUploadDbLoadingViewVisible(true);
+			new FileUploadRepository()
+					.uploadDatabase(requireContext(), AppConfigManager.getInstance(getContext()).getCalibrationTestDeviceName(),
+							new Callback<Void>() {
+								@Override
+								public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+									Toast.makeText(getContext(), "Upload completed!", Toast.LENGTH_LONG).show();
+									setUploadDbLoadingViewVisible(false);
+								}
+
+								@Override
+								public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+									t.printStackTrace();
+									Toast.makeText(getContext(), "Upload failed!", Toast.LENGTH_LONG).show();
+									setUploadDbLoadingViewVisible(false);
+								}
+							});
+		});
+
 		Button deanonymizationButton = view.findViewById(R.id.deanonymization_key_upload_button);
 		deanonymizationButton.setOnClickListener(v -> {
 			String deviceId = deanonymizationDeviceId.getText().toString();
@@ -170,7 +230,7 @@ public class ControlsFragment extends Fragment {
 					.getTemporaryExposureKeyHistory(getActivity(), 123, temporaryExposureKeys -> {
 						GaenRequest exposeeListRequest =
 								new GaenRequest(temporaryExposureKeys, DateUtil.getCurrentRollingStartNumber());
-						new BackendCalibrationReportRepository(getContext())
+						new BackendCalibrationReportRepository(requireContext())
 								.addGaenExposee(exposeeListRequest, deviceId, new ResponseCallback<Void>() {
 									@Override
 									public void onSuccess(Void response) {
@@ -263,6 +323,10 @@ public class ControlsFragment extends Fragment {
 
 		Button buttonClearData = view.findViewById(R.id.home_button_clear_data);
 		buttonClearData.setEnabled(!isRunning);
+		Button buttonSaveDb = view.findViewById(R.id.home_button_export_db);
+		buttonSaveDb.setEnabled(!isRunning);
+		Button buttonUploadDb = view.findViewById(R.id.home_button_upload_db);
+		buttonUploadDb.setEnabled(!isRunning);
 
 		Button buttonReportInfected = view.findViewById(R.id.home_button_report_infected);
 		buttonReportInfected.setEnabled(status.getInfectionStatus() != InfectionStatus.INFECTED);
@@ -348,4 +412,19 @@ public class ControlsFragment extends Fragment {
 		}
 	}
 
+	private void setExportDbLoadingViewVisible(boolean visible) {
+		View view = getView();
+		if (view != null) {
+			view.findViewById(R.id.home_loading_view_export_db).setVisibility(visible ? View.VISIBLE : View.GONE);
+			view.findViewById(R.id.home_button_export_db).setVisibility(visible ? View.INVISIBLE : View.VISIBLE);
+		}
+	}
+
+	private void setUploadDbLoadingViewVisible(boolean visible) {
+		View view = getView();
+		if (view != null) {
+			view.findViewById(R.id.home_loading_view_upload_db).setVisibility(visible ? View.VISIBLE : View.GONE);
+			view.findViewById(R.id.home_button_upload_db).setVisibility(visible ? View.INVISIBLE : View.VISIBLE);
+		}
+	}
 }

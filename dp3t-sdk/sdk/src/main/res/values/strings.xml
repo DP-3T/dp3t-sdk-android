@@ -20,6 +20,7 @@
 	<string name="dp3t_sdk_service_notification_error_bluetooth_not_supported">bluetooth low-energy is not supported on this device</string>
 	<string name="dp3t_sdk_service_notification_error_sync_server">failed to load new infection data (server error)</string>
 	<string name="dp3t_sdk_service_notification_error_sync_network">failed to load new infection data (network error)</string>
+	<string name="dp3t_sdk_service_notification_error_sync_ssltls">failed to load new infection data (ssl/tls error)</string>
 	<string name="dp3t_sdk_service_notification_error_sync_database">failed to load new infection data (database error)</string>
 	<string name="dp3t_sdk_service_notification_error_sync_timing">device time does not match server time</string>
 	<string name="dp3t_sdk_service_notification_error_sync_signature">failed to load new infection data (invalid signature)</string>

@@ -1,5 +1,11 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.5.3 (11.6.2020)
+
+- new sync error state for ssl/tls errors
+- allow export of log database in calibration flavor
+- add database for user-visible logs (event history)
+
 ## Version 0.5.2 (3.6.2020)
 
 - more logs

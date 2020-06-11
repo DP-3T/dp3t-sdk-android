@@ -20,10 +20,7 @@ import androidx.annotation.Nullable;
 import androidx.core.util.Consumer;
 
 import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CancellationException;
 
 import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
@@ -31,8 +28,12 @@ import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.*;
 import org.dpppt.android.sdk.internal.backend.CertificatePinning;
+import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
+import org.dpppt.android.sdk.internal.history.HistoryEntryType;
+import org.dpppt.android.sdk.internal.history.HistoryDatabase;
+import org.dpppt.android.sdk.internal.history.HistoryEntry;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
 import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
@@ -55,6 +56,8 @@ public class DP3T {
 	public static final int REQUEST_CODE_START_CONFIRMATION = 391;
 	public static final int REQUEST_CODE_EXPORT_KEYS = 392;
 
+	private static final int HISTORY_KEEP_FOR_DAYS = 14;
+
 	private static boolean initialized = false;
 
 	private static String appId;
@@ -64,9 +67,14 @@ public class DP3T {
 	private static PendingIAmInfectedRequest pendingIAmInfectedRequest;
 
 	public static void init(Context context, ApplicationInfo applicationInfo, PublicKey signaturePublicKey) {
+		init(context, applicationInfo, signaturePublicKey, false);
+	}
+
+	public static void init(Context context, ApplicationInfo applicationInfo, PublicKey signaturePublicKey, boolean devHistory) {
 		DP3T.appId = applicationInfo.getAppId();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.setManualApplicationInfo(applicationInfo);
+		appConfigManager.setDevHistory(devHistory);
 		SyncWorker.setBucketSignaturePublicKey(signaturePublicKey);
 
 		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
@@ -284,6 +292,7 @@ public class DP3T {
 		exposeeListRequest.setFake(1);
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		boolean devHistory = appConfigManager.getDevHistory();
 		try {
 			appConfigManager.getBackendReportRepository(context)
 					.addGaenExposee(exposeeListRequest, exposeeAuthMethod,
@@ -296,15 +305,32 @@ public class DP3T {
 											1);
 									PendingKeyUploadStorage.getInstance(context).addPendingKey(delayedKey);
 									Logger.d(TAG, "successfully sent fake request");
+									if (devHistory) {
+										HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
+										historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.FAKE_REQUEST, null, true,
+												System.currentTimeMillis()));
+									}
 								}
 
 								@Override
 								public void onError(Throwable throwable) {
 									Logger.d(TAG, "failed to send fake request");
+									if (devHistory) {
+										HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
+										String status = throwable instanceof StatusCodeException ?
+														String.valueOf(((StatusCodeException) throwable).getCode()) : "NETW";
+										historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.FAKE_REQUEST, status, false,
+												System.currentTimeMillis()));
+									}
 								}
 							});
 		} catch (IllegalStateException e) {
 			Logger.d(TAG, "failed to send fake request: " + e.getLocalizedMessage());
+			if (devHistory) {
+				HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
+				historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.FAKE_REQUEST, "SYST", false,
+						System.currentTimeMillis()));
+			}
 		}
 	}
 
@@ -385,6 +411,25 @@ public class DP3T {
 		ExposureDayStorage.getInstance(context).clear();
 		PendingKeyUploadStorage.getInstance(context).clear();
 		Logger.clear();
+	}
+
+	public static void clientOpened(Context context) {
+		HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
+		Calendar calendar = new GregorianCalendar();
+		historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.OPEN_APP, null, true, calendar.getTimeInMillis()));
+		calendar.add(Calendar.DAY_OF_YEAR, -1 * HISTORY_KEEP_FOR_DAYS);
+		historyDatabase.clearBefore(calendar.getTimeInMillis());
+	}
+
+	public static void fakeWorkerScheduled(Context context) {
+		if (AppConfigManager.getInstance(context).getDevHistory()) {
+			HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
+			historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.SCHEDULED_WORKER, "Fake", true, System.currentTimeMillis()));
+		}
+	}
+
+	public static List<HistoryEntry> getHistoryEntries(Context context) {
+		return HistoryDatabase.getInstance(context).getEntries();
 	}
 
 

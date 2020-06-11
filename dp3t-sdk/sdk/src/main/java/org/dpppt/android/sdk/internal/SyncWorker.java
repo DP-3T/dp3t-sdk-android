@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.SSLException;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
@@ -34,6 +35,9 @@ import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.backend.models.GaenKey;
+import org.dpppt.android.sdk.internal.history.HistoryDatabase;
+import org.dpppt.android.sdk.internal.history.HistoryEntry;
+import org.dpppt.android.sdk.internal.history.HistoryEntryType;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
@@ -65,6 +69,11 @@ public class SyncWorker extends Worker {
 
 		WorkManager workManager = WorkManager.getInstance(context);
 		workManager.enqueueUniquePeriodicWork(WORK_TAG, ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest);
+
+		if (AppConfigManager.getInstance(context).getDevHistory()) {
+			HistoryDatabase.getInstance(context)
+					.addEntry(new HistoryEntry(HistoryEntryType.SCHEDULED_WORKER, "Sync", true, System.currentTimeMillis()));
+		}
 
 		Logger.d(TAG, "scheduled SyncWorker");
 	}
@@ -125,8 +134,11 @@ public class SyncWorker extends Worker {
 			} else if (e instanceof ApiException) {
 				syncError = ErrorState.SYNC_ERROR_API_EXCEPTION;
 				syncError.setErrorCode("AGAEN" + ((ApiException) e).getStatusCode());
+			} else if (e instanceof SSLException) {
+				syncError = ErrorState.SYNC_ERROR_SSLTLS;
 			} else {
 				syncError = ErrorState.SYNC_ERROR_NETWORK;
+				syncError.setErrorCode(null);
 			}
 			SyncErrorState.getInstance().setSyncError(syncError);
 			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
@@ -148,6 +160,9 @@ public class SyncWorker extends Worker {
 
 		DayDate lastDateToCheck = new DayDate();
 		DayDate dateToLoad = lastDateToCheck.subtractDays(9);
+		int numInstantErrors = 0;
+		int numDelayedErrors = 0;
+		int numSuccesses = 0;
 		while (dateToLoad.isBeforeOrEquals(lastDateToCheck)) {
 			Long lastSynCallTime = lastSyncCallTimes.get(dateToLoad);
 			if (lastSynCallTime == null) {
@@ -185,9 +200,15 @@ public class SyncWorker extends Worker {
 					}
 					lastSyncCallTimes.put(dateToLoad, System.currentTimeMillis());
 					lastLoadedTimes.put(dateToLoad, Long.parseLong(result.headers().get("x-published-until")));
+					numSuccesses++;
 				} catch (Exception e) {
 					e.printStackTrace();
 					lastException = e;
+					if (isDelayedSyncError(e)) {
+						numDelayedErrors++;
+					} else {
+						numInstantErrors++;
+					}
 				}
 			}
 
@@ -212,6 +233,13 @@ public class SyncWorker extends Worker {
 
 		appConfigManager.setLastLoadedTimes(lastLoadedTimes);
 		appConfigManager.setLastSyncCallTimes(lastSyncCallTimes);
+
+		int base = 'A';
+		String historyStatus =
+				String.valueOf((char) (base + numInstantErrors)) + (char) (base + numDelayedErrors) +
+						(char) (base + numSuccesses);
+		HistoryDatabase.getInstance(context).addEntry(
+				new HistoryEntry(HistoryEntryType.SYNC, historyStatus, lastException == null, System.currentTimeMillis()));
 
 		if (lastException != null) {
 			throw lastException;
@@ -251,11 +279,22 @@ public class SyncWorker extends Worker {
 		}
 	}
 
+	private static boolean isDelayedSyncError(Exception e) {
+		if (e instanceof ServerTimeOffsetException || e instanceof SignatureException || e instanceof StatusCodeException ||
+				e instanceof SQLiteException || e instanceof ApiException || e instanceof SSLException) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
 	private static void uploadPendingKeys(Context context) {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		PendingKeyUploadStorage pendingKeyUploadStorage = PendingKeyUploadStorage.getInstance(context);
 		PendingKeyUploadStorage.PendingKey pendingKey = null;
 		try {
+			int numPendingUploaded = 0;
+			int numFakePendingUploaded = 0;
 			while (pendingKeyUploadStorage.peekRollingStartNumber() < DateUtil.getCurrentRollingStartNumber()) {
 				pendingKey = pendingKeyUploadStorage.popNextPendingKey();
 				if (pendingKey.getRollingStartNumber() < DateUtil.getRollingStartNumberForDate(new DayDate().subtractDays(1))) {
@@ -292,11 +331,29 @@ public class SyncWorker extends Worker {
 					DP3T.stop(context);
 					appConfigManager.setIAmInfectedIsResettable(true);
 				}
+				if (pendingKey.isFake()) {
+					numFakePendingUploaded++;
+				} else {
+					numPendingUploaded++;
+				}
+			}
+			if (appConfigManager.getDevHistory()) {
+				HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
+				int base = 'A';
+				String status = String.valueOf((char) (base + numPendingUploaded)) + (char) (base + numFakePendingUploaded);
+				historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.NEXT_DAY_KEY_UPLOAD_REQUEST, status, true,
+						System.currentTimeMillis()));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			if (pendingKey != null) {
 				pendingKeyUploadStorage.addPendingKey(pendingKey);
+				if (appConfigManager.getDevHistory()) {
+					HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
+					String status = e instanceof StatusCodeException ? String.valueOf(((StatusCodeException) e).getCode()) : "NETW";
+					historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.NEXT_DAY_KEY_UPLOAD_REQUEST, status, false,
+							System.currentTimeMillis()));
+				}
 			}
 		}
 	}

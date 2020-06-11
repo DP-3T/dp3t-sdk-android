@@ -43,6 +43,7 @@ public class AppConfigManager {
 	private static final String PREF_CALIBRATION_TEST_DEVICE_NAME = "calibrationTestDeviceName";
 	private static final String PREF_LAST_LOADED_TIMES = "lastLoadedTimes";
 	private static final String PREF_LAST_SYNC_CALL_TIMES = "lastExposureClientCalls";
+	private static final String PREF_DEV_HISTORY = "devHistory";
 
 	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
 	private static final String PREF_ATTENUATION_THRESHOLD_MEDIUM = "attenuationThresholdMedium";
@@ -191,6 +192,14 @@ public class AppConfigManager {
 	public void setLastSyncCallTimes(HashMap<DayDate, Long> lastExposureClientCalls) {
 		sharedPrefs.edit().putString(PREF_LAST_SYNC_CALL_TIMES, Json.toJson(convertFromDateMap(lastExposureClientCalls)))
 				.apply();
+	}
+
+	public void setDevHistory(boolean devHistory) {
+		sharedPrefs.edit().putBoolean(PREF_DEV_HISTORY, devHistory).apply();
+	}
+
+	public boolean getDevHistory() {
+		return sharedPrefs.getBoolean(PREF_DEV_HISTORY, false);
 	}
 
 	public void clear() {
