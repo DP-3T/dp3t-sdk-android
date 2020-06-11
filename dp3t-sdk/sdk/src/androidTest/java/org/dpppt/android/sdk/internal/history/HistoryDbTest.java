@@ -11,6 +11,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.junit.Assert.assertEquals;
+
 @RunWith(AndroidJUnit4.class)
 public class HistoryDbTest {
 
@@ -35,7 +37,7 @@ public class HistoryDbTest {
 		db.clear();
 
 		List<HistoryEntry> addedEntries = db.getEntries();
-		assert 0 == addedEntries.size();
+		assertEquals(0, addedEntries.size());
 	}
 
 	@Test
@@ -52,14 +54,15 @@ public class HistoryDbTest {
 		for (HistoryEntry entry : entries) { db.addEntry(entry); }
 
 		List<HistoryEntry> addedEntries = db.getEntries();
-		assert entries.size() == addedEntries.size();
+		assertEquals(entries.size(), addedEntries.size());
 		for (int i = 0; i < entries.size(); i++) {
-			assert entries.get(i).equals(addedEntries.get(i));
+			assertEquals(entries.get(entries.size() - 1 - i), addedEntries.get(i));
 		}
 	}
 
 	@Test
 	public void testClearBefore() {
+		db.clear();
 		ArrayList<HistoryEntry> entries = new ArrayList<>();
 		entries.add(new HistoryEntry(HistoryEntryType.SYNC, "AAB", true, 1591806623068L));
 		entries.add(new HistoryEntry(HistoryEntryType.OPEN_APP, null, true, 1591855343112L));
@@ -69,9 +72,9 @@ public class HistoryDbTest {
 		db.clearBefore(1591848000000L);
 
 		List<HistoryEntry> addedEntries = db.getEntries();
-		assert 2 == addedEntries.size();
+		assertEquals(2, addedEntries.size());
 		for (int i = 0; i < 2; i++) {
-			assert entries.get(i + 1).equals(addedEntries.get(i));
+			assertEquals(entries.get(entries.size() - 1 - i), (addedEntries.get(i)));
 		}
 	}
 

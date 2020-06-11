@@ -25,13 +25,9 @@ public class HistoryDatabase {
 
 	private final HistoryDatabaseHelper dbHelper;
 
-	public static HistoryDatabase getInstance(Context context) {
+	public static synchronized HistoryDatabase getInstance(Context context) {
 		if (database == null) {
-			synchronized (HistoryDatabase.class) {
-				if (database == null) {
-					database = new HistoryDatabase(context);
-				}
-			}
+			database = new HistoryDatabase(context);
 		}
 		return database;
 	}
@@ -47,7 +43,7 @@ public class HistoryDatabase {
 
 	protected static void insert(SQLiteDatabase db, HistoryEntry entry) {
 		ContentValues values = new ContentValues();
-		values.put(HistorySpec.COLUMN_NAME_TYPE, entry.getType().ordinal());
+		values.put(HistorySpec.COLUMN_NAME_TYPE, entry.getType().getId());
 		values.put(HistorySpec.COLUMN_NAME_STATUS, entry.getStatus());
 		values.put(HistorySpec.COLUMN_NAME_TIME, entry.getTime());
 		values.put(HistorySpec.COLUMN_NAME_SUCCESS, entry.isSuccessful() ? 1 : 0);
@@ -79,7 +75,7 @@ public class HistoryDatabase {
 
 				do {
 					HistoryEntry entry = new HistoryEntry(
-							HistoryEntryType.values()[cursor.getInt(colIndType)],
+							HistoryEntryType.byId(cursor.getInt(colIndType)),
 							cursor.getString(colIndStatus),
 							cursor.getInt(colIndSuccess) != 0,
 							cursor.getLong(colIndTime)
@@ -99,7 +95,7 @@ public class HistoryDatabase {
 
 		db.delete(HistorySpec.TABLE_NAME,
 				HistorySpec.COLUMN_NAME_TIME + "< ?",
-				new String[]{ String.valueOf(time) });
+				new String[] { String.valueOf(time) });
 		db.execSQL("VACUUM");
 	}
 

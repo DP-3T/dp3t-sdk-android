@@ -30,4 +30,26 @@ public class HistoryEntry {
 		return successful;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		HistoryEntry entry = (HistoryEntry) o;
+
+		if (successful != entry.successful) return false;
+		if (time != entry.time) return false;
+		if (type != entry.type) return false;
+		return status != null ? status.equals(entry.status) : entry.status == null;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = type.hashCode();
+		result = 31 * result + (status != null ? status.hashCode() : 0);
+		result = 31 * result + (successful ? 1 : 0);
+		result = 31 * result + (int) (time ^ (time >>> 32));
+		return result;
+	}
+
 }

@@ -294,6 +294,7 @@ public class SyncWorker extends Worker {
 		PendingKeyUploadStorage.PendingKey pendingKey = null;
 		try {
 			int numPendingUploaded = 0;
+			int numFakePendingUploaded = 0;
 			while (pendingKeyUploadStorage.peekRollingStartNumber() < DateUtil.getCurrentRollingStartNumber()) {
 				pendingKey = pendingKeyUploadStorage.popNextPendingKey();
 				if (pendingKey.getRollingStartNumber() < DateUtil.getRollingStartNumberForDate(new DayDate().subtractDays(1))) {
@@ -330,10 +331,16 @@ public class SyncWorker extends Worker {
 					DP3T.stop(context);
 					appConfigManager.setIAmInfectedIsResettable(true);
 				}
+				if (pendingKey.isFake()) {
+					numFakePendingUploaded++;
+				} else {
+					numPendingUploaded++;
+				}
 			}
 			if (appConfigManager.getDevHistory()) {
 				HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
-				String status = String.valueOf((char) (((int) 'A') + numPendingUploaded));
+				int base = 'A';
+				String status = String.valueOf((char) (base + numPendingUploaded)) + (char) (base + numFakePendingUploaded);
 				historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.NEXT_DAY_KEY_UPLOAD_REQUEST, status, true,
 						System.currentTimeMillis()));
 			}
