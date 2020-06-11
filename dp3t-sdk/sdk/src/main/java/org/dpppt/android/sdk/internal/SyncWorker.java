@@ -234,12 +234,14 @@ public class SyncWorker extends Worker {
 		appConfigManager.setLastLoadedTimes(lastLoadedTimes);
 		appConfigManager.setLastSyncCallTimes(lastSyncCallTimes);
 
-		int base = 'A';
-		String historyStatus =
-				String.valueOf((char) (base + numInstantErrors)) + (char) (base + numDelayedErrors) +
-						(char) (base + numSuccesses);
-		HistoryDatabase.getInstance(context).addEntry(
-				new HistoryEntry(HistoryEntryType.SYNC, historyStatus, lastException == null, System.currentTimeMillis()));
+		if (numInstantErrors > 0 || numDelayedErrors > 0 || numSuccesses > 0) {
+			int base = 'A';
+			String historyStatus =
+					String.valueOf((char) (base + numInstantErrors)) + (char) (base + numDelayedErrors) +
+							(char) (base + numSuccesses);
+			HistoryDatabase.getInstance(context).addEntry(
+					new HistoryEntry(HistoryEntryType.SYNC, historyStatus, lastException == null, System.currentTimeMillis()));
+		}
 
 		if (lastException != null) {
 			throw lastException;
@@ -337,7 +339,7 @@ public class SyncWorker extends Worker {
 					numPendingUploaded++;
 				}
 			}
-			if (appConfigManager.getDevHistory()) {
+			if (appConfigManager.getDevHistory() && (numFakePendingUploaded > 0 || numPendingUploaded > 0)) {
 				HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
 				int base = 'A';
 				String status = String.valueOf((char) (base + numPendingUploaded)) + (char) (base + numFakePendingUploaded);
@@ -350,7 +352,8 @@ public class SyncWorker extends Worker {
 				pendingKeyUploadStorage.addPendingKey(pendingKey);
 				if (appConfigManager.getDevHistory()) {
 					HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
-					String status = e instanceof StatusCodeException ? String.valueOf(((StatusCodeException) e).getCode()) : "NETW";
+					String status = e instanceof StatusCodeException ? String.valueOf(((StatusCodeException) e).getCode()) :
+									"NETW";
 					historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.NEXT_DAY_KEY_UPLOAD_REQUEST, status, false,
 							System.currentTimeMillis()));
 				}
