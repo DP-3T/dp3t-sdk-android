@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.5.5 (11.6.2020)
+
+- improve history logging
+
 ## Version 0.5.4 (11.6.2020)
 
 - bugfix for user-visible logs
