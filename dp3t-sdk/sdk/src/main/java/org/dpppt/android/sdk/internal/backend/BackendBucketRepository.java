@@ -25,8 +25,6 @@ import retrofit2.Retrofit;
 
 public class BackendBucketRepository implements Repository {
 
-	public static long BATCH_LENGTH = 2 * 60 * 60 * 1000L;
-
 	private BucketService bucketService;
 
 	public BackendBucketRepository(@NonNull Context context, @NonNull String bucketBaseUrl, @NonNull PublicKey publicKey) {
