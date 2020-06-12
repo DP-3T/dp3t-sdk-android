@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.5.6 (12.6.2020)
+
+- increased time delta check to 10min
+
 ## Version 0.5.5 (11.6.2020)
 
 - improve history logging
