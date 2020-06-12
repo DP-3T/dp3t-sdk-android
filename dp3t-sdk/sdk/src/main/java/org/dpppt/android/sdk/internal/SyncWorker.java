@@ -129,8 +129,6 @@ public class SyncWorker extends Worker {
 			} else if (e instanceof StatusCodeException) {
 				syncError = ErrorState.SYNC_ERROR_SERVER;
 				syncError.setErrorCode("ASST" + ((StatusCodeException) e).getCode());
-			} else if (e instanceof SQLiteException) {
-				syncError = ErrorState.SYNC_ERROR_DATABASE;
 			} else if (e instanceof ApiException) {
 				syncError = ErrorState.SYNC_ERROR_API_EXCEPTION;
 				syncError.setErrorCode("AGAEN" + ((ApiException) e).getStatusCode());
