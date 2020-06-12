@@ -23,7 +23,7 @@ import okhttp3.Response;
 
 public class TimingVerificationInterceptor implements Interceptor {
 
-	private static final long ALLOWED_SERVER_TIME_DIFF = 60 * 1000L;
+	private static final long ALLOWED_SERVER_TIME_DIFF = 10 * 60 * 1000L;
 
 	private static final String TAG = "TimingVerification";
 
