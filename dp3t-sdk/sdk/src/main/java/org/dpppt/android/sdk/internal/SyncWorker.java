@@ -183,6 +183,7 @@ public class SyncWorker extends Worker {
 					// if there is no last sync call time recorded, set it to 5:59:59.999 on the current day, to make sure the
 					// first sync happens after 6am, otherwise we risk running into the 20 calls ratelimit.
 					Calendar cal = new GregorianCalendar();
+					cal.setTimeZone(TimeZone.getTimeZone("Europe/Zurich"));
 					cal.setTimeInMillis(currentTime);
 					cal.set(Calendar.HOUR_OF_DAY, 5);
 					cal.set(Calendar.MINUTE, 59);
@@ -234,7 +235,7 @@ public class SyncWorker extends Worker {
 				dateToLoad = dateToLoad.addDays(1);
 			}
 
-			DayDate lastDateToKeep = new DayDate().subtractDays(10);
+			DayDate lastDateToKeep = new DayDate(currentTime).subtractDays(10);
 			Iterator<DayDate> dateIterator = lastLoadedTimes.keySet().iterator();
 			while (dateIterator.hasNext()) {
 				if (dateIterator.next().isBefore(lastDateToKeep)) {
