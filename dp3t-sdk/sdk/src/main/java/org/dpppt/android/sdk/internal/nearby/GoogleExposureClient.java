@@ -42,8 +42,17 @@ public class GoogleExposureClient {
 		return instance;
 	}
 
+	public static GoogleExposureClient wrapTestClient(ExposureNotificationClient testClient) {
+		instance = new GoogleExposureClient(testClient);
+		return instance;
+	}
+
 	private GoogleExposureClient(Context context) {
 		exposureNotificationClient = Nearby.getExposureNotificationClient(context);
+	}
+
+	private GoogleExposureClient(ExposureNotificationClient fakeClient) {
+		exposureNotificationClient = fakeClient;
 	}
 
 	public void start(Activity activity, int resolutionRequestCode, Runnable successCallback, Consumer<Exception> errorCallback) {
