@@ -114,12 +114,12 @@ public class SyncWorkerTest {
 			}
 		});
 
-		for (int i = 0; i < 48; i++) {
+		for (int i = 0; i < 480; i++) {
 			new SyncWorker.SyncImpl(context, time.get()).doSync();
 			time.set(time.get() + 1 * 60 * 60 * 1000l);
 		}
 
-		assertEquals(50, testGoogleExposureClient.getProvideDiagnosisKeysCounter());
+		assertEquals(410, testGoogleExposureClient.getProvideDiagnosisKeysCounter());
 	}
 
 	@Test

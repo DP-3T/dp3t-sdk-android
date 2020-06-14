@@ -190,7 +190,8 @@ public class SyncWorker extends Worker {
 					cal.set(Calendar.SECOND, 59);
 					cal.set(Calendar.MILLISECOND, 999);
 					lastSynCallTime = cal.getTimeInMillis();
-					Logger.d(TAG, "never loaded before, set last sync time to 5:59:59 to prevent rate limit issues");
+					Logger.d(TAG, "never loaded " + dateToLoad.formatAsString() +
+							" before, set last sync time to 5:59:59 to prevent rate limit issues");
 				}
 
 				if (lastSynCallTime < getLastDesiredSyncTime(dateToLoad)) {
