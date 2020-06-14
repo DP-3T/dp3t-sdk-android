@@ -16,6 +16,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.dpppt.android.sdk.DP3T;
@@ -221,6 +222,7 @@ public class SyncWorkerTest {
 
 	private long yesterdayAt3am() {
 		Calendar cal = new GregorianCalendar();
+		cal.setTimeZone(TimeZone.getTimeZone("Europe/Zurich"));
 		cal.add(Calendar.DATE, -1);
 		cal.set(Calendar.HOUR_OF_DAY, 3);
 		cal.set(Calendar.MINUTE, 0);
@@ -229,6 +231,7 @@ public class SyncWorkerTest {
 
 	private long yesterdayAt8am() {
 		Calendar cal = new GregorianCalendar();
+		cal.setTimeZone(TimeZone.getTimeZone("Europe/Zurich"));
 		cal.add(Calendar.DATE, -1);
 		cal.set(Calendar.HOUR_OF_DAY, 8);
 		cal.set(Calendar.MINUTE, 0);
@@ -237,6 +240,7 @@ public class SyncWorkerTest {
 
 	private long yesterdayAt8pm() {
 		Calendar cal = new GregorianCalendar();
+		cal.setTimeZone(TimeZone.getTimeZone("Europe/Zurich"));
 		cal.add(Calendar.DATE, -1);
 		cal.set(Calendar.HOUR_OF_DAY, 20);
 		cal.set(Calendar.MINUTE, 0);
