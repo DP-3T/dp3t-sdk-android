@@ -66,21 +66,34 @@ public class SyncWorkerTest {
 	}
 
 	@Test
-	public void testSyncStartAtMorning() throws Exception {
+	public void testSyncStartAtMorning(){
 		AtomicLong time = new AtomicLong(yesterdayAt3am());
 
 		server.setDispatcher(new Dispatcher() {
+			int requestCounter = 0;
+
 			@Override
 			public MockResponse dispatch(RecordedRequest request) {
-				return new MockResponse()
-						.setResponseCode(200)
-						.setBody("randomdatabecauseitdoesnotmatter")
-						.addHeader("x-published-until", time.get() - 2 * 60 * 60 * 1000l);
+				requestCounter++;
+				if (requestCounter % 7 == 0) {
+					//fail every 7th request
+					return new MockResponse()
+							.setResponseCode(503);
+				} else {
+					return new MockResponse()
+							.setResponseCode(200)
+							.setBody("randomdatabecauseitdoesnotmatter")
+							.addHeader("x-published-until", time.get() - 2 * 60 * 60 * 1000l);
+				}
 			}
 		});
 
 		for (int i = 0; i < 21 + 24; i++) {
-			new SyncWorker.SyncImpl(context, time.get()).doSync();
+			try {
+				new SyncWorker.SyncImpl(context, time.get()).doSync();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			time.set(time.get() + 1 * 60 * 60 * 1000l);
 		}
 
