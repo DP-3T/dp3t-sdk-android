@@ -112,6 +112,10 @@ public class DP3T {
 		GaenStateHelper.invalidateGaenEnabled(context);
 	}
 
+	public static boolean isInitialized() {
+		return initialized;
+	}
+
 	private static void checkInit() throws IllegalStateException {
 		if (!initialized) {
 			throw new IllegalStateException("You have to call DP3T.init() in your Application.onCreate()");
@@ -184,7 +188,7 @@ public class DP3T {
 	public static void sync(Context context) {
 		checkInit();
 		try {
-			SyncWorker.doSync(context);
+			new SyncWorker.SyncImpl(context).doSync();
 		} catch (Exception ignored) {
 			// has been handled upstream
 		}
