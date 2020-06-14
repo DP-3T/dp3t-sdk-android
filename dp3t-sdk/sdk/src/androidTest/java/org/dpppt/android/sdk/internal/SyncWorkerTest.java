@@ -66,7 +66,7 @@ public class SyncWorkerTest {
 
 	@Test
 	public void testSyncStartAtMorning() throws Exception {
-		AtomicLong time = new AtomicLong(yesterdayAt8am());
+		AtomicLong time = new AtomicLong(yesterdayAt3am());
 
 		server.setDispatcher(new Dispatcher() {
 			@Override
@@ -100,10 +100,42 @@ public class SyncWorkerTest {
 			}
 		});
 
-		for (int i = 0; i < 24; i++) {
+		for (int i = 0; i < 48; i++) {
 			new SyncWorker.SyncImpl(context, time.get()).doSync();
 			time.set(time.get() + 1 * 60 * 60 * 1000l);
 		}
+
+		assertEquals(50, testGoogleExposureClient.getProvideDiagnosisKeysCounter());
+	}
+
+	@Test
+	public void testSyncDelayedInEvening() throws Exception {
+		AtomicLong time = new AtomicLong(yesterdayAt8am());
+
+		server.setDispatcher(new Dispatcher() {
+			@Override
+			public MockResponse dispatch(RecordedRequest request) {
+				return new MockResponse()
+						.setResponseCode(200)
+						.setBody("randomdatabecauseitdoesnotmatter")
+						.addHeader("x-published-until", time.get() - 2 * 60 * 60 * 1000l);
+			}
+		});
+
+		//8am
+		new SyncWorker.SyncImpl(context, time.get()).doSync();
+
+		//3am +1
+		time.set(time.get() + 19 * 60 * 60 * 1000l);
+		new SyncWorker.SyncImpl(context, time.get()).doSync();
+
+		//7am +1
+		time.set(time.get() + 4 * 60 * 60 * 1000l);
+		new SyncWorker.SyncImpl(context, time.get()).doSync();
+
+		//7pm +1
+		time.set(time.get() + 12 * 60 * 60 * 1000l);
+		new SyncWorker.SyncImpl(context, time.get()).doSync();
 
 		assertEquals(30, testGoogleExposureClient.getProvideDiagnosisKeysCounter());
 	}
@@ -185,6 +217,14 @@ public class SyncWorkerTest {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	private long yesterdayAt3am() {
+		Calendar cal = new GregorianCalendar();
+		cal.add(Calendar.DATE, -1);
+		cal.set(Calendar.HOUR_OF_DAY, 3);
+		cal.set(Calendar.MINUTE, 0);
+		return cal.getTimeInMillis();
 	}
 
 	private long yesterdayAt8am() {

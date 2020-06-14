@@ -284,10 +284,17 @@ public class SyncWorker extends Worker {
 				return currentTime - (currentTime % (5 * 60 * 1000L));
 			} else {
 				Calendar cal = new GregorianCalendar();
+				cal.setTimeZone(TimeZone.getTimeZone("Europe/Zurich"));
 				cal.setTimeInMillis(currentTime);
 				if (cal.get(Calendar.HOUR_OF_DAY) < 6) {
-					cal.add(Calendar.DATE, -1);
-					cal.set(Calendar.HOUR_OF_DAY, 18);
+					if (new DayDate(currentTime).equals(new DayDate(currentTime - 6 * 60 * 60 * 1000l))) {
+						//only if it is still the same UTC day like 6h ago we allow a sync before 6am, otherwise we might run into
+						//the ratelimit on the next day because we check before 6am, at 6am and at 6pm
+						cal.add(Calendar.DATE, -1);
+						cal.set(Calendar.HOUR_OF_DAY, 18);
+					} else {
+						cal.setTimeInMillis(0);
+					}
 				} else if (cal.get(Calendar.HOUR_OF_DAY) < 18) {
 					cal.set(Calendar.HOUR_OF_DAY, 6);
 				} else {
@@ -363,7 +370,8 @@ public class SyncWorker extends Worker {
 				if (appConfigManager.getDevHistory() && (numFakePendingUploaded > 0 || numPendingUploaded > 0)) {
 					HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
 					int base = 'A';
-					String status = String.valueOf((char) (base + numPendingUploaded)) + (char) (base + numFakePendingUploaded);
+					String status =
+							String.valueOf((char) (base + numPendingUploaded)) + (char) (base + numFakePendingUploaded);
 					historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.NEXT_DAY_KEY_UPLOAD_REQUEST, status, true,
 							System.currentTimeMillis()));
 				}
@@ -373,7 +381,8 @@ public class SyncWorker extends Worker {
 					pendingKeyUploadStorage.addPendingKey(pendingKey);
 					if (appConfigManager.getDevHistory()) {
 						HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
-						String status = e instanceof StatusCodeException ? String.valueOf(((StatusCodeException) e).getCode()) :
+						String status = e instanceof StatusCodeException ?
+										String.valueOf(((StatusCodeException) e).getCode()) :
 										"NETW";
 						historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.NEXT_DAY_KEY_UPLOAD_REQUEST, status, false,
 								System.currentTimeMillis()));
