@@ -9,7 +9,14 @@
  */
 package org.dpppt.android.sdk.internal.nearby;
 
+import android.content.Context;
+import android.content.Intent;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,9 +29,16 @@ import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
 import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 import com.google.android.gms.tasks.Task;
 
+import org.dpppt.android.sdk.internal.util.Json;
+
 public class TestGoogleExposureClient implements ExposureNotificationClient {
 
-	int provideDiagnosisKeysCounter = 0;
+	private Context context;
+	private int provideDiagnosisKeysCounter = 0;
+
+	public TestGoogleExposureClient(Context context) {
+		this.context = context;
+	}
 
 	@Override
 	public Task<Void> start() {
@@ -47,8 +61,27 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 	}
 
 	@Override
-	public Task<Void> provideDiagnosisKeys(List<File> list, ExposureConfiguration exposureConfiguration, String s) {
+	public Task<Void> provideDiagnosisKeys(List<File> list, ExposureConfiguration exposureConfiguration, String token) {
 		provideDiagnosisKeysCounter++;
+		for (File file : list) {
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
+				String fileContent = reader.readLine();
+				if (fileContent.startsWith("{")) {
+					ExposureTestParameters params = Json.fromJson(fileContent, ExposureTestParameters.class);
+					Intent intent = new Intent(ExposureNotificationClient.ACTION_EXPOSURE_STATE_UPDATED);
+					intent.putExtra(ExposureNotificationClient.EXTRA_EXPOSURE_SUMMARY,
+							new ExposureSummary.ExposureSummaryBuilder()
+									.setAttenuationDurations(params.attenuationDurations)
+									.setMatchedKeyCount(params.matchedKeyCount)
+									.setDaysSinceLastExposure(params.daysSinceLastExposure)
+									.build());
+					intent.putExtra(ExposureNotificationClient.EXTRA_TOKEN, token);
+					new ExposureNotificationBroadcastReceiver().onReceive(context, intent);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		return new DummyTask<>(null);
 	}
 
@@ -69,6 +102,13 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 
 	public int getProvideDiagnosisKeysCounter() {
 		return provideDiagnosisKeysCounter;
+	}
+
+	public static class ExposureTestParameters {
+		public int[] attenuationDurations;
+		public int matchedKeyCount;
+		public int daysSinceLastExposure;
+
 	}
 
 }

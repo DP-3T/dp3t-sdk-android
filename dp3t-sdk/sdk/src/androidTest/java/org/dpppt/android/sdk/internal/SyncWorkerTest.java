@@ -19,11 +19,15 @@ import java.util.GregorianCalendar;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.dpppt.android.sdk.DP3T;
+import org.dpppt.android.sdk.InfectionStatus;
+import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.internal.logger.LogLevel;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.nearby.TestGoogleExposureClient;
+import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.ApplicationInfo;
+import org.dpppt.android.sdk.models.DayDate;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,15 +49,17 @@ public class SyncWorkerTest {
 	@Before
 	public void setup() throws IOException {
 		context = InstrumentationRegistry.getInstrumentation().getContext();
-		AppConfigManager.getInstance(context).clearPreferences();
 
 		Logger.init(context, LogLevel.DEBUG);
 
-		testGoogleExposureClient = new TestGoogleExposureClient();
+		testGoogleExposureClient = new TestGoogleExposureClient(context);
 		GoogleExposureClient.wrapTestClient(testGoogleExposureClient);
 
 		server = new MockWebServer();
 		server.start();
+		DP3T.init(context, new ApplicationInfo("test", server.url("/bucket/").toString(), server.url("/report/").toString()),
+				null);
+		DP3T.clearData(context);
 		DP3T.init(context, new ApplicationInfo("test", server.url("/bucket/").toString(), server.url("/report/").toString()),
 				null);
 	}
@@ -64,7 +70,7 @@ public class SyncWorkerTest {
 
 		server.setDispatcher(new Dispatcher() {
 			@Override
-			public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+			public MockResponse dispatch(RecordedRequest request) {
 				return new MockResponse()
 						.setResponseCode(200)
 						.setBody("randomdatabecauseitdoesnotmatter")
@@ -86,7 +92,7 @@ public class SyncWorkerTest {
 
 		server.setDispatcher(new Dispatcher() {
 			@Override
-			public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+			public MockResponse dispatch(RecordedRequest request) {
 				return new MockResponse()
 						.setResponseCode(200)
 						.setBody("randomdatabecauseitdoesnotmatter")
@@ -107,13 +113,78 @@ public class SyncWorkerTest {
 		AtomicLong time = new AtomicLong(yesterdayAt8am());
 		server.setDispatcher(new Dispatcher() {
 			@Override
-			public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+			public MockResponse dispatch(RecordedRequest request) {
 				return new MockResponse().setResponseCode(204).addHeader("x-published-until", time.get());
 			}
 		});
 
 		new SyncWorker.SyncImpl(context, time.get()).doSync();
 		assertEquals(0, testGoogleExposureClient.getProvideDiagnosisKeysCounter());
+	}
+
+	@Test
+	public void testExposure() {
+		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
+		params.attenuationDurations = new int[] { 20, 0, 0 };
+		params.daysSinceLastExposure = 1;
+		params.matchedKeyCount = 1;
+
+		testExposure(params);
+
+		TracingStatus status = DP3T.getStatus(context);
+		assertEquals(InfectionStatus.EXPOSED, status.getInfectionStatus());
+	}
+
+	@Test
+	public void testExposureNotLongEnough() {
+		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
+		params.attenuationDurations = new int[] { 10, 8, 0 };
+		params.daysSinceLastExposure = 1;
+		params.matchedKeyCount = 1;
+
+		testExposure(params);
+
+		TracingStatus status = DP3T.getStatus(context);
+		assertEquals(InfectionStatus.HEALTHY, status.getInfectionStatus());
+	}
+
+	@Test
+	public void testExposureTooLongAgo() {
+		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
+		params.attenuationDurations = new int[] { 20, 0, 0 };
+		params.daysSinceLastExposure = 11;
+		params.matchedKeyCount = 1;
+
+		testExposure(params);
+
+		TracingStatus status = DP3T.getStatus(context);
+		assertEquals(InfectionStatus.HEALTHY, status.getInfectionStatus());
+	}
+
+	private void testExposure(TestGoogleExposureClient.ExposureTestParameters params) {
+		AtomicLong time = new AtomicLong(yesterdayAt8am());
+		server.setDispatcher(new Dispatcher() {
+			@Override
+			public MockResponse dispatch(RecordedRequest request) {
+				String content;
+				if (request.getPath().endsWith(String.valueOf(new DayDate(time.get()).subtractDays(1).getStartOfDayTimestamp()))) {
+
+					content = Json.toJson(params);
+				} else {
+					content = "randomcontent";
+				}
+				return new MockResponse()
+						.setResponseCode(200)
+						.setBody(content)
+						.addHeader("x-published-until", time.get());
+			}
+		});
+
+		try {
+			new SyncWorker.SyncImpl(context, time.get()).doSync();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private long yesterdayAt8am() {
