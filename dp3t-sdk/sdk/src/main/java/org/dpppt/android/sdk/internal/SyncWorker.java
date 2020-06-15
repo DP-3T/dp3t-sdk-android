@@ -156,12 +156,12 @@ public class SyncWorker extends Worker {
 				new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
 		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 
-		DayDate lastDateToCheck = new DayDate();
-		DayDate dateToLoad = lastDateToCheck.subtractDays(9);
+		DayDate lastDateToCheck = new DayDate().subtractDays(9);
+		DayDate dateToLoad = new DayDate();
 		int numInstantErrors = 0;
 		int numDelayedErrors = 0;
 		int numSuccesses = 0;
-		while (dateToLoad.isBeforeOrEquals(lastDateToCheck)) {
+		while (lastDateToCheck.isBeforeOrEquals(dateToLoad)) {
 			Long lastSynCallTime = lastSyncCallTimes.get(dateToLoad);
 			if (lastSynCallTime == null) {
 				// if there is no last sync call time recorded, set it to 5:59:59.999 on the current day, to make sure the first
@@ -210,7 +210,7 @@ public class SyncWorker extends Worker {
 				}
 			}
 
-			dateToLoad = dateToLoad.addDays(1);
+			dateToLoad = dateToLoad.subtractDays(1);
 		}
 
 		DayDate lastDateToKeep = new DayDate().subtractDays(10);
