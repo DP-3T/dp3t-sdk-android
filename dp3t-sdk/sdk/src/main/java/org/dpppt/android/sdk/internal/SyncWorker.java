@@ -63,7 +63,7 @@ public class SyncWorker extends Worker {
 				.setRequiredNetworkType(NetworkType.CONNECTED)
 				.build();
 
-		PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(SyncWorker.class, 15, TimeUnit.MINUTES)
+		PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(SyncWorker.class, 120, TimeUnit.MINUTES)
 				.setConstraints(constraints)
 				.build();
 
@@ -172,12 +172,12 @@ public class SyncWorker extends Worker {
 					new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
 			GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 
-			DayDate lastDateToCheck = new DayDate(currentTime);
-			DayDate dateToLoad = lastDateToCheck.subtractDays(9);
+			DayDate lastDateToCheck = new DayDate(currentTime).subtractDays(9);
+			DayDate dateToLoad = new DayDate(currentTime);
 			int numInstantErrors = 0;
 			int numDelayedErrors = 0;
 			int numSuccesses = 0;
-			while (dateToLoad.isBeforeOrEquals(lastDateToCheck)) {
+			while (lastDateToCheck.isBeforeOrEquals(dateToLoad)) {
 				Long lastSynCallTime = lastSyncCallTimes.get(dateToLoad);
 				if (lastSynCallTime == null) {
 					// if there is no last sync call time recorded, set it to 5:59:59.999 on the current day, to make sure the
@@ -233,8 +233,8 @@ public class SyncWorker extends Worker {
 					}
 				}
 
-				dateToLoad = dateToLoad.addDays(1);
-			}
+			dateToLoad = dateToLoad.subtractDays(1);
+		}
 
 			DayDate lastDateToKeep = new DayDate(currentTime).subtractDays(10);
 			Iterator<DayDate> dateIterator = lastLoadedTimes.keySet().iterator();
@@ -313,9 +313,19 @@ public class SyncWorker extends Worker {
 			if (e instanceof ServerTimeOffsetException || e instanceof SignatureException || e instanceof StatusCodeException ||
 					e instanceof SQLiteException || e instanceof ApiException || e instanceof SSLException) {
 				return false;
+			} else if (e instanceof StatusCodeException) {
+				if (isDelayedStatusCodeError((StatusCodeException) e)) {
+					return true;
+				} else {
+					return false;
+				}
 			} else {
 				return true;
 			}
+		}
+
+		private boolean isDelayedStatusCodeError(StatusCodeException e) {
+			return e.getCode() == 502 || e.getCode() == 503;
 		}
 
 		private void uploadPendingKeys(Context context) {
