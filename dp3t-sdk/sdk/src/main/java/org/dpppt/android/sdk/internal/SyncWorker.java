@@ -280,13 +280,24 @@ public class SyncWorker extends Worker {
 	}
 
 	private static boolean isDelayedSyncError(Exception e) {
-		if (e instanceof ServerTimeOffsetException || e instanceof SignatureException || e instanceof StatusCodeException ||
+		if (e instanceof ServerTimeOffsetException || e instanceof SignatureException ||
 				e instanceof SQLiteException || e instanceof ApiException || e instanceof SSLException) {
 			return false;
+		} else if (e instanceof StatusCodeException) {
+			if (isDelayedStatusCodeError((StatusCodeException) e)) {
+				return true;
+			} else {
+				return false;
+			}
 		} else {
 			return true;
 		}
 	}
+
+	private static boolean isDelayedStatusCodeError(StatusCodeException e) {
+		return e.getCode() == 502 || e.getCode() == 503;
+	}
+
 
 	private static void uploadPendingKeys(Context context) {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
