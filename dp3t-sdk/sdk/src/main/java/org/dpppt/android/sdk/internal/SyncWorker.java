@@ -98,7 +98,7 @@ public class SyncWorker extends Worker {
 		}
 
 		try {
-			doSync(context);
+			new SyncImpl(context).doSync();
 		} catch (Exception e) {
 			Logger.d(TAG, "SyncWorker finished with exception " + e.getMessage());
 			return Result.retry();
@@ -107,267 +107,302 @@ public class SyncWorker extends Worker {
 		return Result.success();
 	}
 
-	public static synchronized void doSync(Context context) throws Exception {
-		GaenStateHelper.invalidateGaenAvailability(context);
-		GaenStateHelper.invalidateGaenEnabled(context);
+	public static class SyncImpl {
 
-		try {
-			uploadPendingKeys(context);
-			doSyncInternal(context);
-			Logger.i(TAG, "synced");
-			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
-			SyncErrorState.getInstance().setSyncError(null);
-			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
-		} catch (Exception e) {
-			Logger.e(TAG, "sync", e);
-			AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(false);
-			ErrorState syncError;
-			if (e instanceof ServerTimeOffsetException) {
-				syncError = ErrorState.SYNC_ERROR_TIMING;
-			} else if (e instanceof SignatureException) {
-				syncError = ErrorState.SYNC_ERROR_SIGNATURE;
-			} else if (e instanceof StatusCodeException) {
-				syncError = ErrorState.SYNC_ERROR_SERVER;
-				syncError.setErrorCode("ASST" + ((StatusCodeException) e).getCode());
-			} else if (e instanceof ApiException) {
-				syncError = ErrorState.SYNC_ERROR_API_EXCEPTION;
-				syncError.setErrorCode("AGAEN" + ((ApiException) e).getStatusCode());
-			} else if (e instanceof SSLException) {
-				syncError = ErrorState.SYNC_ERROR_SSLTLS;
-			} else {
-				syncError = ErrorState.SYNC_ERROR_NETWORK;
-				syncError.setErrorCode(null);
-			}
-			SyncErrorState.getInstance().setSyncError(syncError);
-			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
-			throw e;
+		Context context;
+		long currentTime;
+
+		public SyncImpl(Context context) {
+			this(context, System.currentTimeMillis());
 		}
-	}
 
-	private static void doSyncInternal(Context context) throws Exception {
-		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		ApplicationInfo appConfig = appConfigManager.getAppConfig();
+		public SyncImpl(Context context, long currentTime) {
+			this.context = context;
+			this.currentTime = currentTime;
+		}
 
-		Exception lastException = null;
-		HashMap<DayDate, Long> lastLoadedTimes = appConfigManager.getLastLoadedTimes();
-		HashMap<DayDate, Long> lastSyncCallTimes = appConfigManager.getLastSyncCallTimes();
+		public void doSync() throws Exception {
+			synchronized (SyncImpl.class) {
+				GaenStateHelper.invalidateGaenAvailability(context);
+				GaenStateHelper.invalidateGaenEnabled(context);
 
-		BackendBucketRepository backendBucketRepository =
-				new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
-		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
-
-		DayDate lastDateToCheck = new DayDate().subtractDays(9);
-		DayDate dateToLoad = new DayDate();
-		int numInstantErrors = 0;
-		int numDelayedErrors = 0;
-		int numSuccesses = 0;
-		while (lastDateToCheck.isBeforeOrEquals(dateToLoad)) {
-			Long lastSynCallTime = lastSyncCallTimes.get(dateToLoad);
-			if (lastSynCallTime == null) {
-				// if there is no last sync call time recorded, set it to 5:59:59.999 on the current day, to make sure the first
-				// sync happens after 6am, otherwise we risk running into the 20 calls ratelimit.
-				Calendar cal = new GregorianCalendar();
-				cal.set(Calendar.HOUR_OF_DAY, 5);
-				cal.set(Calendar.MINUTE, 59);
-				cal.set(Calendar.SECOND, 59);
-				cal.set(Calendar.MILLISECOND, 999);
-				lastSynCallTime = cal.getTimeInMillis();
-			}
-
-			if (lastSynCallTime < getLastDesiredSyncTime(dateToLoad)) {
 				try {
-					Response<ResponseBody> result =
-							backendBucketRepository.getGaenExposees(dateToLoad, lastLoadedTimes.get(dateToLoad));
-
-					if (result.code() != 204) {
-						File file = new File(context.getCacheDir(),
-								KEYFILE_PREFIX + dateToLoad.formatAsString() + "_" + lastLoadedTimes.get(dateToLoad) + ".zip");
-						try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file))) {
-							byte[] bytesIn = new byte[1024];
-							int read = 0;
-							InputStream bodyStream = result.body().byteStream();
-							while ((read = bodyStream.read(bytesIn)) != -1) {
-								bos.write(bytesIn, 0, read);
-							}
-						}
-
-						ArrayList<File> fileList = new ArrayList<>();
-						fileList.add(file);
-						String token = dateToLoad.formatAsString();
-						googleExposureClient.provideDiagnosisKeys(fileList, token);
-					}
-					lastSyncCallTimes.put(dateToLoad, System.currentTimeMillis());
-					lastLoadedTimes.put(dateToLoad, Long.parseLong(result.headers().get("x-published-until")));
-					numSuccesses++;
+					uploadPendingKeys(context);
+					doSyncInternal(context);
+					Logger.i(TAG, "synced");
+					AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
+					SyncErrorState.getInstance().setSyncError(null);
+					BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 				} catch (Exception e) {
-					e.printStackTrace();
-					lastException = e;
-					if (isDelayedSyncError(e)) {
-						numDelayedErrors++;
+					Logger.e(TAG, "sync", e);
+					AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(false);
+					ErrorState syncError;
+					if (e instanceof ServerTimeOffsetException) {
+						syncError = ErrorState.SYNC_ERROR_TIMING;
+					} else if (e instanceof SignatureException) {
+						syncError = ErrorState.SYNC_ERROR_SIGNATURE;
+					} else if (e instanceof StatusCodeException) {
+						syncError = ErrorState.SYNC_ERROR_SERVER;
+						syncError.setErrorCode("ASST" + ((StatusCodeException) e).getCode());
+					} else if (e instanceof ApiException) {
+						syncError = ErrorState.SYNC_ERROR_API_EXCEPTION;
+						syncError.setErrorCode("AGAEN" + ((ApiException) e).getStatusCode());
+					} else if (e instanceof SSLException) {
+						syncError = ErrorState.SYNC_ERROR_SSLTLS;
 					} else {
-						numInstantErrors++;
+						syncError = ErrorState.SYNC_ERROR_NETWORK;
+						syncError.setErrorCode(null);
 					}
+					SyncErrorState.getInstance().setSyncError(syncError);
+					BroadcastHelper.sendUpdateAndErrorBroadcast(context);
+					throw e;
 				}
 			}
+		}
+
+		private void doSyncInternal(Context context) throws Exception {
+			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+			ApplicationInfo appConfig = appConfigManager.getAppConfig();
+
+			Exception lastException = null;
+			HashMap<DayDate, Long> lastLoadedTimes = appConfigManager.getLastLoadedTimes();
+			HashMap<DayDate, Long> lastSyncCallTimes = appConfigManager.getLastSyncCallTimes();
+
+			BackendBucketRepository backendBucketRepository =
+					new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
+			GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
+
+			DayDate lastDateToCheck = new DayDate(currentTime).subtractDays(9);
+			DayDate dateToLoad = new DayDate(currentTime);
+			int numInstantErrors = 0;
+			int numDelayedErrors = 0;
+			int numSuccesses = 0;
+			while (lastDateToCheck.isBeforeOrEquals(dateToLoad)) {
+				Long lastSynCallTime = lastSyncCallTimes.get(dateToLoad);
+				if (lastSynCallTime == null) {
+					// if there is no last sync call time recorded, set it to 5:59:59.999 on the current day, to make sure the
+					// first sync happens after 6am, otherwise we risk running into the 20 calls ratelimit.
+					Calendar cal = new GregorianCalendar();
+					cal.setTimeZone(TimeZone.getTimeZone("Europe/Zurich"));
+					cal.setTimeInMillis(currentTime);
+					cal.set(Calendar.HOUR_OF_DAY, 5);
+					cal.set(Calendar.MINUTE, 59);
+					cal.set(Calendar.SECOND, 59);
+					cal.set(Calendar.MILLISECOND, 999);
+					lastSynCallTime = cal.getTimeInMillis();
+					Logger.d(TAG, "never loaded " + dateToLoad.formatAsString() +
+							" before, set last sync time to 5:59:59 to prevent rate limit issues");
+				}
+
+				if (lastSynCallTime < getLastDesiredSyncTime(dateToLoad)) {
+					try {
+						Logger.d(TAG, "loading exposees for " + dateToLoad.formatAsString());
+						Response<ResponseBody> result =
+								backendBucketRepository.getGaenExposees(dateToLoad, lastLoadedTimes.get(dateToLoad));
+
+						if (result.code() != 204) {
+							File file = new File(context.getCacheDir(),
+									KEYFILE_PREFIX + dateToLoad.formatAsString() + "_" + lastLoadedTimes.get(dateToLoad) + ".zip");
+							try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file))) {
+								byte[] bytesIn = new byte[1024];
+								int read = 0;
+								InputStream bodyStream = result.body().byteStream();
+								while ((read = bodyStream.read(bytesIn)) != -1) {
+									bos.write(bytesIn, 0, read);
+								}
+							}
+
+							ArrayList<File> fileList = new ArrayList<>();
+							fileList.add(file);
+							String token = dateToLoad.formatAsString();
+							Logger.d(TAG,
+									"provideDiagnosisKeys for " + dateToLoad.formatAsString() + " with size " + file.length());
+							googleExposureClient.provideDiagnosisKeys(fileList, token);
+						}
+						lastSyncCallTimes.put(dateToLoad, currentTime);
+						lastLoadedTimes.put(dateToLoad, Long.parseLong(result.headers().get("x-published-until")));
+						numSuccesses++;
+					} catch (Exception e) {
+						e.printStackTrace();
+						lastException = e;
+						if (isDelayedSyncError(e)) {
+							numDelayedErrors++;
+						} else {
+							numInstantErrors++;
+						}
+					}
+				}
 
 			dateToLoad = dateToLoad.subtractDays(1);
 		}
 
-		DayDate lastDateToKeep = new DayDate().subtractDays(10);
-		Iterator<DayDate> dateIterator = lastLoadedTimes.keySet().iterator();
-		while (dateIterator.hasNext()) {
-			if (dateIterator.next().isBefore(lastDateToKeep)) {
-				dateIterator.remove();
-			}
-		}
-		dateIterator = lastSyncCallTimes.keySet().iterator();
-		while (dateIterator.hasNext()) {
-			if (dateIterator.next().isBefore(lastDateToKeep)) {
-				dateIterator.remove();
-			}
-		}
-
-		cleanupOldKeyFiles(context);
-
-		appConfigManager.setLastLoadedTimes(lastLoadedTimes);
-		appConfigManager.setLastSyncCallTimes(lastSyncCallTimes);
-
-		if (numInstantErrors > 0 || numDelayedErrors > 0 || numSuccesses > 0) {
-			int base = 'A';
-			String historyStatus =
-					String.valueOf((char) (base + numInstantErrors)) + (char) (base + numDelayedErrors) +
-							(char) (base + numSuccesses);
-			HistoryDatabase.getInstance(context).addEntry(
-					new HistoryEntry(HistoryEntryType.SYNC, historyStatus, lastException == null, System.currentTimeMillis()));
-		}
-
-		if (lastException != null) {
-			throw lastException;
-		} else {
-			appConfigManager.setLastSyncDate(System.currentTimeMillis());
-		}
-	}
-
-	private static void cleanupOldKeyFiles(Context context) {
-		for (File file : context.getCacheDir().listFiles()) {
-			if (file.getName().startsWith(KEYFILE_PREFIX)) {
-				if (!file.delete()) {
-					Logger.w(TAG, "Unable to delete file " + file.getName());
+			DayDate lastDateToKeep = new DayDate(currentTime).subtractDays(10);
+			Iterator<DayDate> dateIterator = lastLoadedTimes.keySet().iterator();
+			while (dateIterator.hasNext()) {
+				if (dateIterator.next().isBefore(lastDateToKeep)) {
+					dateIterator.remove();
 				}
 			}
-		}
-	}
-
-	private static long getLastDesiredSyncTime(DayDate dateToLoad) {
-		if (BuildConfig.FLAVOR.equals("calibration")) {
-			long now = System.currentTimeMillis();
-			return now - (now % (5 * 60 * 1000L));
-		} else {
-			Calendar cal = new GregorianCalendar();
-			if (cal.get(Calendar.HOUR_OF_DAY) < 6) {
-				cal.add(Calendar.DATE, -1);
-				cal.set(Calendar.HOUR_OF_DAY, 18);
-			} else if (cal.get(Calendar.HOUR_OF_DAY) < 18) {
-				cal.set(Calendar.HOUR_OF_DAY, 6);
-			} else {
-				cal.set(Calendar.HOUR_OF_DAY, 18);
-			}
-			cal.set(Calendar.MINUTE, 0);
-			cal.set(Calendar.SECOND, 0);
-			cal.set(Calendar.MILLISECOND, 0);
-			return cal.getTimeInMillis();
-		}
-	}
-
-	private static boolean isDelayedSyncError(Exception e) {
-		if (e instanceof ServerTimeOffsetException || e instanceof SignatureException ||
-				e instanceof SQLiteException || e instanceof ApiException || e instanceof SSLException) {
-			return false;
-		} else if (e instanceof StatusCodeException) {
-			if (isDelayedStatusCodeError((StatusCodeException) e)) {
-				return true;
-			} else {
-				return false;
-			}
-		} else {
-			return true;
-		}
-	}
-
-	private static boolean isDelayedStatusCodeError(StatusCodeException e) {
-		return e.getCode() == 502 || e.getCode() == 503;
-	}
-
-
-	private static void uploadPendingKeys(Context context) {
-		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		PendingKeyUploadStorage pendingKeyUploadStorage = PendingKeyUploadStorage.getInstance(context);
-		PendingKeyUploadStorage.PendingKey pendingKey = null;
-		try {
-			int numPendingUploaded = 0;
-			int numFakePendingUploaded = 0;
-			while (pendingKeyUploadStorage.peekRollingStartNumber() < DateUtil.getCurrentRollingStartNumber()) {
-				pendingKey = pendingKeyUploadStorage.popNextPendingKey();
-				if (pendingKey.getRollingStartNumber() < DateUtil.getRollingStartNumberForDate(new DayDate().subtractDays(1))) {
-					//ignore pendingKeys older than one day, upload token will be invalid
-					continue;
+			dateIterator = lastSyncCallTimes.keySet().iterator();
+			while (dateIterator.hasNext()) {
+				if (dateIterator.next().isBefore(lastDateToKeep)) {
+					dateIterator.remove();
 				}
-				GaenKey gaenKey = null;
-				if (!pendingKey.isFake()) {
-					List<TemporaryExposureKey> keys =
-							GoogleExposureClient.getInstance(context).getTemporaryExposureKeyHistorySynchronous();
+			}
 
-					for (TemporaryExposureKey key : keys) {
-						if (key.getRollingStartIntervalNumber() == pendingKey.getRollingStartNumber()) {
-							gaenKey = new GaenKey(toBase64(key.getKeyData()),
-									key.getRollingStartIntervalNumber(),
-									key.getRollingPeriod(),
-									key.getTransmissionRiskLevel());
-							break;
-						}
+			cleanupOldKeyFiles(context);
+
+			appConfigManager.setLastLoadedTimes(lastLoadedTimes);
+			appConfigManager.setLastSyncCallTimes(lastSyncCallTimes);
+
+			if (numInstantErrors > 0 || numDelayedErrors > 0 || numSuccesses > 0) {
+				int base = 'A';
+				String historyStatus =
+						String.valueOf((char) (base + numInstantErrors)) + (char) (base + numDelayedErrors) +
+								(char) (base + numSuccesses);
+				HistoryDatabase.getInstance(context).addEntry(
+						new HistoryEntry(HistoryEntryType.SYNC, historyStatus, lastException == null, System.currentTimeMillis()));
+			}
+
+			if (lastException != null) {
+				throw lastException;
+			} else {
+				appConfigManager.setLastSyncDate(currentTime);
+			}
+		}
+
+		private void cleanupOldKeyFiles(Context context) {
+			for (File file : context.getCacheDir().listFiles()) {
+				if (file.getName().startsWith(KEYFILE_PREFIX)) {
+					if (!file.delete()) {
+						Logger.w(TAG, "Unable to delete file " + file.getName());
 					}
-					if (gaenKey == null) {
-						//key for specified rollingStartNumber was not found, user must have cleared data
+				}
+			}
+		}
+
+		private long getLastDesiredSyncTime(DayDate dateToLoad) {
+			if (BuildConfig.FLAVOR.equals("calibration")) {
+				return currentTime - (currentTime % (5 * 60 * 1000L));
+			} else {
+				Calendar cal = new GregorianCalendar();
+				cal.setTimeZone(TimeZone.getTimeZone("Europe/Zurich"));
+				cal.setTimeInMillis(currentTime);
+				if (cal.get(Calendar.HOUR_OF_DAY) < 6) {
+					if (new DayDate(currentTime).equals(new DayDate(currentTime - 6 * 60 * 60 * 1000l))) {
+						//only if it is still the same UTC day like 6h ago we allow a sync before 6am, otherwise we might run into
+						//the ratelimit on the next day because we check before 6am, at 6am and at 6pm
+						cal.add(Calendar.DATE, -1);
+						cal.set(Calendar.HOUR_OF_DAY, 18);
+					} else {
+						cal.setTimeInMillis(0);
+					}
+				} else if (cal.get(Calendar.HOUR_OF_DAY) < 18) {
+					cal.set(Calendar.HOUR_OF_DAY, 6);
+				} else {
+					cal.set(Calendar.HOUR_OF_DAY, 18);
+				}
+				cal.set(Calendar.MINUTE, 0);
+				cal.set(Calendar.SECOND, 0);
+				cal.set(Calendar.MILLISECOND, 0);
+				return cal.getTimeInMillis();
+			}
+		}
+
+		private boolean isDelayedSyncError(Exception e) {
+			if (e instanceof ServerTimeOffsetException || e instanceof SignatureException || e instanceof StatusCodeException ||
+					e instanceof SQLiteException || e instanceof ApiException || e instanceof SSLException) {
+				return false;
+			} else if (e instanceof StatusCodeException) {
+				if (isDelayedStatusCodeError((StatusCodeException) e)) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return true;
+			}
+		}
+
+		private boolean isDelayedStatusCodeError(StatusCodeException e) {
+			return e.getCode() == 502 || e.getCode() == 503;
+		}
+
+		private void uploadPendingKeys(Context context) {
+			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+			PendingKeyUploadStorage pendingKeyUploadStorage = PendingKeyUploadStorage.getInstance(context);
+			PendingKeyUploadStorage.PendingKey pendingKey = null;
+			try {
+				int numPendingUploaded = 0;
+				int numFakePendingUploaded = 0;
+				while (pendingKeyUploadStorage.peekRollingStartNumber() <
+						DateUtil.getRollingStartNumberForDate(new DayDate(currentTime))) {
+					pendingKey = pendingKeyUploadStorage.popNextPendingKey();
+					if (pendingKey.getRollingStartNumber() <
+							DateUtil.getRollingStartNumberForDate(new DayDate(currentTime).subtractDays(1))) {
+						//ignore pendingKeys older than one day, upload token will be invalid
 						continue;
 					}
-				} else {
-					gaenKey = new GaenKey(toBase64(new byte[16]),
-							pendingKey.getRollingStartNumber(),
-							0,
-							0,
-							1);
+					GaenKey gaenKey = null;
+					if (!pendingKey.isFake()) {
+						List<TemporaryExposureKey> keys =
+								GoogleExposureClient.getInstance(context).getTemporaryExposureKeyHistorySynchronous();
+
+						for (TemporaryExposureKey key : keys) {
+							if (key.getRollingStartIntervalNumber() == pendingKey.getRollingStartNumber()) {
+								gaenKey = new GaenKey(toBase64(key.getKeyData()),
+										key.getRollingStartIntervalNumber(),
+										key.getRollingPeriod(),
+										key.getTransmissionRiskLevel());
+								break;
+							}
+						}
+						if (gaenKey == null) {
+							//key for specified rollingStartNumber was not found, user must have cleared data
+							continue;
+						}
+					} else {
+						gaenKey = new GaenKey(toBase64(new byte[16]),
+								pendingKey.getRollingStartNumber(),
+								0,
+								0,
+								1);
+					}
+					appConfigManager.getBackendReportRepository(context).addPendingGaenKey(gaenKey, pendingKey.getToken());
+					if (!pendingKey.isFake()) {
+						DP3T.stop(context);
+						appConfigManager.setIAmInfectedIsResettable(true);
+					}
+					if (pendingKey.isFake()) {
+						numFakePendingUploaded++;
+					} else {
+						numPendingUploaded++;
+					}
 				}
-				appConfigManager.getBackendReportRepository(context).addPendingGaenKey(gaenKey, pendingKey.getToken());
-				if (!pendingKey.isFake()) {
-					DP3T.stop(context);
-					appConfigManager.setIAmInfectedIsResettable(true);
-				}
-				if (pendingKey.isFake()) {
-					numFakePendingUploaded++;
-				} else {
-					numPendingUploaded++;
-				}
-			}
-			if (appConfigManager.getDevHistory() && (numFakePendingUploaded > 0 || numPendingUploaded > 0)) {
-				HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
-				int base = 'A';
-				String status = String.valueOf((char) (base + numPendingUploaded)) + (char) (base + numFakePendingUploaded);
-				historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.NEXT_DAY_KEY_UPLOAD_REQUEST, status, true,
-						System.currentTimeMillis()));
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			if (pendingKey != null) {
-				pendingKeyUploadStorage.addPendingKey(pendingKey);
-				if (appConfigManager.getDevHistory()) {
+				if (appConfigManager.getDevHistory() && (numFakePendingUploaded > 0 || numPendingUploaded > 0)) {
 					HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
-					String status = e instanceof StatusCodeException ? String.valueOf(((StatusCodeException) e).getCode()) :
-									"NETW";
-					historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.NEXT_DAY_KEY_UPLOAD_REQUEST, status, false,
+					int base = 'A';
+					String status =
+							String.valueOf((char) (base + numPendingUploaded)) + (char) (base + numFakePendingUploaded);
+					historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.NEXT_DAY_KEY_UPLOAD_REQUEST, status, true,
 							System.currentTimeMillis()));
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				if (pendingKey != null) {
+					pendingKeyUploadStorage.addPendingKey(pendingKey);
+					if (appConfigManager.getDevHistory()) {
+						HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
+						String status = e instanceof StatusCodeException ?
+										String.valueOf(((StatusCodeException) e).getCode()) :
+										"NETW";
+						historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.NEXT_DAY_KEY_UPLOAD_REQUEST, status, false,
+								System.currentTimeMillis()));
+					}
 				}
 			}
 		}
+
 	}
 
 }

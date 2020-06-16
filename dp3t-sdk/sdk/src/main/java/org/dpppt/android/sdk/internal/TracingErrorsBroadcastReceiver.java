@@ -37,7 +37,7 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		if (!DP3T.ACTION_UPDATE_ERRORS.equals(intent.getAction()))
+		if (!DP3T.ACTION_UPDATE_ERRORS.equals(intent.getAction()) || !DP3T.isInitialized())
 			return;
 
 		TracingStatus status = DP3T.getStatus(context);

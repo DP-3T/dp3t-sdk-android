@@ -24,11 +24,11 @@ jobs:
       with:
           name: app
           path: calibration-app/app/build/outputs/apk/debug/app-debug.apk
-    
+
   test:
     name: "Run Tests"
     runs-on: macos-latest
-    
+
     steps:
     - uses: actions/checkout@v2
     - name: set up JDK 1.8
@@ -39,7 +39,7 @@ jobs:
       uses: reactivecircus/android-emulator-runner@v2
       with:
         api-level: 29
-        script: cd dp3t-sdk; ./gradlew connectedAndroidTest
+        script: cd dp3t-sdk; ./gradlew connectedProductionDebugAndroidTest
 
   sonar:
     name: "Sonar Analysis"

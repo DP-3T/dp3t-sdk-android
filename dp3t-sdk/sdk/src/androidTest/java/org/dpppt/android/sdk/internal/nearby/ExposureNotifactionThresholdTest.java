@@ -36,7 +36,7 @@ public class ExposureNotifactionThresholdTest {
 	@Test
 	public void testDefault() {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		appConfigManager.clear();
+		appConfigManager.clearPreferences();
 		ExposureNotificationBroadcastReceiver broadcastReceiver = new ExposureNotificationBroadcastReceiver();
 		ExposureSummary exposureSummary =
 				new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 15, 0, 0 }).build();
@@ -60,7 +60,7 @@ public class ExposureNotifactionThresholdTest {
 	@Test
 	public void testChangedConfiguration() {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		appConfigManager.clear();
+		appConfigManager.clearPreferences();
 		appConfigManager.setAttenuationFactorLow(0.5f);
 		appConfigManager.setAttenuationFactorMedium(2f);
 		appConfigManager.setMinDurationForExposure(10);
