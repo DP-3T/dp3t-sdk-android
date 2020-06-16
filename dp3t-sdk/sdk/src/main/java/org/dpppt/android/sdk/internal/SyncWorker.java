@@ -63,7 +63,7 @@ public class SyncWorker extends Worker {
 				.setRequiredNetworkType(NetworkType.CONNECTED)
 				.build();
 
-		PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(SyncWorker.class, 15, TimeUnit.MINUTES)
+		PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(SyncWorker.class, 120, TimeUnit.MINUTES)
 				.setConstraints(constraints)
 				.build();
 
