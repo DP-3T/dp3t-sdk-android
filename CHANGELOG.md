@@ -1,5 +1,13 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.5.7 (16.6.2020)
+
+- improve sync logic to prevent rate limit issues with google api (sync always at 6am/6pm Swiss time!)
+- schedule sync tasks only every two hours to match iOS logic
+- only return latest exposure date to the app
+- do not show statuscode error 502 and 503 directly
+- make fake data in exposed requests more realistic
+
 ## Version 0.5.6 (12.6.2020)
 
 - increased time delta check to 10min

@@ -42,8 +42,17 @@ public class GoogleExposureClient {
 		return instance;
 	}
 
+	public static GoogleExposureClient wrapTestClient(ExposureNotificationClient testClient) {
+		instance = new GoogleExposureClient(testClient);
+		return instance;
+	}
+
 	private GoogleExposureClient(Context context) {
 		exposureNotificationClient = Nearby.getExposureNotificationClient(context);
+	}
+
+	private GoogleExposureClient(ExposureNotificationClient fakeClient) {
+		exposureNotificationClient = fakeClient;
 	}
 
 	public void start(Activity activity, int resolutionRequestCode, Runnable successCallback, Consumer<Exception> errorCallback) {
@@ -109,21 +118,21 @@ public class GoogleExposureClient {
 		final Object syncObject = new Object();
 		Object[] results = new Object[] { null };
 
-		exposureNotificationClient.getTemporaryExposureKeyHistory()
-				.addOnSuccessListener(list -> {
-					results[0] = list;
-					synchronized (syncObject) {
-						syncObject.notifyAll();
-					}
-				})
-				.addOnFailureListener(e -> {
-					results[0] = e;
-					synchronized (syncObject) {
-						syncObject.notifyAll();
-					}
-				});
-
 		synchronized (syncObject) {
+			exposureNotificationClient.getTemporaryExposureKeyHistory()
+					.addOnSuccessListener(list -> {
+						results[0] = list;
+						synchronized (syncObject) {
+							syncObject.notifyAll();
+						}
+					})
+					.addOnFailureListener(e -> {
+						results[0] = e;
+						synchronized (syncObject) {
+							syncObject.notifyAll();
+						}
+					});
+
 			syncObject.wait();
 		}
 		if (results[0] instanceof Exception) {
@@ -161,22 +170,22 @@ public class GoogleExposureClient {
 
 		final Object syncObject = new Object();
 		Exception[] exceptions = new Exception[] { null };
-		exposureNotificationClient.provideDiagnosisKeys(keys, exposureConfiguration, token)
-				.addOnSuccessListener(nothing -> {
-					Logger.d(TAG, "provideDiagnosisKeys: inserted keys successfully");
-					synchronized (syncObject) {
-						syncObject.notifyAll();
-					}
-				})
-				.addOnFailureListener(e -> {
-					Logger.e(TAG, "provideDiagnosisKeys", e);
-					exceptions[0] = e;
-					synchronized (syncObject) {
-						syncObject.notifyAll();
-					}
-				});
-
 		synchronized (syncObject) {
+			exposureNotificationClient.provideDiagnosisKeys(keys, exposureConfiguration, token)
+					.addOnSuccessListener(nothing -> {
+						Logger.d(TAG, "provideDiagnosisKeys: inserted keys successfully for token " + token);
+						synchronized (syncObject) {
+							syncObject.notifyAll();
+						}
+					})
+					.addOnFailureListener(e -> {
+						Logger.e(TAG, "provideDiagnosisKeys for token " + token, e);
+						exceptions[0] = e;
+						synchronized (syncObject) {
+							syncObject.notifyAll();
+						}
+					});
+
 			syncObject.wait();
 		}
 		if (exceptions[0] != null) {

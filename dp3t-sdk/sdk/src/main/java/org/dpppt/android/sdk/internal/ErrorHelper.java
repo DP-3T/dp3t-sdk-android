@@ -62,7 +62,10 @@ public class ErrorHelper {
 				syncError = ErrorState.SYNC_ERROR_NETWORK;
 				syncError.setErrorCode("LOST");
 			}
-			boolean isSuppressibleError = syncError == ErrorState.SYNC_ERROR_NETWORK || syncError == ErrorState.SYNC_ERROR_SSLTLS;
+			boolean isSuppressibleError =
+					syncError == ErrorState.SYNC_ERROR_NETWORK || syncError == ErrorState.SYNC_ERROR_SSLTLS ||
+							(syncError == ErrorState.SYNC_ERROR_SERVER &&
+									("ASST502".equals(syncError.getErrorCode()) || "ASST503".equals(syncError.getErrorCode())));
 			boolean showSuppressibleError = appConfigManager.isTracingEnabled() &&
 					appConfigManager.getLastSyncDate() < System.currentTimeMillis() - syncErrorState.getNetworkErrorGracePeriod();
 			if (!isSuppressibleError || showSuppressibleError) {

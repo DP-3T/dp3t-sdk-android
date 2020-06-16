@@ -48,7 +48,8 @@ public class ExposureDayStorageTest {
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis() - 20));
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis()));
 		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis()));
-		assertEquals(2, eds.getExposureDays().size());
+		assertEquals(1, eds.getExposureDays().size());
+		assertEquals(new DayDate(), eds.getExposureDays().get(0).getExposedDate());
 	}
 
 	@Test
