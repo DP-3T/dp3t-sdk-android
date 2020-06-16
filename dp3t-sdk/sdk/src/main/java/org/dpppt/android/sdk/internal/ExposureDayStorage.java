@@ -80,6 +80,11 @@ public class ExposureDayStorage {
 				iterator.remove();
 			}
 		}
+		if (list.size() > 0) {
+			ExposureDay lastDay = list.get(list.size() - 1);
+			list = new ExposureDayList();
+			list.add(lastDay);
+		}
 		return list;
 	}
 
