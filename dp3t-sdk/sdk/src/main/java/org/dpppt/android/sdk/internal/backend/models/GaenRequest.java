@@ -9,6 +9,7 @@
  */
 package org.dpppt.android.sdk.internal.backend.models;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,16 +28,21 @@ public class GaenRequest {
 
 	public GaenRequest(List<TemporaryExposureKey> temporaryExposureKeys, int delayedKeyDate) {
 		ArrayList<GaenKey> keys = new ArrayList<>();
+		int rollingStartNumber = DateUtil.getCurrentRollingStartNumber();
 		for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
 			keys.add(new GaenKey(toBase64(temporaryExposureKey.getKeyData()),
 					temporaryExposureKey.getRollingStartIntervalNumber(),
 					temporaryExposureKey.getRollingPeriod(),
 					temporaryExposureKey.getTransmissionRiskLevel()));
+			rollingStartNumber = Math.min(rollingStartNumber, temporaryExposureKey.getRollingStartIntervalNumber());
 		}
+		SecureRandom random = new SecureRandom();
 		while (keys.size() < 14) {
-			keys.add(new GaenKey(toBase64(new byte[16]),
-					DateUtil.getCurrentRollingStartNumber(),
-					0,
+			byte[] bytes = new byte[16];
+			random.nextBytes(bytes);
+			keys.add(new GaenKey(toBase64(bytes),
+					--rollingStartNumber,
+					144,
 					0,
 					1));
 		}

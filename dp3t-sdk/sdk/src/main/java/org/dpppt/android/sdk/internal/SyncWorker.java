@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLException;
@@ -233,8 +234,8 @@ public class SyncWorker extends Worker {
 					}
 				}
 
-			dateToLoad = dateToLoad.subtractDays(1);
-		}
+				dateToLoad = dateToLoad.subtractDays(1);
+			}
 
 			DayDate lastDateToKeep = new DayDate(currentTime).subtractDays(10);
 			Iterator<DayDate> dateIterator = lastLoadedTimes.keySet().iterator();
@@ -362,9 +363,12 @@ public class SyncWorker extends Worker {
 							continue;
 						}
 					} else {
-						gaenKey = new GaenKey(toBase64(new byte[16]),
+						SecureRandom random = new SecureRandom();
+						byte[] bytes = new byte[16];
+						random.nextBytes(bytes);
+						gaenKey = new GaenKey(toBase64(bytes),
 								pendingKey.getRollingStartNumber(),
-								0,
+								144,
 								0,
 								1);
 					}
