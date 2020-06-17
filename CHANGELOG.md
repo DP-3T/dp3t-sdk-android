@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## Version 0.6.0 (17.6.2020)
+
+- additional error state for not enough disc space
+
 ## Version 0.5.7 (16.6.2020)
 
 - improve sync logic to prevent rate limit issues with google api (sync always at 6am/6pm Swiss time!)
