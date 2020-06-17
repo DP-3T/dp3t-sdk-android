@@ -327,15 +327,11 @@ public class SyncWorker extends Worker {
 		}
 
 		private boolean isDelayedSyncError(Exception e) {
-			if (e instanceof ServerTimeOffsetException || e instanceof SignatureException || e instanceof StatusCodeException ||
-					e instanceof SQLiteException || e instanceof ApiException || e instanceof SSLException) {
+			if (e instanceof ServerTimeOffsetException || e instanceof SignatureException ||
+					e instanceof SQLiteException || e instanceof ApiException) {
 				return false;
 			} else if (e instanceof StatusCodeException) {
-				if (isDelayedStatusCodeError((StatusCodeException) e)) {
-					return true;
-				} else {
-					return false;
-				}
+				return isDelayedStatusCodeError((StatusCodeException) e);
 			} else {
 				return true;
 			}
