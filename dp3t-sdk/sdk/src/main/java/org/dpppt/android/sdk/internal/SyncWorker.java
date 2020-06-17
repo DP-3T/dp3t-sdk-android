@@ -44,6 +44,7 @@ import org.dpppt.android.sdk.internal.history.HistoryDatabase;
 import org.dpppt.android.sdk.internal.history.HistoryEntry;
 import org.dpppt.android.sdk.internal.history.HistoryEntryType;
 import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.internal.nearby.ApiExceptionUtil;
 import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.models.ApplicationInfo;
@@ -150,12 +151,14 @@ public class SyncWorker extends Worker {
 						syncError = ErrorState.SYNC_ERROR_SERVER;
 						syncError.setErrorCode("ASST" + ((StatusCodeException) e).getCode());
 					} else if (e instanceof ApiException) {
-						if (((ApiException) e).getStatusCode() == ExposureNotificationStatusCodes.FAILED_DISK_IO) {
+						ApiException apiException = (ApiException) e;
+						int enApiStatusCode = ApiExceptionUtil.getENApiStatusCode(apiException);
+						if (enApiStatusCode == ExposureNotificationStatusCodes.FAILED_DISK_IO) {
 							syncError = ErrorState.SYNC_ERROR_NO_SPACE;
 							syncError.setErrorCode("AGNOSP");
 						} else {
 							syncError = ErrorState.SYNC_ERROR_API_EXCEPTION;
-							syncError.setErrorCode("AGAEN" + ((ApiException) e).getStatusCode());
+							syncError.setErrorCode("AGAEN" + apiException.getStatusCode() + "." + enApiStatusCode);
 						}
 					} else if (e instanceof SSLException) {
 						syncError = ErrorState.SYNC_ERROR_SSLTLS;
