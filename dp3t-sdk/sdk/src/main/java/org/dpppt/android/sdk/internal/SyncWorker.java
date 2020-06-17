@@ -11,12 +11,15 @@ package org.dpppt.android.sdk.internal;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteException;
+import android.system.ErrnoException;
+import android.system.OsConstants;
 import androidx.annotation.NonNull;
 import androidx.work.*;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.PublicKey;
 import java.security.SecureRandom;
@@ -25,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLException;
 
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.nearby.exposurenotification.ExposureNotificationStatusCodes;
 import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 
 import org.dpppt.android.sdk.BuildConfig;
@@ -40,6 +44,7 @@ import org.dpppt.android.sdk.internal.history.HistoryDatabase;
 import org.dpppt.android.sdk.internal.history.HistoryEntry;
 import org.dpppt.android.sdk.internal.history.HistoryEntryType;
 import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.internal.nearby.ApiExceptionUtil;
 import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.models.ApplicationInfo;
@@ -146,13 +151,27 @@ public class SyncWorker extends Worker {
 						syncError = ErrorState.SYNC_ERROR_SERVER;
 						syncError.setErrorCode("ASST" + ((StatusCodeException) e).getCode());
 					} else if (e instanceof ApiException) {
-						syncError = ErrorState.SYNC_ERROR_API_EXCEPTION;
-						syncError.setErrorCode("AGAEN" + ((ApiException) e).getStatusCode());
+						ApiException apiException = (ApiException) e;
+						int enApiStatusCode = ApiExceptionUtil.getENApiStatusCode(apiException);
+						if (enApiStatusCode == ExposureNotificationStatusCodes.FAILED_DISK_IO) {
+							syncError = ErrorState.SYNC_ERROR_NO_SPACE;
+							syncError.setErrorCode("AGNOSP");
+						} else {
+							syncError = ErrorState.SYNC_ERROR_API_EXCEPTION;
+							syncError.setErrorCode("AGAEN" + apiException.getStatusCode() + "." + enApiStatusCode);
+						}
 					} else if (e instanceof SSLException) {
 						syncError = ErrorState.SYNC_ERROR_SSLTLS;
 					} else {
 						syncError = ErrorState.SYNC_ERROR_NETWORK;
 						syncError.setErrorCode(null);
+						if (e instanceof IOException && e.getCause() instanceof ErrnoException) {
+							int errorNumber = ((ErrnoException) e.getCause()).errno;
+							if (errorNumber == OsConstants.ENOSPC) {
+								syncError = ErrorState.SYNC_ERROR_NO_SPACE;
+								syncError.setErrorCode("AENOSP");
+							}
+						}
 					}
 					SyncErrorState.getInstance().setSyncError(syncError);
 					BroadcastHelper.sendUpdateAndErrorBroadcast(context);
@@ -311,15 +330,11 @@ public class SyncWorker extends Worker {
 		}
 
 		private boolean isDelayedSyncError(Exception e) {
-			if (e instanceof ServerTimeOffsetException || e instanceof SignatureException || e instanceof StatusCodeException ||
-					e instanceof SQLiteException || e instanceof ApiException || e instanceof SSLException) {
+			if (e instanceof ServerTimeOffsetException || e instanceof SignatureException ||
+					e instanceof SQLiteException || e instanceof ApiException) {
 				return false;
 			} else if (e instanceof StatusCodeException) {
-				if (isDelayedStatusCodeError((StatusCodeException) e)) {
-					return true;
-				} else {
-					return false;
-				}
+				return isDelayedStatusCodeError((StatusCodeException) e);
 			} else {
 				return true;
 			}

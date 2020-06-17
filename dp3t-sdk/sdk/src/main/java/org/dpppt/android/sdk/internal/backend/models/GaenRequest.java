@@ -40,8 +40,9 @@ public class GaenRequest {
 		while (keys.size() < 14) {
 			byte[] bytes = new byte[16];
 			random.nextBytes(bytes);
+			rollingStartNumber = rollingStartNumber - 144;
 			keys.add(new GaenKey(toBase64(bytes),
-					--rollingStartNumber,
+					rollingStartNumber,
 					144,
 					0,
 					1));
