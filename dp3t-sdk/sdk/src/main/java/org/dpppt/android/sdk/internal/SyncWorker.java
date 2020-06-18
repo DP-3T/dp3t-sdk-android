@@ -45,6 +45,7 @@ import org.dpppt.android.sdk.internal.history.HistoryEntry;
 import org.dpppt.android.sdk.internal.history.HistoryEntryType;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.ApiExceptionUtil;
+import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
 import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.models.ApplicationInfo;
@@ -134,9 +135,12 @@ public class SyncWorker extends Worker {
 
 				try {
 					uploadPendingKeys(context);
-					doSyncInternal(context);
-					Logger.i(TAG, "synced");
-					AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
+
+					if (DP3T.isTracingEnabled(context) && !Boolean.FALSE.equals(GaenStateCache.isGaenEnabled())) {
+						doSyncInternal(context);
+						Logger.i(TAG, "synced");
+						AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
+					}
 					SyncErrorState.getInstance().setSyncError(null);
 					BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 				} catch (Exception e) {
