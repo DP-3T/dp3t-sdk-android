@@ -1,5 +1,10 @@
 # Changelog for DP3T-SDK Android
 
+## version 1.0.0 (18.6.2020)
+
+- prevent sync from running when ExposureNotifications disabled
+- updated readme
+
 ## Version 0.6.0 (17.6.2020)
 
 - additional error state for not enough disc space
