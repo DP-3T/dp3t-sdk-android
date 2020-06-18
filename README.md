@@ -43,8 +43,7 @@ init | Initializes the SDK and configures it |  `public static void init(Context
 ### Methods 
 Name | Description | Function Name
 ---- | ----------- | -------------
-start | Asks the user to enable ExposureNotifications and starts tracing if accepted | `public static void start(Activity activity, Runnable successCallback, Consumer<Exception> errorCallback,
-                                                       			Runnable cancelledCallback)`
+start | Asks the user to enable ExposureNotifications and starts tracing if accepted | `public static void start(Activity activity, Runnable successCallback, Consumer<Exception> errorCallback, Runnable cancelledCallback)`
 stop | Stops tracing | `public static void stop(Context context)`
 sync | Pro-actively triggers sync with backend to refresh exposed list | `public static void sync(Context context)`
 status | Returns a TracingStatus-Object describing the current state. This contains:<br/> - `tracingEnabled` : `boolean` <br /> - `lastSyncDate`:`long` <br />- `infectionStatus`:`InfectionStatus` <br />- `exposureDays`:`List<ExposureDay>` <br /> - `errors` (permission, bluetooth disabled, no network, ...) : `List<ErrorState>` | `public static TracingStatus getStatus(Context context)`
