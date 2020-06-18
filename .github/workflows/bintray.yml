@@ -2,7 +2,7 @@ name: Upload AAR to bintray
 
 on:
   push:
-    branches: [ master-alpha ]
+    branches: [ master ]
 
 jobs:
   build:
