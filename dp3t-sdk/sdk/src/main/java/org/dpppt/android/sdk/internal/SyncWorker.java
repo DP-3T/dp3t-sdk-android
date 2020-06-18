@@ -136,7 +136,7 @@ public class SyncWorker extends Worker {
 				try {
 					uploadPendingKeys(context);
 
-					if (DP3T.isTracingEnabled(context) && Boolean.TRUE.equals(GaenStateCache.isGaenEnabled())) {
+					if (DP3T.isTracingEnabled(context) && !Boolean.FALSE.equals(GaenStateCache.isGaenEnabled())) {
 						doSyncInternal(context);
 						Logger.i(TAG, "synced");
 						AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
