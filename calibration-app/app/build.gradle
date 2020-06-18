@@ -1,0 +1,85 @@
+/*
+ * Copyright (c) 2020 Ubique Innovation AG <https://www.ubique.ch>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
+apply plugin: 'com.android.application'
+
+ext.readProperty = { paramName ->
+	if (project.hasProperty(paramName)) {
+		return project.getProperties().get(paramName)
+	} else {
+		Properties properties = new Properties()
+		if (project.rootProject.file('local.properties').exists()) {
+			properties.load(project.rootProject.file('local.properties').newDataInputStream())
+		}
+		return properties.getProperty(paramName)
+	}
+}
+
+android {
+	compileSdkVersion 29
+	buildToolsVersion "29.0.3"
+
+	defaultConfig {
+		applicationId "org.dpppt.android.calibration"
+		minSdkVersion 23
+		targetSdkVersion 29
+		versionCode 2
+		versionName "0.2"
+
+		missingDimensionStrategy 'version', 'calibration'
+
+		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+	}
+
+	signingConfigs {
+		release {
+			storeFile file('../testKeystore')
+			storePassword readProperty('keystorePassword')
+			keyAlias 'keyAlias'
+			keyPassword readProperty('keyAliasPassword')
+		}
+	}
+	buildTypes {
+		release {
+			signingConfig signingConfigs.release
+		}
+	}
+
+	compileOptions {
+		sourceCompatibility JavaVersion.VERSION_1_8
+		targetCompatibility JavaVersion.VERSION_1_8
+	}
+
+	buildTypes {
+		release {
+			minifyEnabled true
+			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+		}
+	}
+
+}
+
+dependencies {
+	implementation fileTree(dir: 'libs', include: ['*.jar'])
+	implementation fileTree(dir: '../../dp3t-sdk/sdk/libs', include: ['*.aar'])
+
+	implementation project(':dp3t-sdk')
+
+	implementation 'com.google.android.gms:play-services-tasks:17.0.2'
+	implementation 'androidx.appcompat:appcompat:1.1.0'
+	implementation 'androidx.core:core:1.2.0'
+	implementation 'androidx.fragment:fragment:1.2.4'
+	implementation 'androidx.work:work-runtime:2.3.4'
+
+	implementation 'com.squareup.retrofit2:retrofit:2.8.1'
+	implementation 'com.squareup.retrofit2:converter-gson:2.8.1'
+
+	implementation 'com.google.android.material:material:1.1.0'
+}

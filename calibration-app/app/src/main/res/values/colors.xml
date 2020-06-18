@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2020 Ubique Innovation AG <https://www.ubique.ch>
+  ~
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+  ~
+  ~ SPDX-License-Identifier: MPL-2.0
+  -->
+
+<resources>
+	<color name="colorPrimary">#009CDA</color>
+	<color name="colorPrimaryDark">#17475A</color>
+	<color name="colorAccent">#3392A3</color>
+
+	<color name="textPrimary">#222222</color>
+
+	<color name="transparent">#0000</color>
+	<color name="red">#DD3737</color>
+	<color name="green">#81CA84</color>
+	<color name="blue">#37AEDD</color>
+	<color name="blueLight">#76C9EA</color>
+	<color name="white">#FFF</color>
+	<color name="greyDark">#666</color>
+	<color name="greyLight">#EEE</color>
+</resources>

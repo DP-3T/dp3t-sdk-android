@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2020 Ubique Innovation AG <https://www.ubique.ch>
+  ~
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+  ~
+  ~ SPDX-License-Identifier: MPL-2.0
+  -->
+
+<resources>
+	<dimen name="spacing_small">5dp</dimen>
+	<dimen name="spacing_medium">10dp</dimen>
+	<dimen name="spacing_large">20dp</dimen>
+	<dimen name="spacing_huge">40dp</dimen>
+
+	<dimen name="text_size_normal">16sp</dimen>
+	<dimen name="text_size_large">20sp</dimen>
+
+	<dimen name="button_outline_stroke">2dp</dimen>
+
+	<dimen name="loading_size_small">32dp</dimen>
+</resources>

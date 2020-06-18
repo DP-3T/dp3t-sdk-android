@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright (c) 2020 Ubique Innovation AG <https://www.ubique.ch>
+  ~
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+  ~
+  ~ SPDX-License-Identifier: MPL-2.0
+  -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_margin="@dimen/spacing_large"
+		android:orientation="vertical">
+
+		<TextView
+			style="@style/Sample.Text.Title"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="@dimen/spacing_large"
+			android:layout_marginBottom="@dimen/spacing_medium"
+			android:text="@string/bucket_thresholds" />
+
+		<androidx.appcompat.widget.AppCompatSeekBar
+			android:id="@+id/parameter_seekbar_attenuation_bucket1"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="@dimen/spacing_small" />
+
+		<EditText
+			android:id="@+id/parameter_seekbar_attenuation_bucket1_value"
+			style="@style/Sample.Text"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal"
+			android:imeOptions="actionDone"
+			android:inputType="textNoSuggestions|numberSigned"
+			android:selectAllOnFocus="true"
+			tools:text="0" />
+
+		<androidx.appcompat.widget.AppCompatSeekBar
+			android:id="@+id/parameter_seekbar_attenuation_bucket2"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="@dimen/spacing_small" />
+
+		<EditText
+			android:id="@+id/parameter_seekbar_attenuation_bucket2_value"
+			style="@style/Sample.Text"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal"
+			android:imeOptions="actionDone"
+			android:inputType="textNoSuggestions|numberSigned"
+			android:selectAllOnFocus="true"
+			tools:text="0" />
+
+		<TextView
+			style="@style/Sample.Text.Title"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="@dimen/spacing_large"
+			android:layout_marginBottom="@dimen/spacing_medium"
+			android:text="@string/version_info" />
+
+		<TextView
+			android:id="@+id/version_info"
+			style="@style/Sample.Text.Light"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="@dimen/spacing_large" />
+
+	</LinearLayout>
+
+</ScrollView>

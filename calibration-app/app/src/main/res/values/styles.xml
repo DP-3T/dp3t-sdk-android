@@ -1,0 +1,69 @@
+<!--
+  ~ Copyright (c) 2020 Ubique Innovation AG <https://www.ubique.ch>
+  ~
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+  ~
+  ~ SPDX-License-Identifier: MPL-2.0
+  -->
+
+<resources>
+
+	<!-- Base application theme. -->
+	<style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+		<!-- Customize your theme here. -->
+		<item name="colorPrimary">@color/colorPrimary</item>
+		<item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+		<item name="colorAccent">@color/colorAccent</item>
+		<item name="android:textAppearance">@style/Sample.Text</item>
+	</style>
+
+	<style name="Sample.Text" parent="TextAppearance.AppCompat">
+		<item name="android:textSize">@dimen/text_size_normal</item>
+		<item name="android:textColor">@color/textPrimary</item>
+	</style>
+
+	<style name="Sample.Text.Light">
+		<item name="android:textColor">@color/greyDark</item>
+	</style>
+
+	<style name="Sample.Text.Title">
+		<item name="android:textSize">@dimen/text_size_large</item>
+		<item name="android:textStyle">bold</item>
+	</style>
+
+	<style name="Sample.Button" parent="Widget.MaterialComponents.Button">
+		<item name="android:textAppearance">@style/Sample.Text</item>
+		<item name="android:textAllCaps">true</item>
+		<item name="android:textColor">@color/white</item>
+		<item name="iconTint">@color/white</item>
+		<item name="iconPadding">@dimen/spacing_medium</item>
+		<item name="backgroundTint">@color/selector_default_button_color</item>
+		<item name="paddingStart">@dimen/spacing_medium</item>
+		<item name="paddingEnd">@dimen/spacing_medium</item>
+		<item name="android:paddingTop">@dimen/spacing_medium</item>
+		<item name="android:paddingBottom">@dimen/spacing_medium</item>
+	</style>
+
+	<style name="Sample.Button.Requirements">
+		<item name="icon">@drawable/selector_requirements_button_icon</item>
+		<item name="iconTint">@color/selector_requirements_button_icon_color</item>
+		<item name="backgroundTint">@color/selector_requirements_button_color</item>
+		<item name="android:textColor">@color/selector_requirements_text_color</item>
+	</style>
+
+	<style name="Sample.Button.Tracking">
+		<item name="backgroundTint">@color/selector_tracking_button_color</item>
+		<item name="strokeColor">@color/red</item>
+		<item name="strokeWidth">@dimen/button_outline_stroke</item>
+		<item name="android:textColor">@color/selector_tracking_text_color</item>
+	</style>
+
+	<style name="Sample.BottomNavigationView" parent="Widget.MaterialComponents.BottomNavigationView">
+		<item name="background">@color/white</item>
+		<item name="itemIconTint">@color/selector_bottom_navigation_item_color</item>
+		<item name="itemTextColor">@color/selector_bottom_navigation_item_color</item>
+	</style>
+
+</resources>

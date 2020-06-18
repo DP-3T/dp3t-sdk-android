@@ -1,0 +1,75 @@
+<!--
+  ~ Copyright (c) 2020 Ubique Innovation AG <https://www.ubique.ch>
+  ~
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+  ~
+  ~ SPDX-License-Identifier: MPL-2.0
+  -->
+
+<resources>
+	<string name="app_name">Calibration App</string>
+	<string name="dp3t_sdk_service_notification_channel">@string/app_name</string>
+	<string name="dp3t_sdk_service_notification_title">@string/app_name</string>
+	<string name="dp3t_sdk_service_notification_text">The app is looking for other people nearby…</string>
+	<string name="push_exposed_title">push_exposed_title</string>
+	<string name="push_exposed_text">push_exposed_text</string>
+	<string name="req_location_permission_ungranted">give location permission</string>
+	<string name="req_location_permission_granted">location permission granted</string>
+	<string name="req_bluetooth_inactive">activate bluetooth</string>
+	<string name="req_bluetooth_active">bluetooth activated</string>
+	<string name="req_battery_active">"deactivate battery optimization"</string>
+	<string name="req_battery_deactivated">"battery optimization deactivated"</string>
+	<string name="button_sync">force backend sync</string>
+	<string name="button_export_db">export database</string>
+	<string name="button_upload_db">upload database</string>
+	<string name="button_tracking_start">start tracking</string>
+	<string name="button_tracking_stop">stop tracking</string>
+	<string name="button_advertising_start">start advertising</string>
+	<string name="button_receiving_start">start receiving</string>
+	<string name="button_report_infected">report infected</string>
+	<string name="button_clear_data">clear data</string>
+	<string name="status_tracking_active">TRACKING</string>
+	<string name="status_tracking_inactive">STOPPED</string>
+	<string name="status_advertising">advertising: %1$b</string>
+	<string name="status_receiving">receiving: %1$b</string>
+	<string name="status_last_synced">last synced: %1$s</string>
+	<string name="status_number_handshakes">handshakes: %1$d</string>
+	<string name="status_number_contacts">contacts: %1$d</string>
+	<string name="status_been_exposed">has been exposed: %1$b</string>
+	<string name="status_self_infected">self infected: %1$b</string>
+	<string name="dialog_clear_data_title">Clear local data</string>
+	<string name="dialog_confirm_message">Do you really want to continue?</string>
+	<string name="dialog_confirm_positive_button">Continue</string>
+	<string name="dialog_confirm_negative_button">Cancel</string>
+	<string name="dialog_title_success">Success</string>
+	<string name="dialog_title_error">Error</string>
+	<string name="dialog_exposed_title">Report exposed</string>
+	<string name="dialog_exposed_input_message">Please select the determined infection date and enter your authentication code:</string>
+	<string name="dialog_exposed_code_hint">Authentication Code</string>
+	<string name="dialog_input_code_error">Invalid code! Please check again.</string>
+	<string name="dialog_input_date_error">Invalid date! Please check again.</string>
+	<string name="dialog_message_request_success">Request was sent successfully</string>
+	<string name="dialog_button_ok">OK</string>
+	<string name="tab_controls">controls</string>
+	<string name="tab_parameters">parameters</string>
+	<string name="tab_handshakes">handshakes</string>
+	<string name="tab_logs">logs</string>
+	<string name="raw_handshakes">raw handshakes</string>
+	<string name="merged_handshakes">merged handshakes</string>
+	<string name="deanonymization_test_mode">Upload keys for debugging</string>
+	<string name="parameter_scan_interval_title">Scan interval</string>
+	<string name="parameter_scan_duration_title">Scan duration</string>
+	<string name="parameter_info_unit_seconds">in seconds</string>
+	<string name="parameter_advertisement_power_level">Power level of advertising</string>
+	<string name="logs_filter_tags">tag filter (comma separated)</string>
+	<string name="parameter_advertisement_mode">Advertising mode</string>
+	<string name="parameter_scan_mode">Scan Mode</string>
+	<string name="parameter_use_scan_response">Use scan response (active scanning)</string>
+	<string name="version_info">SDK Version Info</string>
+	<string name="bucket_thresholds">Attenuation Bucket Thresholds</string>
+	<string name="button_report_fake">report fake</string>
+	<string name="req_gaen_unavailabe">EN not available</string>
+	<string name="req_gaen_availabe">EN available</string>
+</resources>

@@ -1,0 +1,2 @@
+rootProject.name = 'DP3T SDK'
+include ':sdk'

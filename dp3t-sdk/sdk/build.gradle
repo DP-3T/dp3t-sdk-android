@@ -1,0 +1,142 @@
+/*
+ * Copyright (c) 2020 Ubique Innovation AG <https://www.ubique.ch>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
+plugins {
+	id 'com.android.library'
+	id 'maven-publish'
+	id 'com.jfrog.bintray'
+	id "org.sonarqube" version "2.8"
+}
+
+android {
+	compileSdkVersion 29
+
+	defaultConfig {
+		minSdkVersion 23
+		targetSdkVersion 29
+		versionCode 100
+		versionName "1.0.0"
+		testInstrumentationRunnerArgument 'androidx.benchmark.suppressErrors', 'EMULATOR,LOW-BATTERY,ACTIVITY-MISSING,DEBUGGABLE,UNLOCKED,UNSUSTAINED-ACTIVITY-MISSING'
+		testInstrumentationRunner "androidx.benchmark.junit4.AndroidBenchmarkRunner"
+
+		consumerProguardFiles 'consumer-rules.pro'
+
+		buildConfigField "long", "BUILD_TIME", System.currentTimeMillis() + "L"
+	}
+
+	defaultPublishConfig "productionRelease"
+
+	flavorDimensions "version"
+
+	productFlavors {
+		calibration {
+		}
+		production {
+		}
+	}
+
+	buildTypes {
+		release {
+			minifyEnabled false
+		}
+	}
+
+	compileOptions {
+		sourceCompatibility = 1.8
+		targetCompatibility = 1.8
+	}
+}
+
+task androidSourcesJar(type: Jar) {
+	archiveClassifier = 'sources'
+	from android.sourceSets.main.java.srcDirs
+}
+afterEvaluate {
+	publishing {
+		publications {
+			"sdkRelease"(MavenPublication) {
+				from components.productionRelease
+				groupId 'org.dpppt'
+				artifactId 'dp3t-sdk-android'
+				version android.defaultConfig.versionName
+				artifact androidSourcesJar
+			}
+			"sdkCalibration"(MavenPublication) {
+				from components.calibrationRelease
+				groupId 'org.dpppt'
+				artifactId 'dp3t-sdk-android'
+				version android.defaultConfig.versionName + "-calibration"
+				artifact androidSourcesJar
+			}
+		}
+	}
+}
+
+ext.readProperty = { paramName ->
+	if (project.hasProperty(paramName)) {
+		return project.getProperties().get(paramName)
+	} else {
+		Properties properties = new Properties()
+		if (project.rootProject.file('local.properties').exists()) {
+			properties.load(project.rootProject.file('local.properties').newDataInputStream())
+		}
+		return properties.getProperty(paramName)
+	}
+}
+
+bintray {
+	user = readProperty('bintrayUser')
+	key = readProperty('bintrayApikey')
+	publications = ['sdkRelease', 'sdkCalibration']
+	publish = true
+	pkg {
+		repo = 'dp3t-sdk-android'
+		name = 'dp3t-sdk-android'
+		userOrg = 'dp3t'
+		licenses = ['MPL-2.0']
+	}
+}
+
+sonarqube {
+	properties {
+		property "sonar.projectKey", "DP-3T_dp3t-sdk-android"
+		property "sonar.organization", "dp-3t"
+		property "sonar.host.url", "https://sonarcloud.io"
+		property "sonar.projectName", "dp3t-sdk-android"
+	}
+}
+
+dependencies {
+	implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+
+	implementation 'androidx.core:core:1.2.0'
+	implementation 'androidx.security:security-crypto:1.0.0-rc01'
+	implementation 'androidx.work:work-runtime:2.3.4'
+
+	implementation 'com.squareup.retrofit2:retrofit:2.8.1'
+	implementation 'com.squareup.retrofit2:converter-gson:2.8.1'
+
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.1'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.1'
+	runtimeOnly('io.jsonwebtoken:jjwt-orgjson:0.11.1') {
+		exclude group: 'org.json', module: 'json'
+	}
+	implementation 'org.bouncycastle:bcprov-jdk15on:1.65'
+
+	implementation 'com.google.android.gms:play-services-tasks:17.0.2'
+	implementation 'com.google.android.gms:play-services-base:17.2.1'
+
+	testImplementation 'junit:junit:4.12'
+
+	androidTestImplementation 'androidx.benchmark:benchmark-junit4:1.0.0'
+	androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+	androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+	androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.14.7'
+}

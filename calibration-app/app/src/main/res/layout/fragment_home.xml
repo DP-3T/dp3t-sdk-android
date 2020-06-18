@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright (c) 2020 Ubique Innovation AG <https://www.ubique.ch>
+  ~
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+  ~
+  ~ SPDX-License-Identifier: MPL-2.0
+  -->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:focusableInTouchMode="true"
+		android:gravity="center_horizontal"
+		android:orientation="vertical"
+		android:paddingTop="@dimen/spacing_large"
+		android:paddingBottom="@dimen/spacing_large">
+
+		<Button
+			android:id="@+id/home_button_gaen"
+			style="@style/Sample.Button.Requirements"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="@dimen/spacing_medium"
+			tools:text="@string/req_gaen_unavailabe" />
+
+		<Button
+			android:id="@+id/home_button_bluetooth"
+			style="@style/Sample.Button.Requirements"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="@dimen/spacing_medium"
+			tools:text="@string/req_bluetooth_inactive" />
+
+		<Button
+			android:id="@+id/home_button_battery_optimization"
+			style="@style/Sample.Button.Requirements"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="@dimen/spacing_large"
+			tools:text="@string/req_battery_active" />
+
+		<TextView
+			android:id="@+id/home_status_text"
+			style="@style/Sample.Text"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="@dimen/spacing_huge"
+			android:background="@color/greyLight"
+			android:gravity="center"
+			android:padding="@dimen/spacing_large"
+			tools:text="This textview displays the status of the STAR SDK on one or multiple lines." />
+
+		<Button
+			android:id="@+id/home_button_start_stop_tracking"
+			style="@style/Sample.Button.Tracking"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/button_tracking_start" />
+
+		<Button
+			android:id="@+id/home_button_sync"
+			style="@style/Sample.Button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="@dimen/spacing_large"
+			android:text="@string/button_sync"
+			app:backgroundTint="@color/blue"
+			app:icon="@drawable/ic_refresh" />
+
+		<Button
+			android:id="@+id/home_button_clear_data"
+			style="@style/Sample.Button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/button_clear_data" />
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content">
+
+			<FrameLayout
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_margin="@dimen/spacing_large"
+				android:layout_weight="1">
+
+				<Button
+					android:id="@+id/home_button_export_db"
+					style="@style/Sample.Button"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:text="@string/button_export_db" />
+
+				<ProgressBar
+					android:id="@+id/home_loading_view_export_db"
+					android:layout_width="@dimen/loading_size_small"
+					android:layout_height="@dimen/loading_size_small"
+					android:layout_gravity="center"
+					android:visibility="gone" />
+
+			</FrameLayout>
+
+			<FrameLayout
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_margin="@dimen/spacing_large"
+				android:layout_weight="1">
+
+				<Button
+					android:id="@+id/home_button_upload_db"
+					style="@style/Sample.Button"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/button_upload_db" />
+
+				<ProgressBar
+					android:id="@+id/home_loading_view_upload_db"
+					android:layout_width="@dimen/loading_size_small"
+					android:layout_height="@dimen/loading_size_small"
+					android:layout_gravity="center"
+					android:visibility="gone" />
+
+			</FrameLayout>
+		</LinearLayout>
+
+		<LinearLayout
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content">
+
+			<FrameLayout
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginRight="10dp">
+
+				<Button
+					android:id="@+id/home_button_report_infected"
+					style="@style/Sample.Button"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/button_report_infected" />
+
+				<ProgressBar
+					android:id="@+id/home_loading_view_exposed"
+					android:layout_width="@dimen/loading_size_small"
+					android:layout_height="@dimen/loading_size_small"
+					android:layout_gravity="center"
+					android:visibility="gone" />
+			</FrameLayout>
+
+			<Button
+				android:id="@+id/home_button_report_fake"
+				style="@style/Sample.Button"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="10dp"
+				android:text="@string/button_report_fake" />
+		</LinearLayout>
+
+		<EditText
+			android:id="@+id/deanonymization_device_id"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="50dp"
+			android:hint="Debug device name"
+			android:maxLines="1"
+			android:textSize="40dp" />
+
+		<Button
+			android:id="@+id/deanonymization_key_upload_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/deanonymization_test_mode" />
+
+	</LinearLayout>
+</ScrollView>
