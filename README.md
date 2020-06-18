@@ -137,7 +137,7 @@ getContext().registerReceiver(broadcastReceiver, DP3T.getUpdateIntentFilter());
 
 ### Report user infected
 ```java
-DP3T.sendIAmInfected(getContext(), null, new CallbackListener<Void>() {
+DP3T.sendIAmInfected(activity, onsetDate, exposeeAuthMethod, new ResponseCallback<Void> callback){
 				@Override
 				public void onSuccess(Void response) {
 				}
