@@ -160,6 +160,10 @@ public class GoogleExposureClient {
 		return exposureConfiguration;
 	}
 
+	public void setExposureConfiguration(ExposureConfiguration exposureConfiguration) {
+	    this.exposureConfiguration = exposureConfiguration;
+	}
+
 	public void provideDiagnosisKeys(List<File> keys, String token) throws Exception {
 		if (keys == null || keys.isEmpty()) {
 			return;

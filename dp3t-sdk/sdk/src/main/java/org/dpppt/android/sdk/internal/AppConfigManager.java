@@ -12,6 +12,8 @@ package org.dpppt.android.sdk.internal;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.google.android.gms.nearby.exposurenotification.ExposureConfiguration;
+
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
@@ -159,6 +161,10 @@ public class AppConfigManager {
 	public void setAttenuationThresholdMedium(int threshold) {
 		sharedPrefs.edit().putInt(PREF_ATTENUATION_THRESHOLD_MEDIUM, threshold).apply();
 		googleExposureClient.setParams(getAttenuationThresholdLow(), threshold);
+	}
+
+	public void setExposureConfiguration(ExposureConfiguration exposureConfiguration) {
+		googleExposureClient.setExposureConfiguration(exposureConfiguration);
 	}
 
 	public float getAttenuationFactorLow() {
