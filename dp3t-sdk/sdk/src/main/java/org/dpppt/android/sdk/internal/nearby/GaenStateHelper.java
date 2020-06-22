@@ -75,6 +75,10 @@ public class GaenStateHelper {
 	}
 
 	public static void checkGaenEnabled(Context context, Consumer<Boolean> callback) {
+		if (GaenStateCache.getGaenAvailability() == GaenAvailability.UPDATE_REQUIRED) {
+			publishGaenEnabled(context, callback, false, null);
+			return;
+		}
 		GoogleExposureClient.getInstance(context).isEnabled()
 				.addOnSuccessListener(enabled -> {
 					Logger.d(TAG, "checkGaenEnabled: enabled=" + enabled);
