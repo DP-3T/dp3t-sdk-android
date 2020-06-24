@@ -29,7 +29,12 @@ To check for exposure on a given day (we check the past 10 days) we need to call
 TEKs to check for exposure against must be provided in a [special file format](https://developers.google.com/android/exposure-notifications/exposure-key-file-format). The API would allow to provide multiple files, but we always provide all available keys in a single file.
 
 #### Exposure Configuration
-The exposure configuration defines the configuration for the Google scoring of exposures. In our case we ignore most of the scoring methods and only provide the thresholds for the duration at attenuation buckets. This allows us to group the duration of a contact with another device into three buckets regarding the messured attenuation values that we then use to detect if the contact was long enought and close ennough.
+The exposure configuration defines the configuration for the Google scoring of exposures. In our case we ignore most of the scoring methods and only provide the thresholds for the duration at attenuation buckets. The thresholds for the attenuation buckets are loaded from our [config server](https://github.com/DP-3T/dp3t-config-backend-ch/blob/master/dpppt-config-backend/src/main/java/org/dpppt/switzerland/backend/sdk/config/ws/model/GAENSDKConfig.java). This allows us to group the duration of a contact with another device into three buckets regarding the measured attenuation values that we then use to detect if the contact was long enough and close ennough.
+To detect an exposure the following formula is used to compute the exposure duration:
+```
+durationAttenuationLow * factorLow + durationAtttenuationMedium * factorMedium
+```
+If this duration is at least as much as defined in the triggerThreshold a notification is triggered for that day.
 
 #### Token
 Providing a token allows us to update an exposure check executed previously and only providing additional new TEKs in the file. The previously provided TEKs for the same token are stored internally by the framework and the new exposure result is the total exposure with all provided TEKs in the current and previous calls. When we download TEKs from our backend we receive a token (timestamp) that we can use for the next sync to only download the newly added TEKs. This reduces traffic between the app and the backend.
