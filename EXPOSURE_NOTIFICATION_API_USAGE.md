@@ -21,7 +21,7 @@ The TEK of the current day is never returned by getTemporaryExposureKeyHistory()
 
 ## Detecting Exposure
 
-For a contact to be counted as a possible exposure it must be longer than e certain number of minutes on a certain day. The current implementation of the EN-framework does not expose this information. Our way to overcome this limitation is to pass the published keys for each day individually to the framework.
+For a contact to be counted as a possible exposure it must be longer than a certain number of minutes on a certain day. The current implementation of the EN-framework does not expose this information. Our way to overcome this limitation is to pass the published keys for each day individually to the framework.
 
 To check for exposure on a given day (we check the past 10 days) we need to call exposureNotificationClient.provideDiagnosisKeys(). This method has three parameters:
 
