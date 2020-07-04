@@ -12,6 +12,7 @@ package org.dpppt.android.calibration.util;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.os.Build;
 import android.os.PowerManager;
 
 public class RequirementsUtil {
@@ -25,8 +26,13 @@ public class RequirementsUtil {
 	}
 
 	public static boolean isBatteryOptimizationDeactivated(Context context) {
-		PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-		return powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+			return powerManager.isIgnoringBatteryOptimizations(context.getPackageName());
+		} else {
+			// this phone is too old to turn them off, so we lie and say we did.
+			return true;
+		}
 	}
 
 }
