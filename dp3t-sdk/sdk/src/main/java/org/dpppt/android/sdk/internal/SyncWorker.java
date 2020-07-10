@@ -48,8 +48,8 @@ import org.dpppt.android.sdk.internal.nearby.ApiExceptionUtil;
 import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
 import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
-import org.dpppt.android.sdk.internal.storage.models.PendingKey;
 import org.dpppt.android.sdk.internal.storage.PendingKeyUploadStorage;
+import org.dpppt.android.sdk.internal.storage.models.PendingKey;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.util.DateUtil;
@@ -347,7 +347,7 @@ public class SyncWorker extends Worker {
 		}
 
 		private boolean isDelayedStatusCodeError(StatusCodeException e) {
-			return e.getCode() == 502 || e.getCode() == 503;
+			return e.getCode() == 502 || e.getCode() == 503 || e.getCode() == 504;
 		}
 
 		private void uploadPendingKeys(Context context) {
