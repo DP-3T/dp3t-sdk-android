@@ -7,7 +7,7 @@
  *
  * SPDX-License-Identifier: MPL-2.0
  */
-package org.dpppt.android.sdk.internal;
+package org.dpppt.android.sdk.internal.storage;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -15,13 +15,20 @@ import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKeys;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
+import com.google.gson.reflect.TypeToken;
+
+import org.dpppt.android.sdk.internal.storage.models.PendingKey;
 import org.dpppt.android.sdk.internal.util.Json;
 
 public class PendingKeyUploadStorage {
+
+	private static final Type PENDINGKEY_LIST_TYPE = new TypeToken<LinkedList<PendingKey>>() { }.getType();
 
 	private static final String PREF_KEY_PENDING_KEYS = "pendingKeys";
 
@@ -44,22 +51,22 @@ public class PendingKeyUploadStorage {
 					context,
 					EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
 					EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
-		} catch (GeneralSecurityException | IOException ex) {
-			ex.printStackTrace();
+		} catch (GeneralSecurityException | IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
-	private PendingKeyList getPendingKeys() {
-		return Json.fromJson(esp.getString(PREF_KEY_PENDING_KEYS, "[]"), PendingKeyList.class);
+	private List<PendingKey> getPendingKeys() {
+		return Json.fromJson(esp.getString(PREF_KEY_PENDING_KEYS, "[]"), PENDINGKEY_LIST_TYPE);
 	}
 
-	private void setPendingKeys(PendingKeyList list) {
+	private void setPendingKeys(List<PendingKey> list) {
 		Collections.sort(list, (a, b) -> Integer.compare(a.getRollingStartNumber(), b.getRollingStartNumber()));
-		esp.edit().putString(PREF_KEY_PENDING_KEYS, Json.toJson(list)).apply();
+		esp.edit().putString(PREF_KEY_PENDING_KEYS, Json.toJson(list, PENDINGKEY_LIST_TYPE)).apply();
 	}
 
 	public int peekRollingStartNumber() {
-		PendingKeyList list = getPendingKeys();
+		List<PendingKey> list = getPendingKeys();
 		if (list.size() == 0) {
 			return Integer.MAX_VALUE;
 		} else {
@@ -67,57 +74,25 @@ public class PendingKeyUploadStorage {
 		}
 	}
 
-	public PendingKey popNextPendingKey() {
-		synchronized (this) {
-			PendingKeyList list = getPendingKeys();
-			if (list.size() > 0) {
-				PendingKey poped = list.remove(0);
-				setPendingKeys(list);
-				return poped;
-			} else {
-				return null;
-			}
+	public synchronized PendingKey popNextPendingKey() {
+		List<PendingKey> list = getPendingKeys();
+		if (list.size() > 0) {
+			PendingKey popped = list.remove(0);
+			setPendingKeys(list);
+			return popped;
+		} else {
+			return null;
 		}
 	}
 
-	public void addPendingKey(PendingKey key) {
-		synchronized (this) {
-			PendingKeyList list = getPendingKeys();
-			list.add(key);
-			setPendingKeys(list);
-		}
+	public synchronized void addPendingKey(PendingKey key) {
+		List<PendingKey> list = getPendingKeys();
+		list.add(key);
+		setPendingKeys(list);
 	}
 
 	public void clear() {
 		esp.edit().clear().apply();
 	}
-
-	public static class PendingKey {
-		private int rollingStartNumber;
-		private String token;
-		private int fake;
-
-		public PendingKey(int rollingStartNumber, String token, int fake) {
-			this.rollingStartNumber = rollingStartNumber;
-			this.token = token;
-			this.fake = fake;
-		}
-
-		public int getRollingStartNumber() {
-			return rollingStartNumber;
-		}
-
-		public String getToken() {
-			return token;
-		}
-
-		public boolean isFake() {
-			return fake == 1;
-		}
-
-	}
-
-
-	private static class PendingKeyList extends ArrayList<PendingKey> { }
 
 }
