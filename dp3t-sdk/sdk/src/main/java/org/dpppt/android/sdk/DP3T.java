@@ -384,6 +384,10 @@ public class DP3T {
 		SyncErrorState.getInstance().setNetworkErrorGracePeriod(gracePeriodMillis);
 	}
 
+	public static void setErrorNotificationGracePeriod(long gracePeriodMillis) {
+		SyncErrorState.getInstance().setErrorNotificationGracePeriod(gracePeriodMillis);
+	}
+
 	public static IntentFilter getUpdateIntentFilter() {
 		return new IntentFilter(DP3T.ACTION_UPDATE);
 	}

@@ -96,6 +96,15 @@ public class TracingStatus {
 			}
 			return text;
 		}
+
+		public static ErrorState tryValueOf(String name) {
+			for (ErrorState value : values()) {
+				if (value.name().equals(name)) {
+					return value;
+				}
+			}
+			return null;
+		}
 	}
 
 }

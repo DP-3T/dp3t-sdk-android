@@ -9,6 +9,7 @@
  */
 package org.dpppt.android.sdk.internal;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -21,12 +22,15 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collections;
 
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.R;
 import org.dpppt.android.sdk.TracingStatus;
+import org.dpppt.android.sdk.internal.backend.SyncErrorState;
+import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.internal.storage.ErrorNotificationStorage;
+import org.dpppt.android.sdk.internal.storage.models.ActiveNotificationErrors;
 
 public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 
@@ -40,24 +44,50 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 		if (!DP3T.ACTION_UPDATE_ERRORS.equals(intent.getAction()) || !DP3T.isInitialized())
 			return;
 
-		TracingStatus status = DP3T.getStatus(context);
-
 		NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-		Notification notification = createStatusNotification(context, status);
-		if (notification != null) {
+
+		TracingStatus status = DP3T.getStatus(context);
+		Collection<TracingStatus.ErrorState> errorsForNotification = refreshErrorsForNotification(context, status);
+		if (errorsForNotification == null) {
+			// do nothing
+			Logger.d(TAG, "no notification change");
+		} else if (!errorsForNotification.isEmpty()) {
+			Logger.d(TAG, "show notification");
+			Notification notification = createStatusNotification(context, errorsForNotification);
 			notificationManager.notify(NOTIFICATION_ID, notification);
 		} else {
+			Logger.d(TAG, "dismiss notification");
 			notificationManager.cancel(NOTIFICATION_ID);
 		}
 	}
 
-	private Notification createStatusNotification(Context context, TracingStatus status) {
-		Set<TracingStatus.ErrorState> notificationErrors = new HashSet<>(status.getErrors());
+	private Collection<TracingStatus.ErrorState> refreshErrorsForNotification(Context context, TracingStatus status) {
+		ErrorNotificationStorage storage = ErrorNotificationStorage.getInstance(context);
 
-		if (!status.isTracingEnabled() || notificationErrors.isEmpty()) {
-			return null;
+		if (!status.isTracingEnabled()) {
+			storage.saveActiveErrors(new ActiveNotificationErrors());
+			return Collections.emptySet();
 		}
 
+		ActiveNotificationErrors savedActiveErrors = storage.getSavedActiveErrors();
+
+		long now = System.currentTimeMillis();
+		long newSuppressedUntil = now + SyncErrorState.getInstance().getErrorNotificationGracePeriod();
+		Long nextChange = savedActiveErrors.refreshActiveErrors(status.getErrors(), now, newSuppressedUntil);
+
+		storage.saveActiveErrors(savedActiveErrors);
+
+		if (nextChange == null) {
+			return null;
+		} else if (nextChange > now) {
+			refreshNotificationDelayed(context, nextChange);
+			Logger.d(TAG, "scheduled notification invalidation in " + (nextChange - now) / 1000 + "s");
+		}
+
+		return savedActiveErrors.getUnsuppressedErrors(now);
+	}
+
+	private Notification createStatusNotification(Context context, Collection<TracingStatus.ErrorState> notificationErrors) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			createNotificationChannel(context);
 		}
@@ -98,6 +128,14 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 				new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_DEFAULT);
 		channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
 		notificationManager.createNotificationChannel(channel);
+	}
+
+	private static void refreshNotificationDelayed(Context context, long triggerAtMillis) {
+		Intent broadcast = new Intent(context, TracingErrorsBroadcastReceiver.class)
+				.setAction(DP3T.ACTION_UPDATE_ERRORS);
+		PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, broadcast, PendingIntent.FLAG_UPDATE_CURRENT);
+		AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+		alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
 	}
 
 }
