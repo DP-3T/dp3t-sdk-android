@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -74,6 +75,9 @@ public class MainActivity extends AppCompatActivity {
 		boolean handled = DP3T.onActivityResult(this, requestCode, resultCode, data);
 
 		if (!handled) {
+			for (Fragment fragment : getSupportFragmentManager().getFragments()) {
+				fragment.onActivityResult(requestCode, resultCode, data);
+			}
 			super.onActivityResult(requestCode, resultCode, data);
 		}
 	}

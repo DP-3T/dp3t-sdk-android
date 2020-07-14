@@ -40,7 +40,6 @@ public class AppConfigManager {
 	private static final String PREF_LAST_SYNC_NET_SUCCESS = "lastSyncNetSuccess";
 	private static final String PREF_I_AM_INFECTED = "IAmInfected";
 	private static final String PREF_I_AM_INFECTED_IS_RESETTABLE = "IAmInfectedIsResettable";
-	private static final String PREF_CALIBRATION_TEST_DEVICE_NAME = "calibrationTestDeviceName";
 	private static final String PREF_LAST_LOADED_TIMES = "lastLoadedTimes";
 	private static final String PREF_LAST_SYNC_CALL_TIMES = "lastExposureClientCalls";
 	private static final String PREF_LAST_SUCCESSFUL_SYNC_TIMES = "lastSuccessfulSyncTimes";
@@ -124,14 +123,6 @@ public class AppConfigManager {
 		return new BackendReportRepository(context, appConfig.getReportBaseUrl());
 	}
 
-	public void setCalibrationTestDeviceName(String name) {
-		sharedPrefs.edit().putString(PREF_CALIBRATION_TEST_DEVICE_NAME, name).apply();
-	}
-
-	public String getCalibrationTestDeviceName() {
-		return sharedPrefs.getString(PREF_CALIBRATION_TEST_DEVICE_NAME, null);
-	}
-
 	public void clearPreferences() {
 		sharedPrefs.edit().clear().apply();
 	}
@@ -199,7 +190,8 @@ public class AppConfigManager {
 	}
 
 	public void setLastSuccessfulSyncTimes(HashMap<DayDate, Long> lastSuccessfulSyncTimes) {
-		sharedPrefs.edit().putString(PREF_LAST_SUCCESSFUL_SYNC_TIMES, Json.toJson(convertFromDateMap(lastSuccessfulSyncTimes))).apply();
+		sharedPrefs.edit().putString(PREF_LAST_SUCCESSFUL_SYNC_TIMES, Json.toJson(convertFromDateMap(lastSuccessfulSyncTimes)))
+				.apply();
 	}
 
 	public void setDevHistory(boolean devHistory) {

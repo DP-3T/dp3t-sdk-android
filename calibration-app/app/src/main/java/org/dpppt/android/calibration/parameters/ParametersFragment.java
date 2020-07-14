@@ -10,35 +10,41 @@
 package org.dpppt.android.calibration.parameters;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.AppCompatSeekBar;
 import androidx.fragment.app.Fragment;
 
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
 import org.dpppt.android.calibration.R;
+import org.dpppt.android.calibration.handshakes.BackendCalibrationReportRepository;
 import org.dpppt.android.sdk.BuildConfig;
+import org.dpppt.android.sdk.DP3TCalibrationHelper;
+import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.AppConfigManager;
+import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
+import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
+import org.dpppt.android.sdk.util.DateUtil;
 
 public class ParametersFragment extends Fragment {
 
-	AppConfigManager appConfigManager;
+	private static final int RESOLUTION_REQUEST_CODE = 123;
 
-	AppCompatSeekBar attenuationBucket1Seeekbar;
-	EditText attenuationBucket1Text;
-	AppCompatSeekBar attenuationBucket2Seeekbar;
-	EditText attenuationBucket2Text;
+	AppConfigManager appConfigManager;
+	EditText experimentIdEditText;
+	EditText deviceIdEditText;
 
 	public static ParametersFragment newInstance() {
 		return new ParametersFragment();
@@ -57,73 +63,14 @@ public class ParametersFragment extends Fragment {
 
 		appConfigManager = AppConfigManager.getInstance(getContext());
 
-		attenuationBucket1Seeekbar = view.findViewById(R.id.parameter_seekbar_attenuation_bucket1);
-		attenuationBucket1Text = view.findViewById(R.id.parameter_seekbar_attenuation_bucket1_value);
+		experimentIdEditText = view.findViewById(R.id.experiment_id);
+		deviceIdEditText = view.findViewById(R.id.experiment_device_id);
 
-		attenuationBucket1Seeekbar.setMax(255);
-		attenuationBucket1Seeekbar.setProgress(appConfigManager.getAttenuationThresholdLow());
-		attenuationBucket1Seeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-			@Override
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				setBucket1Value(progress);
-			}
+		Button deanonymizationButton = view.findViewById(R.id.deanonymization_key_upload_button);
+		deanonymizationButton.setOnClickListener(v -> uploadKeys());
 
-			@Override
-			public void onStartTrackingTouch(SeekBar seekBar) { }
-
-			@Override
-			public void onStopTrackingTouch(SeekBar seekBar) { }
-		});
-		attenuationBucket1Text.setText(Integer.toString(appConfigManager.getAttenuationThresholdLow()));
-		attenuationBucket1Text.setOnEditorActionListener((v, actionId, event) -> {
-			if (actionId == EditorInfo.IME_ACTION_DONE) {
-				String input = attenuationBucket1Text.getText().toString();
-				if (input.length() == 0) return true;
-				try {
-					int value = Integer.parseInt(input);
-					attenuationBucket1Seeekbar.setProgress(value);
-					hideKeyboard(v);
-				} catch (NumberFormatException e) {
-					e.printStackTrace();
-				}
-				return true;
-			}
-			return false;
-		});
-
-		attenuationBucket2Seeekbar = view.findViewById(R.id.parameter_seekbar_attenuation_bucket2);
-		attenuationBucket2Text = view.findViewById(R.id.parameter_seekbar_attenuation_bucket2_value);
-
-		attenuationBucket2Seeekbar.setMax(255);
-		attenuationBucket2Seeekbar.setProgress(appConfigManager.getAttenuationThresholdMedium());
-		attenuationBucket2Seeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-			@Override
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				setBucket2Value(progress);
-			}
-
-			@Override
-			public void onStartTrackingTouch(SeekBar seekBar) { }
-
-			@Override
-			public void onStopTrackingTouch(SeekBar seekBar) { }
-		});
-		attenuationBucket2Text.setText(Integer.toString(appConfigManager.getAttenuationThresholdMedium()));
-		attenuationBucket2Text.setOnEditorActionListener((v, actionId, event) -> {
-			if (actionId == EditorInfo.IME_ACTION_DONE) {
-				String input = attenuationBucket2Text.getText().toString();
-				if (input.length() == 0) return true;
-				try {
-					int value = Integer.parseInt(input);
-					attenuationBucket2Seeekbar.setProgress(value);
-					hideKeyboard(v);
-				} catch (NumberFormatException e) {
-					e.printStackTrace();
-				}
-				return true;
-			}
-			return false;
-		});
+		experimentIdEditText.setText(DP3TCalibrationHelper.getInstance(getContext()).getExperimentName());
+		deviceIdEditText.setText(DP3TCalibrationHelper.getInstance(getContext()).getCalibrationTestDeviceName());
 
 		TextView version_info = view.findViewById(R.id.version_info);
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -133,18 +80,45 @@ public class ParametersFragment extends Fragment {
 						BuildConfig.BUILD_TYPE);
 	}
 
-	private void setBucket1Value(int value) {
-		appConfigManager.setAttenuationThresholdLow(value);
-		attenuationBucket1Text.setText(Integer.toString(value));
-		attenuationBucket2Seeekbar.setProgress(Math.max(attenuationBucket2Seeekbar.getProgress(), value + 1));
+	private void uploadKeys() {
+		String experimentId = experimentIdEditText.getText().toString();
+		String deviceId = deviceIdEditText.getText().toString();
+		DP3TCalibrationHelper.getInstance(getContext()).setExperimentName(experimentId);
+		DP3TCalibrationHelper.getInstance(getContext()).setCalibrationTestDeviceName(deviceId);
+		String name = "experiment_" + experimentId + "_" + deviceId;
+		GoogleExposureClient.getInstance(getContext())
+				.getTemporaryExposureKeyHistory(getActivity(), RESOLUTION_REQUEST_CODE, temporaryExposureKeys -> {
+					ProgressDialog progressDialog = new ProgressDialog(getContext());
+					progressDialog.show();
+					GaenRequest exposeeListRequest =
+							new GaenRequest(temporaryExposureKeys, DateUtil.getCurrentRollingStartNumber());
+					new BackendCalibrationReportRepository(requireContext())
+							.addGaenExposee(exposeeListRequest, name,
+									new ResponseCallback<Void>() {
+										@Override
+										public void onSuccess(Void response) {
+											progressDialog.dismiss();
+											Toast.makeText(getContext(), "Uploaded keys!", Toast.LENGTH_LONG).show();
+										}
+
+										@Override
+										public void onError(Throwable throwable) {
+											progressDialog.dismiss();
+											Toast.makeText(getContext(), throwable.getLocalizedMessage(), Toast.LENGTH_LONG)
+													.show();
+										}
+									});
+				}, e -> {
+					Toast.makeText(getContext(), e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+				});
 	}
 
-	private void setBucket2Value(int value) {
-		appConfigManager.setAttenuationThresholdMedium(value);
-		attenuationBucket2Text.setText(Integer.toString(value));
-		attenuationBucket1Seeekbar.setProgress(Math.min(attenuationBucket1Seeekbar.getProgress(), value - 1));
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+		if (requestCode == RESOLUTION_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+			uploadKeys();
+		}
 	}
-
 
 	private void hideKeyboard(View view) {
 		InputMethodManager inputMethodManager = (InputMethodManager) getContext().getSystemService(Activity.INPUT_METHOD_SERVICE);

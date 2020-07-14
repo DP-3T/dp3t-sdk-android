@@ -35,10 +35,16 @@ public class ExposureNotificationBroadcastReceiver extends BroadcastReceiver {
 		if (ExposureNotificationClient.ACTION_EXPOSURE_STATE_UPDATED.equals(action)) {
 			ExposureSummary exposureSummary = intent.getParcelableExtra(ExposureNotificationClient.EXTRA_EXPOSURE_SUMMARY);
 
+			if(exposureSummary==null){
+				Logger.i(TAG, "received update for exposureWindows");
+				return;
+			}
+
 			if (BuildConfig.FLAVOR.equals("calibration")) {
 				Logger.i(TAG, "received update for " + intent.getStringExtra(ExposureNotificationClient.EXTRA_TOKEN) + " " +
 						exposureSummary.toString());
 			}
+
 
 			if (isExposureLimitReached(context, exposureSummary)) {
 				Logger.d(TAG, "exposure limit reached");

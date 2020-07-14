@@ -197,6 +197,36 @@ public class GoogleExposureClient {
 		return exposureNotificationClient.getExposureSummary(token);
 	}
 
+	public List<ExposureWindow> getExposureWindows() throws Exception {
+		final Object syncObject = new Object();
+		Object[] results = new Object[] { null };
+
+		synchronized (syncObject) {
+			exposureNotificationClient.getExposureWindows(ExposureNotificationClient.TOKEN_A)
+					.addOnSuccessListener(list -> {
+						results[0] = list;
+						synchronized (syncObject) {
+							syncObject.notifyAll();
+						}
+					})
+					.addOnFailureListener(e -> {
+						results[0] = e;
+						synchronized (syncObject) {
+							syncObject.notifyAll();
+						}
+					});
+
+			syncObject.wait();
+		}
+		if (results[0] instanceof Exception) {
+			throw (Exception) results[0];
+		} else if (results[0] instanceof List) {
+			return (List<ExposureWindow>) results[0];
+		} else {
+			throw new IllegalStateException("either exception or result must be set");
+		}
+	}
+
 	public Task<List<ExposureInformation>> getExposureInformation(String token) {
 		return exposureNotificationClient.getExposureInformation(token);
 	}

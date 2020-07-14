@@ -164,20 +164,5 @@
 				android:text="@string/button_report_fake" />
 		</LinearLayout>
 
-		<EditText
-			android:id="@+id/deanonymization_device_id"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginTop="50dp"
-			android:hint="Debug device name"
-			android:maxLines="1"
-			android:textSize="40dp" />
-
-		<Button
-			android:id="@+id/deanonymization_key_upload_button"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:text="@string/deanonymization_test_mode" />
-
 	</LinearLayout>
 </ScrollView>

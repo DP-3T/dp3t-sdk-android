@@ -31,7 +31,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -49,7 +48,6 @@ import java.util.Date;
 
 import org.dpppt.android.calibration.MainApplication;
 import org.dpppt.android.calibration.R;
-import org.dpppt.android.calibration.handshakes.BackendCalibrationReportRepository;
 import org.dpppt.android.calibration.util.DialogUtil;
 import org.dpppt.android.calibration.util.RequirementsUtil;
 import org.dpppt.android.sdk.DP3T;
@@ -58,12 +56,8 @@ import org.dpppt.android.sdk.GaenAvailability;
 import org.dpppt.android.sdk.InfectionStatus;
 import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.backend.ResponseCallback;
-import org.dpppt.android.sdk.internal.AppConfigManager;
-import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.export.FileUploadRepository;
-import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
-import org.dpppt.android.sdk.util.DateUtil;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -198,14 +192,11 @@ public class ControlsFragment extends Fragment {
 			setExportDbLoadingViewVisible(true);
 		});
 
-		EditText deanonymizationDeviceId = view.findViewById(R.id.deanonymization_device_id);
 		Button uploadDB = view.findViewById(R.id.home_button_upload_db);
 		uploadDB.setOnClickListener(v -> {
-			String deviceId = deanonymizationDeviceId.getText().toString();
-			DP3TCalibrationHelper.setCalibrationTestDeviceName(getContext(), deviceId);
 			setUploadDbLoadingViewVisible(true);
 			new FileUploadRepository()
-					.uploadDatabase(requireContext(), AppConfigManager.getInstance(getContext()).getCalibrationTestDeviceName(),
+					.uploadDatabase(requireContext(), DP3TCalibrationHelper.getInstance(getContext()).getCalibrationTestDeviceName(),
 							new Callback<Void>() {
 								@Override
 								public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
@@ -221,34 +212,6 @@ public class ControlsFragment extends Fragment {
 								}
 							});
 		});
-
-		Button deanonymizationButton = view.findViewById(R.id.deanonymization_key_upload_button);
-		deanonymizationButton.setOnClickListener(v -> {
-			String deviceId = deanonymizationDeviceId.getText().toString();
-			DP3TCalibrationHelper.setCalibrationTestDeviceName(getContext(), deviceId);
-			GoogleExposureClient.getInstance(getContext())
-					.getTemporaryExposureKeyHistory(getActivity(), 123, temporaryExposureKeys -> {
-						GaenRequest exposeeListRequest =
-								new GaenRequest(temporaryExposureKeys, DateUtil.getCurrentRollingStartNumber());
-						new BackendCalibrationReportRepository(requireContext())
-								.addGaenExposee(exposeeListRequest, deviceId, new ResponseCallback<Void>() {
-									@Override
-									public void onSuccess(Void response) {
-										Toast.makeText(getContext(), "Uploaded keys!", Toast.LENGTH_LONG).show();
-									}
-
-									@Override
-									public void onError(Throwable throwable) {
-										Toast.makeText(getContext(), throwable.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-									}
-								});
-					}, e -> {
-						Toast.makeText(getContext(), e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-					});
-		});
-		if (DP3TCalibrationHelper.getCalibrationTestDeviceName(getContext()) != null) {
-			deanonymizationDeviceId.setText(DP3TCalibrationHelper.getCalibrationTestDeviceName(getContext()));
-		}
 	}
 
 	private void checkPermissionRequirements() {
@@ -346,9 +309,6 @@ public class ControlsFragment extends Fragment {
 				v -> {
 					DP3T.sendFakeInfectedRequest(getContext(), null);
 				});
-
-		EditText deanonymizationDeviceId = view.findViewById(R.id.deanonymization_device_id);
-		deanonymizationDeviceId.setText(DP3TCalibrationHelper.getCalibrationTestDeviceName(getContext()));
 	}
 
 	private SpannableString formatStatusString(TracingStatus status) {
@@ -427,4 +387,5 @@ public class ControlsFragment extends Fragment {
 			view.findViewById(R.id.home_button_upload_db).setVisibility(visible ? View.INVISIBLE : View.VISIBLE);
 		}
 	}
+
 }
