@@ -243,9 +243,11 @@ public class SyncWorker extends Worker {
 							String token = dateToLoad.formatAsString();
 							Logger.d(TAG,
 									"provideDiagnosisKeys for " + dateToLoad.formatAsString() + " with size " + file.length());
+							lastSyncCallTimes.put(dateToLoad, currentTime);
 							googleExposureClient.provideDiagnosisKeys(fileList, token);
+						}else{
+							lastSyncCallTimes.put(dateToLoad, currentTime);
 						}
-						lastSyncCallTimes.put(dateToLoad, currentTime);
 						lastLoadedTimes.put(dateToLoad, Long.parseLong(result.headers().get("x-published-until")));
 						numSuccesses++;
 					} catch (Exception e) {
