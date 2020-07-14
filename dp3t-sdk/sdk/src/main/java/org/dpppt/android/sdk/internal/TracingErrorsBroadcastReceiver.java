@@ -23,10 +23,12 @@ import androidx.core.app.NotificationCompat;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
 
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.R;
 import org.dpppt.android.sdk.TracingStatus;
+import org.dpppt.android.sdk.TracingStatus.ErrorState;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.storage.ErrorNotificationStorage;
@@ -47,7 +49,7 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 		NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
 		TracingStatus status = DP3T.getStatus(context);
-		Collection<TracingStatus.ErrorState> errorsForNotification = refreshErrorsForNotification(context, status);
+		Collection<ErrorState> errorsForNotification = refreshErrorsForNotification(context, status);
 		if (errorsForNotification == null) {
 			// do nothing
 			Logger.d(TAG, "no notification change");
@@ -61,7 +63,7 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 		}
 	}
 
-	private Collection<TracingStatus.ErrorState> refreshErrorsForNotification(Context context, TracingStatus status) {
+	private Collection<ErrorState> refreshErrorsForNotification(Context context, TracingStatus status) {
 		ErrorNotificationStorage storage = ErrorNotificationStorage.getInstance(context);
 
 		if (!status.isTracingEnabled()) {
@@ -73,21 +75,26 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 
 		long now = System.currentTimeMillis();
 		long newSuppressedUntil = now + SyncErrorState.getInstance().getErrorNotificationGracePeriod();
-		Long nextChange = savedActiveErrors.refreshActiveErrors(status.getErrors(), now, newSuppressedUntil);
-
-		storage.saveActiveErrors(savedActiveErrors);
-
-		if (nextChange == null) {
-			return null;
-		} else if (nextChange > now) {
+		long nextChange = savedActiveErrors.refreshActiveErrors(status.getErrors(), now, newSuppressedUntil);
+		if (nextChange > now) {
 			refreshNotificationDelayed(context, nextChange);
 			Logger.d(TAG, "scheduled notification invalidation in " + (nextChange - now) / 1000 + "s");
 		}
 
-		return savedActiveErrors.getUnsuppressedErrors(now);
+		storage.saveActiveErrors(savedActiveErrors);
+		Set<ErrorState> unsuppressedErrors = savedActiveErrors.getUnsuppressedErrors(now);
+
+		Set<ErrorState> lastShownErrors = storage.getLastShownErrors();
+		if (unsuppressedErrors.equals(lastShownErrors)) {
+			return null;
+		}
+
+		storage.saveLastShownErrors(unsuppressedErrors);
+
+		return unsuppressedErrors;
 	}
 
-	private Notification createStatusNotification(Context context, Collection<TracingStatus.ErrorState> notificationErrors) {
+	private Notification createStatusNotification(Context context, Collection<ErrorState> notificationErrors) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			createNotificationChannel(context);
 		}
@@ -112,9 +119,9 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 		return builder.build();
 	}
 
-	private String getNotificationErrorText(Context context, Collection<TracingStatus.ErrorState> errors) {
+	private String getNotificationErrorText(Context context, Collection<ErrorState> errors) {
 		StringBuilder sb = new StringBuilder(context.getString(R.string.dp3t_sdk_service_notification_errors));
-		for (TracingStatus.ErrorState error : errors) {
+		for (ErrorState error : errors) {
 			sb.append("\n").append(error.getErrorString(context));
 		}
 		return sb.toString();

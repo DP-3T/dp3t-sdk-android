@@ -10,6 +10,7 @@
 package org.dpppt.android.sdk;
 
 import android.content.Context;
+import androidx.annotation.Keep;
 import androidx.annotation.StringRes;
 
 import java.util.Collection;
@@ -54,6 +55,7 @@ public class TracingStatus {
 		return errors;
 	}
 
+	@Keep
 	public enum ErrorState {
 		LOCATION_SERVICE_DISABLED(R.string.dp3t_sdk_service_notification_error_location_service),
 		BLE_DISABLED(R.string.dp3t_sdk_service_notification_error_bluetooth_disabled),
