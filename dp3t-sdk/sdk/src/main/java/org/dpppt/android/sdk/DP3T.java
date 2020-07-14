@@ -380,8 +380,8 @@ public class DP3T {
 		return userAgent;
 	}
 
-	public static void setNetworkErrorGracePeriod(long gracePeriodMillis) {
-		SyncErrorState.getInstance().setNetworkErrorGracePeriod(gracePeriodMillis);
+	public static void setSyncErrorGracePeriod(long gracePeriodMillis) {
+		SyncErrorState.getInstance().setSyncErrorGracePeriod(gracePeriodMillis);
 	}
 
 	public static void setErrorNotificationGracePeriod(long gracePeriodMillis) {

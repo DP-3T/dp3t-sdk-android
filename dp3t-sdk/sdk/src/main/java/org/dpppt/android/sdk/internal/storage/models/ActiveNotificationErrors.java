@@ -5,17 +5,17 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.dpppt.android.sdk.TracingStatus;
+import org.dpppt.android.sdk.TracingStatus.ErrorState;
 
 /**
  * Map: ErrorState key -> suppressed until (unit timestamp, millis)
  */
 public class ActiveNotificationErrors extends HashMap<String, Long> {
 
-	public Set<TracingStatus.ErrorState> getUnsuppressedErrors(long now) {
-		Set<TracingStatus.ErrorState> unsuppressedErrors = new HashSet<>();
+	public Set<ErrorState> getUnsuppressedErrors(long now) {
+		Set<ErrorState> unsuppressedErrors = new HashSet<>();
 		for (String errorKey : getUnsuppressedErrorKeys(now)) {
-			TracingStatus.ErrorState error = TracingStatus.ErrorState.tryValueOf(errorKey);
+			ErrorState error = ErrorState.tryValueOf(errorKey);
 			if (error != null) {
 				unsuppressedErrors.add(error);
 			}
@@ -26,14 +26,15 @@ public class ActiveNotificationErrors extends HashMap<String, Long> {
 	/**
 	 * @return timestamp of next unsuppression event, -1 if no future event.
 	 */
-	public long refreshActiveErrors(Collection<TracingStatus.ErrorState> activeErrors, long now, long suppressNewErrorsUntil) {
+	public long refreshActiveErrors(Collection<ErrorState> activeErrors, long now, long suppressNewErrorsUntil,
+			Collection<ErrorState> unsuppressableErrors) {
 		if (activeErrors.isEmpty()) {
 			clear();
 			return -1;
 		}
 
 		Set<String> activeErrorKeys = new HashSet<>();
-		for (TracingStatus.ErrorState activeError : activeErrors) {
+		for (ErrorState activeError : activeErrors) {
 			activeErrorKeys.add(activeError.name());
 		}
 
@@ -45,9 +46,10 @@ public class ActiveNotificationErrors extends HashMap<String, Long> {
 		}
 
 		// add new errors with suppressNewErrorsUntil
-		for (String errorKey : activeErrorKeys) {
+		for (ErrorState error : activeErrors) {
+			String errorKey = error.name();
 			if (!containsKey(errorKey)) {
-				put(errorKey, suppressNewErrorsUntil);
+				put(errorKey, unsuppressableErrors.contains(error) ? -1 : suppressNewErrorsUntil);
 			}
 		}
 

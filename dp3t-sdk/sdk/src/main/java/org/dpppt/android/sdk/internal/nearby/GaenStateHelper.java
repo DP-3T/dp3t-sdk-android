@@ -75,7 +75,8 @@ public class GaenStateHelper {
 	}
 
 	public static void checkGaenEnabled(Context context, Consumer<Boolean> callback) {
-		if (GaenStateCache.getGaenAvailability() == GaenAvailability.UPDATE_REQUIRED) {
+		if (GaenStateCache.getGaenAvailability() == GaenAvailability.UPDATE_REQUIRED ||
+				GaenStateCache.getGaenAvailability() == GaenAvailability.UNAVAILABLE) {
 			publishGaenEnabled(context, callback, false, null);
 			return;
 		}

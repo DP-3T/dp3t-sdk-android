@@ -75,7 +75,9 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 
 		long now = System.currentTimeMillis();
 		long newSuppressedUntil = now + SyncErrorState.getInstance().getErrorNotificationGracePeriod();
-		long nextChange = savedActiveErrors.refreshActiveErrors(status.getErrors(), now, newSuppressedUntil);
+		// sync errors have already been delayed, so don't suppress them for the notification
+		Collection<ErrorState> unsuppressableErrors = ErrorHelper.getDelayableSyncErrors();
+		long nextChange = savedActiveErrors.refreshActiveErrors(status.getErrors(), now, newSuppressedUntil, unsuppressableErrors);
 		if (nextChange > now) {
 			refreshNotificationDelayed(context, nextChange);
 			Logger.d(TAG, "scheduled notification invalidation in " + (nextChange - now) / 1000 + "s");
