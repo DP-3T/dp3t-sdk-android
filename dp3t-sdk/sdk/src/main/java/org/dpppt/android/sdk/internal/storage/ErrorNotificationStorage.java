@@ -80,4 +80,8 @@ public class ErrorNotificationStorage {
 		esp.edit().putString(PREF_KEY_LAST_SHOWN_ERRORS, Json.toJson(lastShownErrorKeys, LAST_SHOWN_ERRORS_LIST_TYPE)).apply();
 	}
 
+	public void clear() {
+		esp.edit().clear().apply();
+	}
+
 }

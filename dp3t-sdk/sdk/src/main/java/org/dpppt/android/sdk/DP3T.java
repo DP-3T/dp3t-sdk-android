@@ -38,6 +38,7 @@ import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
 import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
+import org.dpppt.android.sdk.internal.storage.ErrorNotificationStorage;
 import org.dpppt.android.sdk.internal.storage.ExposureDayStorage;
 import org.dpppt.android.sdk.internal.storage.models.PendingKey;
 import org.dpppt.android.sdk.internal.storage.PendingKeyUploadStorage;
@@ -414,6 +415,7 @@ public class DP3T {
 		appConfigManager.clearPreferences();
 		ExposureDayStorage.getInstance(context).clear();
 		PendingKeyUploadStorage.getInstance(context).clear();
+		ErrorNotificationStorage.getInstance(context).clear();
 		Logger.clear();
 	}
 
