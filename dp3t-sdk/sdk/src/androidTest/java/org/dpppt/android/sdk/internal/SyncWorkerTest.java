@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.InfectionStatus;
 import org.dpppt.android.sdk.TracingStatus;
+import org.dpppt.android.sdk.internal.backend.ProxyConfig;
 import org.dpppt.android.sdk.internal.logger.LogLevel;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
@@ -55,6 +56,7 @@ public class SyncWorkerTest {
 
 		testGoogleExposureClient = new TestGoogleExposureClient(context);
 		GoogleExposureClient.wrapTestClient(testGoogleExposureClient);
+		ProxyConfig.DISABLE_SYSTEM_PROXY = true;
 
 		server = new MockWebServer();
 		server.start();
