@@ -10,33 +10,24 @@
 package org.dpppt.android.sdk.internal;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteException;
-import android.system.ErrnoException;
-import android.system.OsConstants;
 import androidx.annotation.NonNull;
 import androidx.work.*;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import javax.net.ssl.SSLException;
 
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.nearby.exposurenotification.ExposureNotificationStatusCodes;
 import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 
 import org.dpppt.android.sdk.BuildConfig;
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
-import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.internal.backend.BackendBucketRepository;
-import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.backend.models.GaenKey;
@@ -44,7 +35,6 @@ import org.dpppt.android.sdk.internal.history.HistoryDatabase;
 import org.dpppt.android.sdk.internal.history.HistoryEntry;
 import org.dpppt.android.sdk.internal.history.HistoryEntryType;
 import org.dpppt.android.sdk.internal.logger.Logger;
-import org.dpppt.android.sdk.internal.nearby.ApiExceptionUtil;
 import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
 import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
@@ -118,8 +108,8 @@ public class SyncWorker extends Worker {
 
 	public static class SyncImpl {
 
-		Context context;
-		long currentTime;
+		private final Context context;
+		private final long currentTime;
 
 		public SyncImpl(Context context) {
 			this(context, System.currentTimeMillis());
@@ -148,37 +138,7 @@ public class SyncWorker extends Worker {
 				} catch (Exception e) {
 					Logger.e(TAG, "sync", e);
 					AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(false);
-					ErrorState syncError;
-					if (e instanceof ServerTimeOffsetException) {
-						syncError = ErrorState.SYNC_ERROR_TIMING;
-					} else if (e instanceof SignatureException) {
-						syncError = ErrorState.SYNC_ERROR_SIGNATURE;
-					} else if (e instanceof StatusCodeException) {
-						syncError = ErrorState.SYNC_ERROR_SERVER;
-						syncError.setErrorCode("ASST" + ((StatusCodeException) e).getCode());
-					} else if (e instanceof ApiException) {
-						ApiException apiException = (ApiException) e;
-						int enApiStatusCode = ApiExceptionUtil.getENApiStatusCode(apiException);
-						if (enApiStatusCode == ExposureNotificationStatusCodes.FAILED_DISK_IO) {
-							syncError = ErrorState.SYNC_ERROR_NO_SPACE;
-							syncError.setErrorCode("AGNOSP");
-						} else {
-							syncError = ErrorState.SYNC_ERROR_API_EXCEPTION;
-							syncError.setErrorCode("AGAEN" + apiException.getStatusCode() + "." + enApiStatusCode);
-						}
-					} else if (e instanceof SSLException) {
-						syncError = ErrorState.SYNC_ERROR_SSLTLS;
-					} else {
-						syncError = ErrorState.SYNC_ERROR_NETWORK;
-						syncError.setErrorCode(null);
-						if (e instanceof IOException && e.getCause() instanceof ErrnoException) {
-							int errorNumber = ((ErrnoException) e.getCause()).errno;
-							if (errorNumber == OsConstants.ENOSPC) {
-								syncError = ErrorState.SYNC_ERROR_NO_SPACE;
-								syncError.setErrorCode("AENOSP");
-							}
-						}
-					}
+					ErrorState syncError = ErrorHelper.getSyncErrorFromException(e, true);
 					SyncErrorState.getInstance().setSyncError(syncError);
 					BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 					throw e;
@@ -193,6 +153,7 @@ public class SyncWorker extends Worker {
 			Exception lastException = null;
 			HashMap<DayDate, Long> lastLoadedTimes = appConfigManager.getLastLoadedTimes();
 			HashMap<DayDate, Long> lastSyncCallTimes = appConfigManager.getLastSyncCallTimes();
+			HashMap<DayDate, Long> lastSuccessfulSyncTimes = appConfigManager.getLastSuccessfulSyncTimes();
 
 			BackendBucketRepository backendBucketRepository =
 					new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
@@ -220,7 +181,7 @@ public class SyncWorker extends Worker {
 							" before, set last sync time to 5:59:59 to prevent rate limit issues");
 				}
 
-				if (lastSynCallTime < getLastDesiredSyncTime(dateToLoad)) {
+				if (lastSynCallTime < getLastDesiredSyncTime()) {
 					try {
 						Logger.d(TAG, "loading exposees for " + dateToLoad.formatAsString());
 						Response<ResponseBody> result =
@@ -231,7 +192,7 @@ public class SyncWorker extends Worker {
 									KEYFILE_PREFIX + dateToLoad.formatAsString() + "_" + lastLoadedTimes.get(dateToLoad) + ".zip");
 							try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file))) {
 								byte[] bytesIn = new byte[1024];
-								int read = 0;
+								int read;
 								InputStream bodyStream = result.body().byteStream();
 								while ((read = bodyStream.read(bytesIn)) != -1) {
 									bos.write(bytesIn, 0, read);
@@ -245,18 +206,25 @@ public class SyncWorker extends Worker {
 									"provideDiagnosisKeys for " + dateToLoad.formatAsString() + " with size " + file.length());
 							lastSyncCallTimes.put(dateToLoad, currentTime);
 							googleExposureClient.provideDiagnosisKeys(fileList, token);
-						}else{
+						} else {
 							lastSyncCallTimes.put(dateToLoad, currentTime);
 						}
 						lastLoadedTimes.put(dateToLoad, Long.parseLong(result.headers().get("x-published-until")));
+						lastSuccessfulSyncTimes.put(dateToLoad, currentTime);
 						numSuccesses++;
 					} catch (Exception e) {
 						e.printStackTrace();
-						lastException = e;
-						if (isDelayedSyncError(e)) {
+						if (!lastSuccessfulSyncTimes.containsKey(dateToLoad)) {
+							lastSuccessfulSyncTimes.put(dateToLoad, currentTime);
+						}
+						long lastSuccessfulSyncTime = lastSuccessfulSyncTimes.get(dateToLoad);
+						boolean isDelayWithinGracePeriod =
+								lastSuccessfulSyncTime > currentTime - SyncErrorState.getInstance().getSyncErrorGracePeriod();
+						if (isDelayWithinGracePeriod && ErrorHelper.isDelayableSyncError(e)) {
 							numDelayedErrors++;
 						} else {
 							numInstantErrors++;
+							lastException = e;
 						}
 					}
 				}
@@ -265,16 +233,22 @@ public class SyncWorker extends Worker {
 			}
 
 			DayDate lastDateToKeep = new DayDate(currentTime).subtractDays(10);
-			Iterator<DayDate> dateIterator = lastLoadedTimes.keySet().iterator();
-			while (dateIterator.hasNext()) {
-				if (dateIterator.next().isBefore(lastDateToKeep)) {
-					dateIterator.remove();
+			Iterator<DayDate> lastLoadedTimesIterator = lastLoadedTimes.keySet().iterator();
+			while (lastLoadedTimesIterator.hasNext()) {
+				if (lastLoadedTimesIterator.next().isBefore(lastDateToKeep)) {
+					lastLoadedTimesIterator.remove();
 				}
 			}
-			dateIterator = lastSyncCallTimes.keySet().iterator();
-			while (dateIterator.hasNext()) {
-				if (dateIterator.next().isBefore(lastDateToKeep)) {
-					dateIterator.remove();
+			Iterator<DayDate> lastSyncCallTimesIterator = lastSyncCallTimes.keySet().iterator();
+			while (lastSyncCallTimesIterator.hasNext()) {
+				if (lastSyncCallTimesIterator.next().isBefore(lastDateToKeep)) {
+					lastSyncCallTimesIterator.remove();
+				}
+			}
+			Iterator<DayDate> lastSuccessfulSyncTimesIterator = lastSuccessfulSyncTimes.keySet().iterator();
+			while (lastSuccessfulSyncTimesIterator.hasNext()) {
+				if (lastSuccessfulSyncTimesIterator.next().isBefore(lastDateToKeep)) {
+					lastSuccessfulSyncTimesIterator.remove();
 				}
 			}
 
@@ -282,6 +256,7 @@ public class SyncWorker extends Worker {
 
 			appConfigManager.setLastLoadedTimes(lastLoadedTimes);
 			appConfigManager.setLastSyncCallTimes(lastSyncCallTimes);
+			appConfigManager.setLastSuccessfulSyncTimes(lastSuccessfulSyncTimes);
 
 			if (numInstantErrors > 0 || numDelayedErrors > 0 || numSuccesses > 0) {
 				int base = 'A';
@@ -309,7 +284,7 @@ public class SyncWorker extends Worker {
 			}
 		}
 
-		private long getLastDesiredSyncTime(DayDate dateToLoad) {
+		private long getLastDesiredSyncTime() {
 			if (BuildConfig.FLAVOR.equals("calibration")) {
 				return currentTime - (currentTime % (5 * 60 * 1000L));
 			} else {
@@ -317,7 +292,7 @@ public class SyncWorker extends Worker {
 				cal.setTimeZone(TimeZone.getTimeZone("Europe/Zurich"));
 				cal.setTimeInMillis(currentTime);
 				if (cal.get(Calendar.HOUR_OF_DAY) < 6) {
-					if (new DayDate(currentTime).equals(new DayDate(currentTime - 6 * 60 * 60 * 1000l))) {
+					if (new DayDate(currentTime).equals(new DayDate(currentTime - 6 * 60 * 60 * 1000L))) {
 						//only if it is still the same UTC day like 6h ago we allow a sync before 6am, otherwise we might run into
 						//the ratelimit on the next day because we check before 6am, at 6am and at 6pm
 						cal.add(Calendar.DATE, -1);
@@ -335,21 +310,6 @@ public class SyncWorker extends Worker {
 				cal.set(Calendar.MILLISECOND, 0);
 				return cal.getTimeInMillis();
 			}
-		}
-
-		private boolean isDelayedSyncError(Exception e) {
-			if (e instanceof ServerTimeOffsetException || e instanceof SignatureException ||
-					e instanceof SQLiteException || e instanceof ApiException) {
-				return false;
-			} else if (e instanceof StatusCodeException) {
-				return isDelayedStatusCodeError((StatusCodeException) e);
-			} else {
-				return true;
-			}
-		}
-
-		private boolean isDelayedStatusCodeError(StatusCodeException e) {
-			return e.getCode() == 502 || e.getCode() == 503 || e.getCode() == 504;
 		}
 
 		private void uploadPendingKeys(Context context) {

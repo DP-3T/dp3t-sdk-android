@@ -41,6 +41,10 @@
 			</intent-filter>
 		</receiver>
 
+		<receiver android:name="org.dpppt.android.sdk.internal.TracingErrorsBroadcastReceiver"
+			android:exported="false">
+		</receiver>
+
 	</application>
 
 </manifest>

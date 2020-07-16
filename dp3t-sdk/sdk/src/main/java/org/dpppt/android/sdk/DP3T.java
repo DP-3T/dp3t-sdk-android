@@ -38,6 +38,7 @@ import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
 import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
+import org.dpppt.android.sdk.internal.storage.ErrorNotificationStorage;
 import org.dpppt.android.sdk.internal.storage.ExposureDayStorage;
 import org.dpppt.android.sdk.internal.storage.models.PendingKey;
 import org.dpppt.android.sdk.internal.storage.PendingKeyUploadStorage;
@@ -380,8 +381,12 @@ public class DP3T {
 		return userAgent;
 	}
 
-	public static void setNetworkErrorGracePeriod(long gracePeriodMillis) {
-		SyncErrorState.getInstance().setNetworkErrorGracePeriod(gracePeriodMillis);
+	public static void setSyncErrorGracePeriod(long gracePeriodMillis) {
+		SyncErrorState.getInstance().setSyncErrorGracePeriod(gracePeriodMillis);
+	}
+
+	public static void setErrorNotificationGracePeriod(long gracePeriodMillis) {
+		SyncErrorState.getInstance().setErrorNotificationGracePeriod(gracePeriodMillis);
 	}
 
 	public static IntentFilter getUpdateIntentFilter() {
@@ -410,6 +415,7 @@ public class DP3T {
 		appConfigManager.clearPreferences();
 		ExposureDayStorage.getInstance(context).clear();
 		PendingKeyUploadStorage.getInstance(context).clear();
+		ErrorNotificationStorage.getInstance(context).clear();
 		Logger.clear();
 	}
 

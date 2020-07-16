@@ -16,7 +16,8 @@ public class SyncErrorState {
 	private static SyncErrorState instance;
 
 	private ErrorState syncError = null;
-	private long networkErrorGracePeriod = 24 * 60 * 60 * 1000L;
+	private long syncErrorGracePeriod = 24 * 60 * 60 * 1000L;
+	private long errorNotificationGracePeriod = 5 * 60 * 1000L;
 
 	private SyncErrorState() { }
 
@@ -35,12 +36,20 @@ public class SyncErrorState {
 		return syncError;
 	}
 
-	public void setNetworkErrorGracePeriod(long durationMillis) {
-		this.networkErrorGracePeriod = durationMillis;
+	public void setSyncErrorGracePeriod(long durationMillis) {
+		this.syncErrorGracePeriod = durationMillis;
 	}
 
-	public long getNetworkErrorGracePeriod() {
-		return networkErrorGracePeriod;
+	public long getSyncErrorGracePeriod() {
+		return syncErrorGracePeriod;
+	}
+
+	public void setErrorNotificationGracePeriod(long durationMillis) {
+		this.errorNotificationGracePeriod = durationMillis;
+	}
+
+	public long getErrorNotificationGracePeriod() {
+		return errorNotificationGracePeriod;
 	}
 
 }

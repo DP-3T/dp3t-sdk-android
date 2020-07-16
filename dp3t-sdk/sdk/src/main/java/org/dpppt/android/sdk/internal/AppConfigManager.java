@@ -43,6 +43,7 @@ public class AppConfigManager {
 	private static final String PREF_CALIBRATION_TEST_DEVICE_NAME = "calibrationTestDeviceName";
 	private static final String PREF_LAST_LOADED_TIMES = "lastLoadedTimes";
 	private static final String PREF_LAST_SYNC_CALL_TIMES = "lastExposureClientCalls";
+	private static final String PREF_LAST_SUCCESSFUL_SYNC_TIMES = "lastSuccessfulSyncTimes";
 	private static final String PREF_DEV_HISTORY = "devHistory";
 
 	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
@@ -185,13 +186,20 @@ public class AppConfigManager {
 		return convertToDateMap(Json.fromJson(sharedPrefs.getString(PREF_LAST_SYNC_CALL_TIMES, "{}"), StringLongMap.class));
 	}
 
+	public HashMap<DayDate, Long> getLastSuccessfulSyncTimes() {
+		return convertToDateMap(Json.fromJson(sharedPrefs.getString(PREF_LAST_SUCCESSFUL_SYNC_TIMES, "{}"), StringLongMap.class));
+	}
+
 	public void setLastLoadedTimes(HashMap<DayDate, Long> lastLoadedTimes) {
 		sharedPrefs.edit().putString(PREF_LAST_LOADED_TIMES, Json.toJson(convertFromDateMap(lastLoadedTimes))).apply();
 	}
 
 	public void setLastSyncCallTimes(HashMap<DayDate, Long> lastExposureClientCalls) {
-		sharedPrefs.edit().putString(PREF_LAST_SYNC_CALL_TIMES, Json.toJson(convertFromDateMap(lastExposureClientCalls)))
-				.apply();
+		sharedPrefs.edit().putString(PREF_LAST_SYNC_CALL_TIMES, Json.toJson(convertFromDateMap(lastExposureClientCalls))).apply();
+	}
+
+	public void setLastSuccessfulSyncTimes(HashMap<DayDate, Long> lastSuccessfulSyncTimes) {
+		sharedPrefs.edit().putString(PREF_LAST_SUCCESSFUL_SYNC_TIMES, Json.toJson(convertFromDateMap(lastSuccessfulSyncTimes))).apply();
 	}
 
 	public void setDevHistory(boolean devHistory) {

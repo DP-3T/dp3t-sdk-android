@@ -12,11 +12,15 @@ package org.dpppt.android.sdk.internal.backend;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import java.net.Proxy;
+
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.backend.UserAgentInterceptor;
 
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
+
+import static org.dpppt.android.sdk.internal.backend.ProxyConfig.DISABLE_SYSTEM_PROXY;
 
 public interface Repository {
 
@@ -32,6 +36,10 @@ public interface Repository {
 		okHttpBuilder.cache(cache);
 
 		okHttpBuilder.certificatePinner(CertificatePinning.getCertificatePinner());
+
+		if (DISABLE_SYSTEM_PROXY) {
+			okHttpBuilder.proxy(Proxy.NO_PROXY);
+		}
 
 		return okHttpBuilder;
 	}
