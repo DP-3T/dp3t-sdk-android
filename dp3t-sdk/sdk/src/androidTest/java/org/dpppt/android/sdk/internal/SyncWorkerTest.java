@@ -25,6 +25,7 @@ import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.internal.backend.ProxyConfig;
 import org.dpppt.android.sdk.internal.logger.LogLevel;
 import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.nearby.TestGoogleExposureClient;
 import org.dpppt.android.sdk.internal.util.Json;
@@ -57,6 +58,7 @@ public class SyncWorkerTest {
 		testGoogleExposureClient = new TestGoogleExposureClient(context);
 		GoogleExposureClient.wrapTestClient(testGoogleExposureClient);
 		ProxyConfig.DISABLE_SYSTEM_PROXY = true;
+		GaenStateHelper.SET_GAEN_AVAILABILITY_AVAILABLE_FOR_TESTS = true;
 
 		server = new MockWebServer();
 		server.start();

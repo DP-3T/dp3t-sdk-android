@@ -24,6 +24,7 @@ import org.dpppt.android.sdk.internal.util.PackageManagerUtil;
 public class GaenStateHelper {
 
 	private static final String TAG = "GaenStateHelper";
+	public static boolean SET_GAEN_AVAILABILITY_AVAILABLE_FOR_TESTS = false;
 
 	public static void invalidateGaenAvailability(Context context) {
 		checkGaenAvailability(context, null);
@@ -32,7 +33,7 @@ public class GaenStateHelper {
 	public static void checkGaenAvailability(Context context, Consumer<GaenAvailability> callback) {
 		Intent enSettingsIntent = new Intent(ExposureNotificationClient.ACTION_EXPOSURE_NOTIFICATION_SETTINGS);
 		boolean enModuleAvailable = enSettingsIntent.resolveActivity(context.getPackageManager()) != null;
-		if (enModuleAvailable) {
+		if (enModuleAvailable || SET_GAEN_AVAILABILITY_AVAILABLE_FOR_TESTS) {
 			Logger.d(TAG, "checkGaenAvailability: EN available");
 			publishGaenAvailability(context, callback, GaenAvailability.AVAILABLE);
 			return;
