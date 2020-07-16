@@ -31,7 +31,6 @@
 			android:permission="com.google.android.gms.nearby.exposurenotification.EXPOSURE_CALLBACK">
 			<intent-filter>
 				<action android:name="com.google.android.gms.exposurenotification.ACTION_EXPOSURE_STATE_UPDATED" />
-				<action android:name="com.google.android.gms.settings.EXPOSURE_NOTIFICATION_SETTINGS" />
 			</intent-filter>
 		</receiver>
 
@@ -40,6 +39,10 @@
 				<action android:name="android.intent.action.BOOT_COMPLETED" />
 				<action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
 			</intent-filter>
+		</receiver>
+
+		<receiver android:name="org.dpppt.android.sdk.internal.TracingErrorsBroadcastReceiver"
+			android:exported="false">
 		</receiver>
 
 	</application>

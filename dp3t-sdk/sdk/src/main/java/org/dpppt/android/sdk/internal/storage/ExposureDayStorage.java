@@ -7,7 +7,7 @@
  *
  * SPDX-License-Identifier: MPL-2.0
  */
-package org.dpppt.android.sdk.internal;
+package org.dpppt.android.sdk.internal.storage;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -15,16 +15,24 @@ import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKeys;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
+import com.google.gson.reflect.TypeToken;
+
+import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposureDay;
 
 public class ExposureDayStorage {
+
+	private static final Type EXPOSUREDAY_LIST_TYPE = new TypeToken<LinkedList<ExposureDay>>() { }.getType();
 
 	private static final int NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS = 10;
 
@@ -55,9 +63,9 @@ public class ExposureDayStorage {
 		}
 	}
 
-	private ExposureDayList getExposureDaysInternal() {
-		ExposureDayList list =
-				Json.safeFromJson(esp.getString(PREF_KEY_EEXPOSURE_DAYS, "[]"), ExposureDayList.class, ExposureDayList::new);
+	private List<ExposureDay> getExposureDaysInternal() {
+		List<ExposureDay> list =
+				Json.safeFromJson(esp.getString(PREF_KEY_EEXPOSURE_DAYS, "[]"), EXPOSUREDAY_LIST_TYPE, ArrayList::new);
 
 		DayDate maxAgeForExposureDay = new DayDate().subtractDays(NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS);
 		Iterator<ExposureDay> iterator = list.iterator();
@@ -72,8 +80,8 @@ public class ExposureDayStorage {
 		return list;
 	}
 
-	public ArrayList<ExposureDay> getExposureDays() {
-		ExposureDayList list = getExposureDaysInternal();
+	public List<ExposureDay> getExposureDays() {
+		List<ExposureDay> list = getExposureDaysInternal();
 		Iterator<ExposureDay> iterator = list.iterator();
 		while (iterator.hasNext()) {
 			if (iterator.next().isDeleted()) {
@@ -82,14 +90,14 @@ public class ExposureDayStorage {
 		}
 		if (list.size() > 0) {
 			ExposureDay lastDay = list.get(list.size() - 1);
-			list = new ExposureDayList();
+			list = new ArrayList<>();
 			list.add(lastDay);
 		}
 		return list;
 	}
 
 	public void addExposureDay(Context context, ExposureDay exposureDay) {
-		ExposureDayList previousExposureDays = getExposureDaysInternal();
+		List<ExposureDay> previousExposureDays = getExposureDaysInternal();
 		for (ExposureDay previousExposureDay : previousExposureDays) {
 			if (previousExposureDay.getExposedDate().equals(exposureDay.getExposedDate())) {
 				return;//exposure day was already added
@@ -108,23 +116,19 @@ public class ExposureDayStorage {
 	}
 
 	public void resetExposureDays() {
-		ExposureDayList previousExposureDays = getExposureDaysInternal();
+		List<ExposureDay> previousExposureDays = getExposureDaysInternal();
 		for (ExposureDay previousExposureDay : previousExposureDays) {
 			previousExposureDay.setDeleted(true);
 		}
 		esp.edit()
-				.putString(PREF_KEY_EEXPOSURE_DAYS, Json.toJson(previousExposureDays))
+				.putString(PREF_KEY_EEXPOSURE_DAYS, Json.toJson(previousExposureDays, EXPOSUREDAY_LIST_TYPE))
 				.apply();
 	}
 
 	public void clear() {
 		esp.edit()
-				.putString(PREF_KEY_EEXPOSURE_DAYS, Json.toJson(new ExposureDayList()))
+				.putString(PREF_KEY_EEXPOSURE_DAYS, Json.toJson(new ArrayList<>(), EXPOSUREDAY_LIST_TYPE))
 				.apply();
-	}
-
-	private static class ExposureDayList extends ArrayList<ExposureDay> {
-
 	}
 
 }

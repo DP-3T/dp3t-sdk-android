@@ -1,5 +1,12 @@
 # Changelog for DP3T-SDK Android
 
+## version 1.0.1 (16.7.2020)
+
+- less frequent error notifications (only once per error while errors persist, wait 5min for GPS/Bluetooth state changes, wait 24h before showing EN API Errors)
+- prevent rate limit errors when EN Api returns an error
+- do not show http response code 504 error directly (like we already did for 502 and 503)
+- fixed serialization issue in combination with core library desugaring
+
 ## version 1.0.0 (18.6.2020)
 
 - prevent sync from running when ExposureNotifications disabled

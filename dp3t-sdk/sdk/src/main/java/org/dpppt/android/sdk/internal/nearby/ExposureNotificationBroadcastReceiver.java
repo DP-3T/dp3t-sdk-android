@@ -18,8 +18,7 @@ import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
 
 import org.dpppt.android.sdk.BuildConfig;
 import org.dpppt.android.sdk.internal.AppConfigManager;
-import org.dpppt.android.sdk.internal.BroadcastHelper;
-import org.dpppt.android.sdk.internal.ExposureDayStorage;
+import org.dpppt.android.sdk.internal.storage.ExposureDayStorage;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposureDay;
@@ -49,8 +48,6 @@ public class ExposureNotificationBroadcastReceiver extends BroadcastReceiver {
 			} else {
 				Logger.d(TAG, "exposure limit not reached");
 			}
-		} else if (ExposureNotificationClient.ACTION_EXPOSURE_NOTIFICATION_SETTINGS.equals(action)) {
-			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 		}
 	}
 
