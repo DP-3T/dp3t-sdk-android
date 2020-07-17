@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## version 1.0.2 (17.7.2020)
+
+- fix logic for when a sync is considered successfull in HistoryDatabase (only if no errors)
+
 ## version 1.0.1 (16.7.2020)
 
 - less frequent error notifications (only once per error while errors persist, wait 5min for GPS/Bluetooth state changes, wait 24h before showing EN API Errors)
