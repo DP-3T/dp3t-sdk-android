@@ -264,7 +264,8 @@ public class SyncWorker extends Worker {
 						String.valueOf((char) (base + numInstantErrors)) + (char) (base + numDelayedErrors) +
 								(char) (base + numSuccesses);
 				HistoryDatabase.getInstance(context).addEntry(
-						new HistoryEntry(HistoryEntryType.SYNC, historyStatus, lastException == null, System.currentTimeMillis()));
+						new HistoryEntry(HistoryEntryType.SYNC, historyStatus, numInstantErrors == 0 && numDelayedErrors == 0,
+								System.currentTimeMillis()));
 			}
 
 			if (lastException != null) {
