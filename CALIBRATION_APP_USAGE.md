@@ -52,3 +52,5 @@ https://dp3tdemo.blob.core.windows.net/fileupload/result_experiment_1_2020-07-19
 ## Good to know
 
 - You can only execute one experiment and one (!) matching after a clean install. All subsequent experiments / matching runs will not work or lead to wrong results.
+
+- Battery optimization does not have to be deactivated for experiments, this is only needed to guarantee periodic backend syncs in the background, which is irrelevant for experiments. The error notification can thus be ignored.
