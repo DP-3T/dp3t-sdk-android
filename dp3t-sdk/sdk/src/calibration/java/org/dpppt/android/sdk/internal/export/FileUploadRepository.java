@@ -53,7 +53,7 @@ public class FileUploadRepository {
 		}
 	}
 
-	private void uploadFile(File file, Callback<Void> callback) {
+	public void uploadFile(File file, Callback<Void> callback) {
 		RequestBody requestFile =
 				RequestBody.create(
 						MediaType.parse("application/sqlite"),

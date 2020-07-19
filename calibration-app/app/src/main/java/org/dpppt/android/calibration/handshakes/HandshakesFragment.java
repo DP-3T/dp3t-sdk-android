@@ -20,9 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,13 +32,23 @@ import java.util.zip.ZipInputStream;
 
 import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
 import com.google.android.gms.nearby.exposurenotification.ExposureWindow;
+import com.google.android.gms.nearby.exposurenotification.ScanInstance;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializer;
 
 import org.dpppt.android.calibration.R;
+import org.dpppt.android.sdk.DP3TCalibrationHelper;
+import org.dpppt.android.sdk.internal.export.FileUploadRepository;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.DayDate;
 
 import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HandshakesFragment extends Fragment {
 
@@ -95,7 +103,7 @@ public class HandshakesFragment extends Fragment {
 						deviceName = matcher.group(2);
 						experiment = experiments.get(experimentName);
 						if (experiment == null) {
-							experiment = new Experiment("Experiment: " + experimentName);
+							experiment = new Experiment(experimentName);
 							experiments.put(experimentName, experiment);
 						}
 					} else {
@@ -120,7 +128,7 @@ public class HandshakesFragment extends Fragment {
 				getView().post(() -> {
 					for (Experiment experiment : experiments.values()) {
 						View view = getLayoutInflater().inflate(R.layout.item_handshake, layout, false);
-						((TextView) view.findViewById(R.id.device_name)).setText(experiment.name);
+						((TextView) view.findViewById(R.id.device_name)).setText("Experiment: " + experiment.name);
 						TextView textView = view.findViewById(R.id.device_info);
 						textView.setText("Devices: " +
 								experiment.getDevices().stream().map((device -> device.getName())).reduce((a, b) -> a + ", " + b)
@@ -154,8 +162,30 @@ public class HandshakesFragment extends Fragment {
 										});
 									}
 								}
-								view.post(() -> {
-									textView.setText(Json.toJson(result));
+								File file = new File(context.getFilesDir(),
+										"result_experiment_" + experiment.name + "_" + new DayDate().formatAsString() +
+												"_device_" +
+												DP3TCalibrationHelper.getInstance(context).getCalibrationTestDeviceName() +
+												".json");
+								try {
+									new BufferedWriter(new FileWriter(file)).append(GSON.toJson(result)).close();
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
+								new FileUploadRepository().uploadFile(file, new Callback<Void>() {
+									@Override
+									public void onResponse(Call<Void> call, Response<Void> response) {
+										view.post(() -> {
+											textView.setText(GSON.toJson(result));
+										});
+									}
+
+									@Override
+									public void onFailure(Call<Void> call, Throwable t) {
+										view.post(() -> {
+											textView.setText("Upload failed: " + t.getMessage());
+										});
+									}
 								});
 							}).start();
 						});
@@ -167,4 +197,27 @@ public class HandshakesFragment extends Fragment {
 		}).start();
 	}
 
+	private static JsonSerializer<ExposureWindow> exposureWindowJsonSerializer = (src, typeOfSrc, context) -> {
+		JsonObject jsonObject = new JsonObject();
+
+		jsonObject.addProperty("dateMillisSinceEpoch", src.getDateMillisSinceEpoch());
+		jsonObject.addProperty("reportType", src.getReportType());
+		jsonObject.add("scanInstances", context.serialize(src.getScanInstances()));
+
+		return jsonObject;
+	};
+
+	private static JsonSerializer<ScanInstance> scanInstanceJsonSerializer = (src, typeOfSrc, context) -> {
+		JsonObject jsonObject = new JsonObject();
+
+		jsonObject.addProperty("minAttenuationDb", src.getMinAttenuationDb());
+		jsonObject.addProperty("typicalAttenuationDb", src.getTypicalAttenuationDb());
+		jsonObject.addProperty("secondsSinceLastScan", src.getSecondsSinceLastScan());
+
+		return jsonObject;
+	};
+	private static final Gson GSON = new GsonBuilder()
+			.registerTypeAdapter(ExposureWindow.class, exposureWindowJsonSerializer)
+			.registerTypeAdapter(ScanInstance.class, scanInstanceJsonSerializer)
+			.create();
 }
