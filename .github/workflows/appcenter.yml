@@ -2,7 +2,7 @@ name: Android Build
 
 on:
   push:
-    branches: [ master, master-alpha ]
+    branches: [ master, master-alpha, feature/include-google-en-api-1-5 ]
 
 jobs:
   build:
