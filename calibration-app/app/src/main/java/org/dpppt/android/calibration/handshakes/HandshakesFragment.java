@@ -40,13 +40,13 @@ import com.google.gson.JsonSerializer;
 
 import org.dpppt.android.calibration.R;
 import org.dpppt.android.sdk.DP3TCalibrationHelper;
+import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.export.FileUploadRepository;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.models.DayDate;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 
 public class HandshakesFragment extends Fragment {
@@ -83,46 +83,7 @@ public class HandshakesFragment extends Fragment {
 		layout.removeAllViews();
 		new Thread(() -> {
 			try {
-				GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
-				long batchReleaseTime = new DayDate().addDays(1).getStartOfDayTimestamp();
-				BackendUserBucketRepository backendBucketRepository = new BackendUserBucketRepository(context);
-				ResponseBody responseBody = backendBucketRepository.getGaenExposees(batchReleaseTime);
-
-				HashMap<String, Experiment> experiments = new HashMap<>();
-
-				ZipInputStream zis = new ZipInputStream(responseBody.byteStream());
-				ZipEntry zipEntry;
-				while ((zipEntry = zis.getNextEntry()) != null) {
-					String name = zipEntry.getName();
-					Experiment experiment;
-					String deviceName = "unknown";
-					Matcher matcher = Pattern.compile("key_export_experiment_([a-zA-Z0-9]+)_(.+)").matcher(name);
-					if (matcher.find()) {
-						String experimentName = matcher.group(1);
-						deviceName = matcher.group(2);
-						experiment = experiments.get(experimentName);
-						if (experiment == null) {
-							experiment = new Experiment(experimentName);
-							experiments.put(experimentName, experiment);
-						}
-					} else {
-						deviceName = name.substring(11);
-						experiment = new Experiment("SingleDevice: " + deviceName);
-						experiments.put(experiment.getName(), experiment);
-					}
-
-					File file = new File(context.getCacheDir(), batchReleaseTime + "_" + name);
-					BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
-					byte[] bytesIn = new byte[1024];
-					int read = 0;
-					while ((read = zis.read(bytesIn)) != -1) {
-						bos.write(bytesIn, 0, read);
-					}
-					bos.close();
-					zis.closeEntry();
-
-					experiment.devices.add(new Experiment.Device(deviceName, file));
-				}
+				HashMap<String, Experiment> experiments = getExperiments(context);
 
 				getView().post(() -> {
 					for (Experiment experiment : experiments.values()) {
@@ -142,52 +103,18 @@ public class HandshakesFragment extends Fragment {
 							v.setOnClickListener(null);
 							textView.setText("Loading...");
 							new Thread(() -> {
-								HashMap<String, List<ExposureWindow>> result = new HashMap<>();
-								List<ExposureWindow> oldExposureWindows = new ArrayList<>();
-								for (Experiment.Device device : experiment.devices) {
-									try {
-										ArrayList<File> fileList = new ArrayList<>();
-										fileList.add(device.file);
-										googleExposureClient.provideDiagnosisKeys(fileList, ExposureNotificationClient.TOKEN_A);
-										Thread.sleep(2000);
-										List<ExposureWindow> newExposureWindows = googleExposureClient.getExposureWindows();
-										Iterator<ExposureWindow> iterator = newExposureWindows.iterator();
-										while (iterator.hasNext()) {
-											if (oldExposureWindows.contains(iterator.next())) {
-												iterator.remove();
-											}
-										}
-										oldExposureWindows.addAll(newExposureWindows);
-										result.put(device.getName(), newExposureWindows);
-									} catch (Exception e) {
-										e.printStackTrace();
-										view.post(() -> {
-											textView.setText("Exception: " + e.getLocalizedMessage());
-										});
-									}
-								}
-								File file = new File(context.getFilesDir(),
-										"result_experiment_" + experiment.name + "_" + new DayDate().formatAsString() +
-												"_device_" +
-												DP3TCalibrationHelper.getInstance(context).getCalibrationTestDeviceName() +
-												".json");
-								try {
-									new BufferedWriter(new FileWriter(file)).append(GSON.toJson(result)).close();
-								} catch (IOException e) {
-									e.printStackTrace();
-								}
-								new FileUploadRepository().uploadFile(file, new Callback<Void>() {
+								executeAndUploadMatching(context, experiment, new Callback() {
 									@Override
-									public void onResponse(Call<Void> call, Response<Void> response) {
+									public void onResult(HashMap<String, List<ExposureWindow>> result) {
 										view.post(() -> {
 											textView.setText(GSON.toJson(result));
 										});
 									}
 
 									@Override
-									public void onFailure(Call<Void> call, Throwable t) {
+									public void onFailure(Throwable t) {
 										view.post(() -> {
-											textView.setText("Upload failed: " + t.getMessage());
+											textView.setText("Exception: " + t.getMessage());
 										});
 									}
 								});
@@ -199,6 +126,101 @@ public class HandshakesFragment extends Fragment {
 				e.printStackTrace();
 			}
 		}).start();
+	}
+
+	public static HashMap<String, Experiment> getExperiments(Context context) throws IOException, StatusCodeException {
+		long batchReleaseTime = new DayDate().addDays(1).getStartOfDayTimestamp();
+		BackendUserBucketRepository backendBucketRepository = new BackendUserBucketRepository(context);
+		ResponseBody responseBody = backendBucketRepository.getGaenExposees(batchReleaseTime);
+
+		HashMap<String, Experiment> experiments = new HashMap<>();
+
+		ZipInputStream zis = new ZipInputStream(responseBody.byteStream());
+		ZipEntry zipEntry;
+		while ((zipEntry = zis.getNextEntry()) != null) {
+			String name = zipEntry.getName();
+			Experiment experiment;
+			String deviceName = "unknown";
+			Matcher matcher = Pattern.compile("key_export_experiment_([a-zA-Z0-9]+)_(.+)").matcher(name);
+			if (matcher.find()) {
+				String experimentName = matcher.group(1);
+				deviceName = matcher.group(2);
+				experiment = experiments.get(experimentName);
+				if (experiment == null) {
+					experiment = new Experiment(experimentName);
+					experiments.put(experimentName, experiment);
+				}
+			} else {
+				deviceName = name.substring(11);
+				experiment = new Experiment("SingleDevice: " + deviceName);
+				experiments.put(experiment.getName(), experiment);
+			}
+
+			File file = new File(context.getCacheDir(), batchReleaseTime + "_" + name);
+			BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
+			byte[] bytesIn = new byte[1024];
+			int read = 0;
+			while ((read = zis.read(bytesIn)) != -1) {
+				bos.write(bytesIn, 0, read);
+			}
+			bos.close();
+			zis.closeEntry();
+
+			experiment.devices.add(new Experiment.Device(deviceName, file));
+		}
+		return experiments;
+	}
+
+	public static void executeAndUploadMatching(Context context, Experiment experiment, Callback callback) {
+		File file = new File(context.getFilesDir(),
+				"result_experiment_" + experiment.name + "_" + new DayDate().formatAsString() +
+						"_device_" +
+						DP3TCalibrationHelper.getInstance(context).getCalibrationTestDeviceName() +
+						".json");
+		if (file.exists()) {
+			callback.onFailure(new RuntimeException(
+					"This matching has already been computed, computing it again would not lead to meaningfull results."));
+			return;
+		}
+		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
+		HashMap<String, List<ExposureWindow>> result = new HashMap<>();
+		List<ExposureWindow> oldExposureWindows = new ArrayList<>();
+		for (Experiment.Device device : experiment.devices) {
+			try {
+				ArrayList<File> fileList = new ArrayList<>();
+				fileList.add(device.file);
+				googleExposureClient.provideDiagnosisKeys(fileList, ExposureNotificationClient.TOKEN_A);
+				Thread.sleep(2000);
+				List<ExposureWindow> newExposureWindows = googleExposureClient.getExposureWindows();
+				Iterator<ExposureWindow> iterator = newExposureWindows.iterator();
+				while (iterator.hasNext()) {
+					if (oldExposureWindows.contains(iterator.next())) {
+						iterator.remove();
+					}
+				}
+				oldExposureWindows.addAll(newExposureWindows);
+				result.put(device.getName(), newExposureWindows);
+			} catch (Exception e) {
+				e.printStackTrace();
+				callback.onFailure(e);
+			}
+		}
+		try {
+			new BufferedWriter(new FileWriter(file)).append(GSON.toJson(result)).close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		new FileUploadRepository().uploadFile(file, new retrofit2.Callback<Void>() {
+			@Override
+			public void onResponse(Call<Void> call, Response<Void> response) {
+				callback.onResult(result);
+			}
+
+			@Override
+			public void onFailure(Call<Void> call, Throwable t) {
+				callback.onFailure(t);
+			}
+		});
 	}
 
 	private static JsonSerializer<ExposureWindow> exposureWindowJsonSerializer = (src, typeOfSrc, context) -> {
@@ -220,9 +242,18 @@ public class HandshakesFragment extends Fragment {
 
 		return jsonObject;
 	};
+
 	private static final Gson GSON = new GsonBuilder()
 			.registerTypeAdapter(ExposureWindow.class, exposureWindowJsonSerializer)
 			.registerTypeAdapter(ScanInstance.class, scanInstanceJsonSerializer)
 			.create();
+
+
+	public interface Callback {
+		void onResult(HashMap<String, List<ExposureWindow>> result);
+
+		void onFailure(Throwable t);
+
+	}
 
 }

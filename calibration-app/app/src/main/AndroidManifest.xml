@@ -28,6 +28,14 @@
 			</intent-filter>
 		</activity>
 
+		<receiver
+			android:name=".handshakes.ADBBroadcastReceiver"
+			android:exported="true">
+			<intent-filter>
+				<action android:name="org.dpppt.android.calibration.adb" />
+			</intent-filter>
+		</receiver>
+
 	</application>
 
 </manifest>
