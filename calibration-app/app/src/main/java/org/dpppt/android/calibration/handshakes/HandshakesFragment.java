@@ -42,7 +42,6 @@ import org.dpppt.android.calibration.R;
 import org.dpppt.android.sdk.DP3TCalibrationHelper;
 import org.dpppt.android.sdk.internal.export.FileUploadRepository;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
-import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.DayDate;
 
 import okhttp3.ResponseBody;
@@ -130,9 +129,14 @@ public class HandshakesFragment extends Fragment {
 						View view = getLayoutInflater().inflate(R.layout.item_handshake, layout, false);
 						((TextView) view.findViewById(R.id.device_name)).setText("Experiment: " + experiment.name);
 						TextView textView = view.findViewById(R.id.device_info);
-						textView.setText("Devices: " +
-								experiment.getDevices().stream().map((device -> device.getName())).reduce((a, b) -> a + ", " + b)
-										.get());
+						StringBuilder devices = new StringBuilder();
+						String delimiter = "";
+						for (Experiment.Device device : experiment.getDevices()) {
+							devices.append(delimiter);
+							devices.append(device.getName());
+							delimiter = ", ";
+						}
+						textView.setText("Devices: " + devices.toString());
 						layout.addView(view);
 						view.setOnClickListener(v -> {
 							v.setOnClickListener(null);
@@ -220,4 +224,5 @@ public class HandshakesFragment extends Fragment {
 			.registerTypeAdapter(ExposureWindow.class, exposureWindowJsonSerializer)
 			.registerTypeAdapter(ScanInstance.class, scanInstanceJsonSerializer)
 			.create();
+
 }
