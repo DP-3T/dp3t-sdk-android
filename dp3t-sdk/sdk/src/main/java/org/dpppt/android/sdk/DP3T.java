@@ -398,8 +398,7 @@ public class DP3T {
 		checkInit();
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		appConfigManager.setAttenuationThresholdLow(attenuationThresholdLow);
-		appConfigManager.setAttenuationThresholdMedium(attenuationThresholdMedium);
+		appConfigManager.setAttenuationThresholds(attenuationThresholdLow, attenuationThresholdMedium);
 		appConfigManager.setAttenuationFactorLow(attenuationFactorLow);
 		appConfigManager.setAttenuationFactorMedium(attenuationFactorMedium);
 		appConfigManager.setMinDurationForExposure(minDurationForExposure);
