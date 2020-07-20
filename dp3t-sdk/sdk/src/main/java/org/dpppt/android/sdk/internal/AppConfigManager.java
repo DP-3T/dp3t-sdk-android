@@ -15,6 +15,7 @@ import android.content.SharedPreferences;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
+import java.lang.IllegalArgumentException;
 
 import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
@@ -148,18 +149,17 @@ public class AppConfigManager {
 		return sharedPrefs.getInt(PREF_ATTENUATION_THRESHOLD_LOW, DEFAULT_ATTENUATION_THRESHOLD_LOW);
 	}
 
-	public void setAttenuationThresholdLow(int threshold) {
-		sharedPrefs.edit().putInt(PREF_ATTENUATION_THRESHOLD_LOW, threshold).apply();
-		googleExposureClient.setParams(threshold, getAttenuationThresholdMedium());
-	}
-
 	public int getAttenuationThresholdMedium() {
 		return sharedPrefs.getInt(PREF_ATTENUATION_THRESHOLD_MEDIUM, DEFAULT_ATTENUATION_THRESHOLD_MEDIUM);
 	}
 
-	public void setAttenuationThresholdMedium(int threshold) {
-		sharedPrefs.edit().putInt(PREF_ATTENUATION_THRESHOLD_MEDIUM, threshold).apply();
-		googleExposureClient.setParams(getAttenuationThresholdLow(), threshold);
+	public void setAttenuationThresholds(int thresholdLow, int thresholdMedium) {
+		if (thresholdLow >= thresholdMedium) {
+			throw new IllegalArgumentException("Illegal Arguments: thresholdLow must be smaller than thresholdMedium");
+		}
+		sharedPrefs.edit().putInt(PREF_ATTENUATION_THRESHOLD_LOW, thresholdLow).apply();
+		sharedPrefs.edit().putInt(PREF_ATTENUATION_THRESHOLD_MEDIUM, thresholdMedium).apply();
+		googleExposureClient.setParams(thresholdLow, thresholdMedium);
 	}
 
 	public float getAttenuationFactorLow() {
