@@ -10,15 +10,15 @@
 package org.dpppt.android.sdk.internal.backend;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-
-import java.io.IOException;
-import java.security.PublicKey;
 
 import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.backend.SignatureVerificationInterceptor;
 import org.dpppt.android.sdk.models.DayDate;
 
+import java.io.IOException;
+import java.security.PublicKey;
+
+import androidx.annotation.NonNull;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
@@ -51,7 +51,7 @@ public class BackendBucketRepository implements Repository {
 		if (response.isSuccessful()) {
 			return response;
 		} else {
-			throw new StatusCodeException(response.raw());
+			throw new StatusCodeException(response.raw(), response.errorBody());
 		}
 	}
 
