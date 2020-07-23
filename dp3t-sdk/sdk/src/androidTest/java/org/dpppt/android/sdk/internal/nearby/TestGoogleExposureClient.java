@@ -22,11 +22,7 @@ import java.util.List;
 
 import com.google.android.gms.common.api.Api;
 import com.google.android.gms.common.api.internal.ApiKey;
-import com.google.android.gms.nearby.exposurenotification.ExposureConfiguration;
-import com.google.android.gms.nearby.exposurenotification.ExposureInformation;
-import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
-import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
-import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
+import com.google.android.gms.nearby.exposurenotification.*;
 import com.google.android.gms.tasks.Task;
 
 import org.dpppt.android.sdk.internal.util.Json;
@@ -83,6 +79,11 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 			}
 		}
 		return new DummyTask<>(null);
+	}
+
+	@Override
+	public Task<List<ExposureWindow>> getExposureWindows(String s) {
+		return new DummyTask<>(new ArrayList<>());
 	}
 
 	@Override
