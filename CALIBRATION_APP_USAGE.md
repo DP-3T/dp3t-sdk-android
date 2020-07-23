@@ -4,11 +4,18 @@
 
 Make sure that the calibration app is the only installed ExposureNotifications app (check Settings > Google > COVID-19 Exposure Notifications), otherwise clearing the exposure history is not possible over adb.
 
+### Enable ExposureNotification Debug Mode
+Go to Settings > Google > COVID-19 exposure notifications > Debug mode and make sure that the following options are enabled:
+- Bypass app signature check
+- Return all TEKs immediately
+The option "Enable diagnosis key file signature check" should not be enabled.
+
 ### Reset app and exposure history
 Run the following adb command to clear app and exposure history:
 ```
 adb shell pm clear org.dpppt.android.calibration
 ```
+Alternatively you can go to Settings > Apps > Calibration App and select "Clear data".
 
 ### Configure app
 Set experiment name and device name with the following adb command (replace expName and devName):
