@@ -4,6 +4,15 @@
 
 Make sure that the calibration app is the only installed ExposureNotifications app (check Settings > Google > COVID-19 Exposure Notifications), otherwise clearing the exposure history is not possible over adb.
 
+### Make sure your device supports ExposureNotification v1.5
+Go to Settings > Google > COVID-19 exposure notifications and scroll to the bottom of the screen. Verify that the version number starts with 15... (Be aware that version 15xxxxxxxxx is newer than version 20xxxxxxx.)
+
+Alternatively you can use the following adb command:
+```
+adb shell dumpsys activity provider com.google.android.gms.chimera.container.GmsModuleProvider | grep 'nearby_en'
+```
+This will show you the EN version, but here the leading 15 for v1.5 is not printed. Known v1.5 versions are: v203004001, v202902002
+
 ### Enable ExposureNotification Debug Mode
 Go to Settings > Google > COVID-19 exposure notifications > Debug mode and make sure that the following options are enabled:
 - Bypass app signature check
