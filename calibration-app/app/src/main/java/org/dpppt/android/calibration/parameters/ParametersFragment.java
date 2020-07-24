@@ -60,7 +60,7 @@ public class ParametersFragment extends Fragment {
 		attenuationBucket1Seeekbar = view.findViewById(R.id.parameter_seekbar_attenuation_bucket1);
 		attenuationBucket1Text = view.findViewById(R.id.parameter_seekbar_attenuation_bucket1_value);
 
-		attenuationBucket1Seeekbar.setMax(255);
+		attenuationBucket1Seeekbar.setMax(254);
 		attenuationBucket1Seeekbar.setProgress(appConfigManager.getAttenuationThresholdLow());
 		attenuationBucket1Seeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			@Override
@@ -99,6 +99,8 @@ public class ParametersFragment extends Fragment {
 		attenuationBucket2Seeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			@Override
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				int min = 1;
+				if (progress < min) progress = min;
 				setBucket2Value(progress);
 			}
 
@@ -133,16 +135,18 @@ public class ParametersFragment extends Fragment {
 						BuildConfig.BUILD_TYPE);
 	}
 
-	private void setBucket1Value(int value) {
-		appConfigManager.setAttenuationThresholdLow(value);
-		attenuationBucket1Text.setText(Integer.toString(value));
-		attenuationBucket2Seeekbar.setProgress(Math.max(attenuationBucket2Seeekbar.getProgress(), value + 1));
+	private void setBucket1Value(int thresholdLow) {
+		int thresholdMedium = Math.max(attenuationBucket2Seeekbar.getProgress(), thresholdLow + 1);
+		appConfigManager.setAttenuationThresholds(thresholdLow, thresholdMedium);
+		attenuationBucket1Text.setText(Integer.toString(thresholdLow));
+		attenuationBucket2Seeekbar.setProgress(thresholdMedium);
 	}
 
-	private void setBucket2Value(int value) {
-		appConfigManager.setAttenuationThresholdMedium(value);
-		attenuationBucket2Text.setText(Integer.toString(value));
-		attenuationBucket1Seeekbar.setProgress(Math.min(attenuationBucket1Seeekbar.getProgress(), value - 1));
+	private void setBucket2Value(int thresholdMedium) {
+		int thresholdLow = Math.min(attenuationBucket1Seeekbar.getProgress(), thresholdMedium - 1);
+		appConfigManager.setAttenuationThresholds(thresholdLow, thresholdMedium);
+		attenuationBucket2Text.setText(Integer.toString(thresholdMedium));
+		attenuationBucket1Seeekbar.setProgress(thresholdLow);
 	}
 
 

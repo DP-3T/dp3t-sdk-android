@@ -52,7 +52,7 @@ public class BackendReportRepository implements Repository {
 				if (response.isSuccessful()) {
 					responseCallback.onSuccess(response.headers().get("Authorization"));
 				} else {
-					onFailure(call, new StatusCodeException(response.raw()));
+					onFailure(call, new StatusCodeException(response.raw(), response.errorBody()));
 				}
 			}
 
@@ -66,7 +66,7 @@ public class BackendReportRepository implements Repository {
 	public void addPendingGaenKey(GaenKey gaenKey, String token) throws IOException, StatusCodeException {
 		Response<Void> response = reportService.addPendingGaenKey(new GaenSecondDay(gaenKey), token).execute();
 		if (!response.isSuccessful()) {
-			throw new StatusCodeException(response.raw());
+			throw new StatusCodeException(response.raw(), response.errorBody());
 		}
 	}
 

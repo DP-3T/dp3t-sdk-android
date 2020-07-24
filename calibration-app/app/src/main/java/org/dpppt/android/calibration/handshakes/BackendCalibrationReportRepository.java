@@ -10,7 +10,6 @@
 package org.dpppt.android.calibration.handshakes;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
 
 import org.dpppt.android.calibration.MainApplication;
 import org.dpppt.android.sdk.backend.ResponseCallback;
@@ -18,6 +17,7 @@ import org.dpppt.android.sdk.internal.backend.Repository;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 
+import androidx.annotation.NonNull;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -46,7 +46,7 @@ public class BackendCalibrationReportRepository implements Repository {
 				if (response.isSuccessful()) {
 					responseCallback.onSuccess(null);
 				} else {
-					onFailure(call, new StatusCodeException(response.raw()));
+					onFailure(call, new StatusCodeException(response.raw(), response.errorBody()));
 				}
 			}
 
