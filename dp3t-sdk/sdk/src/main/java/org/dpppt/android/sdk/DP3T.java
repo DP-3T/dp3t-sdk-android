@@ -40,8 +40,8 @@ import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.storage.ErrorNotificationStorage;
 import org.dpppt.android.sdk.internal.storage.ExposureDayStorage;
-import org.dpppt.android.sdk.internal.storage.models.PendingKey;
 import org.dpppt.android.sdk.internal.storage.PendingKeyUploadStorage;
+import org.dpppt.android.sdk.internal.storage.models.PendingKey;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposeeAuthMethod;
@@ -85,12 +85,12 @@ public class DP3T {
 		googleExposureClient
 				.setParams(appConfigManager.getAttenuationThresholdLow(), appConfigManager.getAttenuationThresholdMedium());
 
-		executeInit(context.getApplicationContext());
+		executeInit(context.getApplicationContext(), appConfigManager);
 
 		initialized = true;
 	}
 
-	private static void executeInit(Context context) {
+	private static void executeInit(Context context, AppConfigManager appConfigManager) {
 		if (initialized) {
 			return;
 		}
@@ -114,6 +114,11 @@ public class DP3T {
 
 		GaenStateHelper.invalidateGaenAvailability(context);
 		GaenStateHelper.invalidateGaenEnabled(context);
+
+		if (appConfigManager.isTracingEnabled()) {
+			SyncWorker.startSyncWorker(context);
+			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
+		}
 	}
 
 	public static boolean isInitialized() {
