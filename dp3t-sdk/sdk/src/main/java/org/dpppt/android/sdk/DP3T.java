@@ -293,7 +293,8 @@ public class DP3T {
 		pendingIAmInfectedRequest = null;
 	}
 
-	public static void sendFakeInfectedRequest(Context context, ExposeeAuthMethod exposeeAuthMethod) {
+	public static void sendFakeInfectedRequest(Context context, ExposeeAuthMethod exposeeAuthMethod, Runnable successCallback,
+			Runnable errorCallback) {
 		checkInit();
 
 		int delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
@@ -316,6 +317,7 @@ public class DP3T {
 										historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.FAKE_REQUEST, null, true,
 												System.currentTimeMillis()));
 									}
+									if (successCallback != null) successCallback.run();
 								}
 
 								@Override
@@ -328,6 +330,7 @@ public class DP3T {
 										historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.FAKE_REQUEST, status, false,
 												System.currentTimeMillis()));
 									}
+									if (errorCallback != null) errorCallback.run();
 								}
 							});
 		} catch (IllegalStateException e) {
@@ -337,6 +340,7 @@ public class DP3T {
 				historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.FAKE_REQUEST, "SYST", false,
 						System.currentTimeMillis()));
 			}
+			if (errorCallback != null) errorCallback.run();
 		}
 	}
 
