@@ -1,5 +1,10 @@
 # Changelog for DP3T-SDK Android
 
+## version 1.0.3 (24.7.2020)
+
+- upgraded to play-services-nearby-18.0.3-eap (adds a service for Google to restart our application after force stop starting v1.5)
+- add success and error callback to senFakeInfectedRequest
+
 ## version 1.0.2 (17.7.2020)
 
 - fix logic for when a sync is considered successfull in HistoryDatabase (only if no errors)
