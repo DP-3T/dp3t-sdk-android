@@ -4,6 +4,7 @@
 
 - upgraded to play-services-nearby-18.0.3-eap (adds a service for Google to restart our application after force stop starting v1.5)
 - add success and error callback to senFakeInfectedRequest
+- add response body to StatusCodeException
 
 ## version 1.0.2 (17.7.2020)
 
