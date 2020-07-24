@@ -344,7 +344,7 @@ public class ControlsFragment extends Fragment {
 		Button buttonReportFake = view.findViewById(R.id.home_button_report_fake);
 		buttonReportFake.setOnClickListener(
 				v -> {
-					DP3T.sendFakeInfectedRequest(getContext(), null);
+					DP3T.sendFakeInfectedRequest(getContext(), null, null, null);
 				});
 
 		EditText deanonymizationDeviceId = view.findViewById(R.id.deanonymization_device_id);
@@ -427,4 +427,5 @@ public class ControlsFragment extends Fragment {
 			view.findViewById(R.id.home_button_upload_db).setVisibility(visible ? View.INVISIBLE : View.VISIBLE);
 		}
 	}
+
 }
