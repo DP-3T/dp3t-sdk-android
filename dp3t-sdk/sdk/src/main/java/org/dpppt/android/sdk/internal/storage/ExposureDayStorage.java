@@ -35,6 +35,7 @@ public class ExposureDayStorage {
 	private static final Type EXPOSUREDAY_LIST_TYPE = new TypeToken<LinkedList<ExposureDay>>() { }.getType();
 
 	private static final int NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS = 14;
+	private static final int NUMBER_OF_DAYS_TO_TREAT_EXPOSED_DAYS_AS_RISKY = 10;
 
 	private static final String PREF_KEY_EEXPOSURE_DAYS = "exposureDays";
 	private static final String PREF_KEY_LAST_ID = "last_id";
@@ -94,6 +95,19 @@ public class ExposureDayStorage {
 			list.add(lastDay);
 		}
 		return list;
+	}
+
+	public List<ExposureDay> getRiskyExposureDays() {
+		List<ExposureDay> allExposureDays = getExposureDays();
+		List<ExposureDay> filteredExposureDays = new ArrayList<>();
+
+		for (ExposureDay exposureDay : allExposureDays) {
+			if (new DayDate(System.currentTimeMillis()).subtractDays(NUMBER_OF_DAYS_TO_TREAT_EXPOSED_DAYS_AS_RISKY)
+					.isBeforeOrEquals(exposureDay.getExposedDate())) {
+				filteredExposureDays.add(exposureDay);
+			}
+		}
+		return filteredExposureDays;
 	}
 
 	public void addExposureDay(Context context, ExposureDay exposureDay) {
