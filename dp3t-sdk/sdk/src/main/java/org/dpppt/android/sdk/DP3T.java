@@ -209,10 +209,9 @@ public class DP3T {
 		Collection<TracingStatus.ErrorState> errorStates = ErrorHelper.checkTracingErrorStatus(context, appConfigManager);
 		InfectionStatus infectionStatus;
 		List<ExposureDay> exposureDays = ExposureDayStorage.getInstance(context).getExposureDays();
-		List<ExposureDay> riskyExposureDays = ExposureDayStorage.getInstance(context).getRiskyExposureDays();
 		if (appConfigManager.getIAmInfected()) {
 			infectionStatus = InfectionStatus.INFECTED;
-		} else if (riskyExposureDays.size() > 0) {
+		} else if (exposureDays.size() > 0) {
 			infectionStatus = InfectionStatus.EXPOSED;
 		} else {
 			infectionStatus = InfectionStatus.HEALTHY;

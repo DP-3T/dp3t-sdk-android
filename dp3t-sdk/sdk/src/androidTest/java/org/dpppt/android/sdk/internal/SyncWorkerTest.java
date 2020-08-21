@@ -205,7 +205,7 @@ public class SyncWorkerTest {
 	public void testExposureTooLongAgo() {
 		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
 		params.attenuationDurations = new int[] { 20, 0, 0 };
-		params.daysSinceLastExposure = 11;
+		params.daysSinceLastExposure = 15;
 		params.matchedKeyCount = 1;
 
 		testExposure(params);
