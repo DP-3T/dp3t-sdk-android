@@ -23,9 +23,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.InfectionStatus;
 import org.dpppt.android.sdk.backend.ResponseCallback;
@@ -39,6 +36,7 @@ import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.nearby.TestGoogleExposureClient;
 import org.dpppt.android.sdk.internal.storage.PendingKeyUploadStorage;
+import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
 import org.dpppt.android.sdk.util.DateUtil;
@@ -90,106 +88,19 @@ public class TEKReleaseTest {
 
 
 	@Test
-	public void testIAmInfectedKeyAlreadyReleased() throws Exception {
-
-		testGoogleExposureClient = new TestGoogleExposureClient(context, true);
-		GoogleExposureClient.wrapTestClient(testGoogleExposureClient);
-		testGoogleExposureClient.setTime(System.currentTimeMillis());
-
-		Activity activity = startEmptyActivity();
-
-		AtomicInteger exposedFakeRequestCounter = new AtomicInteger(0);
-		AtomicInteger exposedRequestCounter = new AtomicInteger(0);
-		AtomicInteger exposednextdayFakeRequestCounter = new AtomicInteger(0);
-		AtomicInteger exposednextdayRequestCounter = new AtomicInteger(0);
-		ArrayList<Integer> sentRollingStartNumbers = new ArrayList<>();
-
-		//Onset Date is 4 days ago
-		long onsetDate = System.currentTimeMillis() - 1000 * 60 * 60 * 96;
-		Gson gson = new Gson();
-
-		server.setDispatcher(new Dispatcher() {
-			@Override
-			public MockResponse dispatch(RecordedRequest request) {
-				String body = new String(request.getBody().readByteArray());
-				if (request.getPath().equals("/bucket/v1/gaen/exposed")) {
-					GaenRequest gaenRequest = gson.fromJson(body, new TypeToken<GaenRequest>() { }.getType());
-					int fake = gaenRequest.isFake();
-					if (fake == 1) exposedFakeRequestCounter.getAndIncrement();
-					else {
-						for (GaenKey k : gaenRequest.getGaenKeys()) {
-							if (!k.isFake()) {
-								sentRollingStartNumbers.add(k.getRollingStartNumber());
-							}
-						}
-						exposedRequestCounter.getAndIncrement();
-					}
-				}
-				if (request.getPath().equals("/bucket/v1/gaen/exposednextday")) {
-					GaenSecondDay gaenSecondDayRequest = gson.fromJson(body, new TypeToken<GaenSecondDay>() { }.getType());
-					int fake = gaenSecondDayRequest.isFake();
-					if (fake == 1) exposednextdayFakeRequestCounter.getAndIncrement();
-					else exposednextdayRequestCounter.getAndIncrement();
-				}
-				return new MockResponse().setResponseCode(200);
-			}
-		});
-
-		CountDownLatch countDownLatch = new CountDownLatch(1);
-		DP3T.sendIAmInfected(activity, new Date(onsetDate), new ExposeeAuthMethodJson(""), new ResponseCallback<Void>() {
-			@Override
-			public void onSuccess(Void response) {
-				countDownLatch.countDown();
-			}
-
-			@Override
-			public void onError(Throwable throwable) {
-				countDownLatch.countDown();
-			}
-		});
-		countDownLatch.await();
-
-		AtomicLong today = new AtomicLong(System.currentTimeMillis());
-		try {
-			new SyncWorker.SyncImpl(context, today.get()).doSync();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		assertEquals(1, exposedRequestCounter.get());
-		assertEquals(0, exposedFakeRequestCounter.get());
-		assertEquals(0, exposednextdayFakeRequestCounter.get());
-		assertEquals(0, exposednextdayRequestCounter.get());
-		assertFalse(DP3T.isTracingEnabled(context));
-		assertEquals(InfectionStatus.INFECTED, DP3T.getStatus(context).getInfectionStatus());
-		for (int k : sentRollingStartNumbers) {
-			assertTrue(k >= DateUtil.getRollingStartNumberForDate(onsetDate));
-			assertTrue(k <= DateUtil.getRollingStartNumberForDate(today.get()));
-		}
-
-		AtomicLong tomorrow = new AtomicLong(today.get() + 1000 * 60 * 60 * 24);
-		testGoogleExposureClient.setTime(tomorrow.get());
-
-		try {
-			new SyncWorker.SyncImpl(context, tomorrow.get()).doSync();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		mInstrumentation.removeMonitor(monitor);
-
-		assertEquals(1, exposedRequestCounter.get());
-		assertEquals(0, exposedFakeRequestCounter.get());
-		assertEquals(1, exposednextdayFakeRequestCounter.get());
-		assertEquals(0, exposednextdayRequestCounter.get());
-		assertFalse(DP3T.isTracingEnabled(context));
-		assertEquals(InfectionStatus.INFECTED, DP3T.getStatus(context).getInfectionStatus());
+	public void testIAmInfectedTodayKeyAlreadyReleased() throws Exception {
+		testIAmInfected(true, false, 5, true);
 	}
 
 	@Test
-	public void testIAmInfectedKeyNotReleased() throws Exception {
+	public void testIAmInfectedTodayKeyNotReleased() throws Exception {
+		testIAmInfected(false, true, 4, false);
+	}
 
-		testGoogleExposureClient = new TestGoogleExposureClient(context, false);
+	private void testIAmInfected(boolean currentDayKeyReleased, boolean expectedTracingEnabledDirectlyAfterSendingInfection,
+			int expectedNumberOfTEKToday, boolean expectedNextDayRequestIsFake) throws Exception {
+
+		testGoogleExposureClient = new TestGoogleExposureClient(context, currentDayKeyReleased);
 		GoogleExposureClient.wrapTestClient(testGoogleExposureClient);
 		testGoogleExposureClient.setTime(System.currentTimeMillis());
 
@@ -204,14 +115,13 @@ public class TEKReleaseTest {
 
 		//Onset Date is 4 days ago
 		long onsetDate = System.currentTimeMillis() - 1000 * 60 * 60 * 96;
-		Gson gson = new Gson();
 
 		server.setDispatcher(new Dispatcher() {
 			@Override
 			public MockResponse dispatch(RecordedRequest request) {
 				String body = new String(request.getBody().readByteArray());
 				if (request.getPath().equals("/bucket/v1/gaen/exposed")) {
-					GaenRequest gaenRequest = gson.fromJson(body, new TypeToken<GaenRequest>() { }.getType());
+					GaenRequest gaenRequest = Json.fromJson(body, GaenRequest.class);
 					int fake = gaenRequest.isFake();
 					if (fake == 1) exposedFakeRequestCounter.getAndIncrement();
 					else {
@@ -224,7 +134,7 @@ public class TEKReleaseTest {
 					}
 				}
 				if (request.getPath().equals("/bucket/v1/gaen/exposednextday")) {
-					GaenSecondDay gaenSecondDayRequest = gson.fromJson(body, new TypeToken<GaenSecondDay>() { }.getType());
+					GaenSecondDay gaenSecondDayRequest = Json.fromJson(body, GaenSecondDay.class);
 					int fake = gaenSecondDayRequest.isFake();
 					if (fake == 1) exposednextdayFakeRequestCounter.getAndIncrement();
 					else {
@@ -261,11 +171,16 @@ public class TEKReleaseTest {
 		assertEquals(0, exposedFakeRequestCounter.get());
 		assertEquals(0, exposednextdayFakeRequestCounter.get());
 		assertEquals(0, exposednextdayRequestCounter.get());
-		assertTrue(DP3T.isTracingEnabled(context));
+		assertEquals(expectedTracingEnabledDirectlyAfterSendingInfection, DP3T.isTracingEnabled(context));
 		assertEquals(InfectionStatus.INFECTED, DP3T.getStatus(context).getInfectionStatus());
+		assertEquals(expectedNumberOfTEKToday, sentRollingStartNumbers.size());
 		for (int k : sentRollingStartNumbers) {
 			assertTrue(k >= DateUtil.getRollingStartNumberForDate(onsetDate));
-			assertTrue(k < DateUtil.getRollingStartNumberForDate(today.get()));
+			if (currentDayKeyReleased) {
+				assertTrue(k <= DateUtil.getRollingStartNumberForDate(today.get()));
+			} else {
+				assertTrue(k < DateUtil.getRollingStartNumberForDate(today.get()));
+			}
 		}
 
 		AtomicLong tomorrow = new AtomicLong(today.get() + 1000 * 60 * 60 * 24);
@@ -281,8 +196,13 @@ public class TEKReleaseTest {
 
 		assertEquals(1, exposedRequestCounter.get());
 		assertEquals(0, exposedFakeRequestCounter.get());
-		assertEquals(0, exposednextdayFakeRequestCounter.get());
-		assertEquals(1, exposednextdayRequestCounter.get());
+		if (expectedNextDayRequestIsFake) {
+			assertEquals(1, exposednextdayFakeRequestCounter.get());
+			assertEquals(0, exposednextdayRequestCounter.get());
+		} else {
+			assertEquals(0, exposednextdayFakeRequestCounter.get());
+			assertEquals(1, exposednextdayRequestCounter.get());
+		}
 		assertFalse(DP3T.isTracingEnabled(context));
 		assertEquals(InfectionStatus.INFECTED, DP3T.getStatus(context).getInfectionStatus());
 		for (int k : nextdaySentRollingStartNumbers) {

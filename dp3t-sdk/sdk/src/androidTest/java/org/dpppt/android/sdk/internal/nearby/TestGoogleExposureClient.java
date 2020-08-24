@@ -63,7 +63,7 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 	@Override
 	public Task<List<TemporaryExposureKey>> getTemporaryExposureKeyHistory() {
 		ArrayList<TemporaryExposureKey> temporaryExposureKeys = new ArrayList<>();
-		for (int i = 1; i<20; i++){
+		for (int i = 1; i<14; i++){
 			temporaryExposureKeys.add(new TemporaryExposureKey.TemporaryExposureKeyBuilder()
 					.setRollingStartIntervalNumber(DateUtil.getRollingStartNumberForDate(new DayDate(time).subtractDays(i)))
 					.build());
