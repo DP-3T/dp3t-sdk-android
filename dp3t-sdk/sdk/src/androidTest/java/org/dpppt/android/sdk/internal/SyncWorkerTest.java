@@ -201,19 +201,6 @@ public class SyncWorkerTest {
 		assertEquals(InfectionStatus.HEALTHY, status.getInfectionStatus());
 	}
 
-	@Test
-	public void testExposureTooLongAgo() {
-		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
-		params.attenuationDurations = new int[] { 20, 0, 0 };
-		params.daysSinceLastExposure = 15;
-		params.matchedKeyCount = 1;
-
-		testExposure(params);
-
-		TracingStatus status = DP3T.getStatus(context);
-		assertEquals(InfectionStatus.HEALTHY, status.getInfectionStatus());
-	}
-
 	private void testExposure(TestGoogleExposureClient.ExposureTestParameters params) {
 		AtomicLong time = new AtomicLong(yesterdayAt8am());
 		server.setDispatcher(new Dispatcher() {
