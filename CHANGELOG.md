@@ -4,6 +4,7 @@
 
 - exposed days are now deleted 14 days after reporting the exposureDay (before they were deleted 10 days after the exposure which could be only 1 day after reporting)
 - handle same day release of TEK: if we receive the current days TEK directly, we do a fake request the next day. Otherwise, the current days TEK is uploaded the next day as before.
+- the number of uploaded keys has been increased to 30, because with same day release of keys it is possible to have more than 14 TEKs for the past 14 days
 
 ## version 1.0.3 (24.7.2020)
 
