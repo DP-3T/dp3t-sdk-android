@@ -19,4 +19,12 @@ public class GaenSecondDay {
 		this.fake = gaenKey.fake;
 	}
 
+	public Integer isFake() {
+		return this.fake;
+	}
+
+	public GaenKey getDelayedKey() {
+		return delayedKey;
+	}
+
 }

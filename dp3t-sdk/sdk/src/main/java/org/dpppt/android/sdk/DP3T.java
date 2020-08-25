@@ -248,25 +248,38 @@ public class DP3T {
 				.getTemporaryExposureKeyHistory(activity, REQUEST_CODE_EXPORT_KEYS,
 						temporaryExposureKeys -> {
 							List<TemporaryExposureKey> filteredKeys = new ArrayList<>();
+							int delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
+							boolean delayedKeyAlreadyPresent = false;
 							for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
 								if (temporaryExposureKey.getRollingStartIntervalNumber() >=
 										DateUtil.getRollingStartNumberForDate(onsetDate)) {
 									filteredKeys.add(temporaryExposureKey);
+									if (temporaryExposureKey.getRollingStartIntervalNumber() == delayedKeyDate) {
+										delayedKeyAlreadyPresent = true;
+									}
 								}
 							}
-							int delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
 							GaenRequest exposeeListRequest = new GaenRequest(filteredKeys, delayedKeyDate);
 
 							AppConfigManager appConfigManager = AppConfigManager.getInstance(activity);
 							try {
+								boolean finalDelayedKeyAlreadyPresent = delayedKeyAlreadyPresent;
 								appConfigManager.getBackendReportRepository(activity)
 										.addGaenExposee(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
 												new ResponseCallback<String>() {
 													@Override
 													public void onSuccess(String authToken) {
-														PendingKey delayedKey = new PendingKey(delayedKeyDate, authToken, 0);
+														//if the currentDay key was already released (because of same day TEK
+														// release) we do a fake request the next day, otherwise we upload todays
+														// key tomorrow
+														PendingKey delayedKey = new PendingKey(delayedKeyDate, authToken,
+																finalDelayedKeyAlreadyPresent ? 1 : 0);
 														PendingKeyUploadStorage.getInstance(activity).addPendingKey(delayedKey);
 														appConfigManager.setIAmInfected(true);
+														if (finalDelayedKeyAlreadyPresent) {
+															DP3T.stop(activity);
+															appConfigManager.setIAmInfectedIsResettable(true);
+														}
 														pendingIAmInfectedRequest.callback.onSuccess(null);
 														pendingIAmInfectedRequest = null;
 													}

@@ -37,7 +37,7 @@ public class GaenRequest {
 			rollingStartNumber = Math.min(rollingStartNumber, temporaryExposureKey.getRollingStartIntervalNumber());
 		}
 		SecureRandom random = new SecureRandom();
-		while (keys.size() < 14) {
+		while (keys.size() < 30) {
 			byte[] bytes = new byte[16];
 			random.nextBytes(bytes);
 			rollingStartNumber = rollingStartNumber - 144;
