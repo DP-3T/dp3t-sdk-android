@@ -26,14 +26,23 @@ import com.google.android.gms.nearby.exposurenotification.*;
 import com.google.android.gms.tasks.Task;
 
 import org.dpppt.android.sdk.internal.util.Json;
+import org.dpppt.android.sdk.models.DayDate;
+import org.dpppt.android.sdk.util.DateUtil;
 
 public class TestGoogleExposureClient implements ExposureNotificationClient {
 
 	private Context context;
 	private int provideDiagnosisKeysCounter = 0;
+	private boolean currentDayKeyReleased = false;
+	private long time = System.currentTimeMillis();
 
 	public TestGoogleExposureClient(Context context) {
 		this.context = context;
+	}
+
+	public TestGoogleExposureClient(Context context, boolean currentDayKeyReleased) {
+		this.context = context;
+		this.currentDayKeyReleased = currentDayKeyReleased;
 	}
 
 	@Override
@@ -53,7 +62,18 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 
 	@Override
 	public Task<List<TemporaryExposureKey>> getTemporaryExposureKeyHistory() {
-		return new DummyTask<>(new ArrayList<>());
+		ArrayList<TemporaryExposureKey> temporaryExposureKeys = new ArrayList<>();
+		for (int i = 1; i<14; i++){
+			temporaryExposureKeys.add(new TemporaryExposureKey.TemporaryExposureKeyBuilder()
+					.setRollingStartIntervalNumber(DateUtil.getRollingStartNumberForDate(new DayDate(time).subtractDays(i)))
+					.build());
+		}
+		if (currentDayKeyReleased) {
+			temporaryExposureKeys.add(new TemporaryExposureKey.TemporaryExposureKeyBuilder()
+					.setRollingStartIntervalNumber(DateUtil.getRollingStartNumberForDate(new DayDate(time)))
+					.build());
+		}
+		return new DummyTask<>(temporaryExposureKeys);
 	}
 
 	@Override
@@ -103,6 +123,10 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 
 	public int getProvideDiagnosisKeysCounter() {
 		return provideDiagnosisKeysCounter;
+	}
+
+	public void setTime(long time){
+		this.time = time;
 	}
 
 	public static class ExposureTestParameters {

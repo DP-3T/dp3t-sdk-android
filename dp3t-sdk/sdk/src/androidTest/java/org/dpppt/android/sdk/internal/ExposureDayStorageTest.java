@@ -82,4 +82,16 @@ public class ExposureDayStorageTest {
 		assertEquals(1, eds.getExposureDays().size());
 	}
 
+	@Test
+	public void testKeepTestsFor14DaysAfterReport() {
+		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
+		eds.clear();
+		//should be returned in getExposureDays()
+		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(11), System.currentTimeMillis() - 10));
+		//should not be considered because the report date is more than 14 days in the past
+		eds.addExposureDay(context,
+				new ExposureDay(-2, new DayDate().subtractDays(16), System.currentTimeMillis() - 15 * 24 * 60 * 60 * 1000));
+		assertEquals(1, eds.getExposureDays().size());
+	}
+
 }

@@ -19,6 +19,7 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.dpppt.android.sdk.BuildConfig;
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.InfectionStatus;
 import org.dpppt.android.sdk.TracingStatus;
@@ -74,6 +75,9 @@ public class SyncWorkerTest {
 
 	@Test
 	public void testSyncStartAtMorning() {
+		if (!BuildConfig.FLAVOR.equals("production")) {
+			throw new IllegalStateException("Wrong Build Variant. Make sure to run this Test with the production build variant.");
+		}
 		AtomicLong time = new AtomicLong(yesterdayAt3am());
 
 		server.setDispatcher(new Dispatcher() {
@@ -109,6 +113,9 @@ public class SyncWorkerTest {
 
 	@Test
 	public void testSyncStartEvening() throws Exception {
+		if (!BuildConfig.FLAVOR.equals("production")) {
+			throw new IllegalStateException("Wrong Build Variant. Make sure to run this Test with the production build variant.");
+		}
 		AtomicLong time = new AtomicLong(yesterdayAt8pm());
 
 		server.setDispatcher(new Dispatcher() {
@@ -131,6 +138,9 @@ public class SyncWorkerTest {
 
 	@Test
 	public void testSyncDelayedInEvening() throws Exception {
+		if (!BuildConfig.FLAVOR.equals("production")) {
+			throw new IllegalStateException("Wrong Build Variant. Make sure to run this Test with the production build variant.");
+		}
 		AtomicLong time = new AtomicLong(yesterdayAt8am());
 
 		server.setDispatcher(new Dispatcher() {
@@ -193,19 +203,6 @@ public class SyncWorkerTest {
 		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
 		params.attenuationDurations = new int[] { 10, 8, 0 };
 		params.daysSinceLastExposure = 1;
-		params.matchedKeyCount = 1;
-
-		testExposure(params);
-
-		TracingStatus status = DP3T.getStatus(context);
-		assertEquals(InfectionStatus.HEALTHY, status.getInfectionStatus());
-	}
-
-	@Test
-	public void testExposureTooLongAgo() {
-		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
-		params.attenuationDurations = new int[] { 20, 0, 0 };
-		params.daysSinceLastExposure = 11;
 		params.matchedKeyCount = 1;
 
 		testExposure(params);
