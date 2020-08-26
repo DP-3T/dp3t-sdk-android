@@ -12,6 +12,7 @@ package org.dpppt.android.sdk.internal;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.PowerManager;
 import android.system.ErrnoException;
 import android.system.OsConstants;
@@ -62,7 +63,7 @@ public class ErrorHelper {
 			}
 		}
 
-		if (!LocationServiceUtil.isLocationEnabled(context)) {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R && !LocationServiceUtil.isLocationEnabled(context)) {
 			errors.add(ErrorState.LOCATION_SERVICE_DISABLED);
 		}
 

@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.LocationManager;
+import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Consumer;
@@ -99,10 +100,12 @@ public class DP3T {
 				new BluetoothStateBroadcastReceiver(),
 				new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
 		);
-		context.registerReceiver(
-				new LocationServiceBroadcastReceiver(),
-				new IntentFilter(LocationManager.MODE_CHANGED_ACTION)
-		);
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+			context.registerReceiver(
+					new LocationServiceBroadcastReceiver(),
+					new IntentFilter(LocationManager.MODE_CHANGED_ACTION)
+			);
+		}
 		context.registerReceiver(
 				new BatteryOptimizationBroadcastReceiver(),
 				new IntentFilter(BatteryOptimizationBroadcastReceiver.ACTION_POWER_SAVE_WHITELIST_CHANGED)
