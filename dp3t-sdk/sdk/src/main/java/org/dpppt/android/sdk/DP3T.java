@@ -208,6 +208,7 @@ public class DP3T {
 
 	public static TracingStatus getStatus(Context context) {
 		checkInit();
+		GaenStateHelper.invalidateGaenEnabled(context);
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		Collection<TracingStatus.ErrorState> errorStates = ErrorHelper.checkTracingErrorStatus(context, appConfigManager);
 		InfectionStatus infectionStatus;
