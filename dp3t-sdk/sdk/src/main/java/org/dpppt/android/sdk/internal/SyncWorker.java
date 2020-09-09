@@ -344,6 +344,8 @@ public class SyncWorker extends Worker {
 						}
 						if (gaenKey == null) {
 							//key for specified rollingStartNumber was not found, user must have cleared data
+							DP3T.stop(context);
+							appConfigManager.setIAmInfectedIsResettable(true);
 							continue;
 						}
 					} else {
