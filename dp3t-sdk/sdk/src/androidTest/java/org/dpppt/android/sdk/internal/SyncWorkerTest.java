@@ -14,10 +14,14 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicLong;
+
+import com.google.android.gms.nearby.exposurenotification.ExposureWindow;
+import com.google.android.gms.nearby.exposurenotification.ScanInstance;
 
 import org.dpppt.android.sdk.BuildConfig;
 import org.dpppt.android.sdk.DP3T;
@@ -188,9 +192,20 @@ public class SyncWorkerTest {
 	@Test
 	public void testExposure() {
 		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
-		params.attenuationDurations = new int[] { 20, 0, 0 };
-		params.daysSinceLastExposure = 1;
-		params.matchedKeyCount = 1;
+		params.exposureWindows = new ArrayList<>();
+		ArrayList<ScanInstance> scanInstances = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			scanInstances.add(new ScanInstance.Builder()
+					.setMinAttenuationDb(50)
+					.setTypicalAttenuationDb(50)
+					.setSecondsSinceLastScan(120)
+					.build());
+		}
+		ExposureWindow window = new ExposureWindow.Builder()
+				.setDateMillisSinceEpoch(new DayDate().subtractDays(1).getStartOfDayTimestamp())
+				.setScanInstances(scanInstances)
+				.build();
+		params.exposureWindows.add(window);
 
 		testExposure(params);
 
@@ -201,9 +216,27 @@ public class SyncWorkerTest {
 	@Test
 	public void testExposureNotLongEnough() {
 		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
-		params.attenuationDurations = new int[] { 10, 8, 0 };
-		params.daysSinceLastExposure = 1;
-		params.matchedKeyCount = 1;
+		params.exposureWindows = new ArrayList<>();
+		ArrayList<ScanInstance> scanInstances = new ArrayList<>();
+		for (int i = 0; i < 5; i++) {
+			scanInstances.add(new ScanInstance.Builder()
+					.setMinAttenuationDb(50)
+					.setTypicalAttenuationDb(50)
+					.setSecondsSinceLastScan(120)
+					.build());
+		}
+		for (int i = 0; i < 4; i++) {
+			scanInstances.add(new ScanInstance.Builder()
+					.setMinAttenuationDb(60)
+					.setTypicalAttenuationDb(60)
+					.setSecondsSinceLastScan(120)
+					.build());
+		}
+		ExposureWindow window = new ExposureWindow.Builder()
+				.setDateMillisSinceEpoch(new DayDate().subtractDays(1).getStartOfDayTimestamp())
+				.setScanInstances(scanInstances)
+				.build();
+		params.exposureWindows.add(window);
 
 		testExposure(params);
 

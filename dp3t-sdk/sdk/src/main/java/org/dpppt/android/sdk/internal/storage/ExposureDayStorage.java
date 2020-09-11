@@ -88,26 +88,29 @@ public class ExposureDayStorage {
 				iterator.remove();
 			}
 		}
-		if (list.size() > 0) {
-			ExposureDay lastDay = list.get(list.size() - 1);
-			list = new ArrayList<>();
-			list.add(lastDay);
-		}
 		return list;
 	}
-
-
-	public void addExposureDay(Context context, ExposureDay exposureDay) {
+	
+	public void addExposureDays(Context context, List<ExposureDay> newExposureDays) {
 		List<ExposureDay> previousExposureDays = getExposureDaysInternal();
-		for (ExposureDay previousExposureDay : previousExposureDays) {
-			if (previousExposureDay.getExposedDate().equals(exposureDay.getExposedDate())) {
-				return;//exposure day was already added
+		int id = esp.getInt(PREF_KEY_LAST_ID, 0);
+		for (ExposureDay exposureDay : newExposureDays) {
+			boolean alreadyInserted = false;
+			for (ExposureDay previousExposureDay : previousExposureDays) {
+				if (previousExposureDay.getExposedDate().equals(exposureDay.getExposedDate())) {
+					alreadyInserted = true;
+					break;//exposure day was already added
+				}
 			}
+			if (alreadyInserted) {
+				continue;
+			}
+
+			id++;
+			exposureDay.setId(id);
+			previousExposureDays.add(exposureDay);
 		}
 
-		int id = esp.getInt(PREF_KEY_LAST_ID, 0) + 1;
-		exposureDay.setId(id);
-		previousExposureDays.add(exposureDay);
 		esp.edit()
 				.putInt(PREF_KEY_LAST_ID, id)
 				.putString(PREF_KEY_EEXPOSURE_DAYS, Json.toJson(previousExposureDays))

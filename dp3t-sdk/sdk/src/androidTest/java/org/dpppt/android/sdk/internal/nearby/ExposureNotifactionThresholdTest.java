@@ -13,8 +13,6 @@ import android.content.Context;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
-
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,22 +36,14 @@ public class ExposureNotifactionThresholdTest {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.clearPreferences();
 		ExposureNotificationBroadcastReceiver broadcastReceiver = new ExposureNotificationBroadcastReceiver();
-		ExposureSummary exposureSummary =
-				new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 15, 0, 0 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 10, 10, 0 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 0, 30, 0 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 30, 30, 30 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
+		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 15, 0, 0 }));
+		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 10, 10, 0 }));
+		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 0, 30, 0 }));
+		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 30, 30, 30 }));
 
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 14, 1, 0 }).build();
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 5, 19, 0 }).build();
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 0, 29, 30 }).build();
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
+		assertFalse(broadcastReceiver.isExposureLimitReached(context, new int[] { 14, 1, 0 }));
+		assertFalse(broadcastReceiver.isExposureLimitReached(context, new int[] { 5, 19, 0 }));
+		assertFalse(broadcastReceiver.isExposureLimitReached(context, new int[] { 0, 29, 30 }));
 	}
 
 
@@ -66,24 +56,15 @@ public class ExposureNotifactionThresholdTest {
 		appConfigManager.setMinDurationForExposure(10);
 
 		ExposureNotificationBroadcastReceiver broadcastReceiver = new ExposureNotificationBroadcastReceiver();
-		ExposureSummary exposureSummary =
-				new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 20, 0, 0 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 10, 3, 0 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 0, 30, 0 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 30, 0, 0 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 30, 30, 30 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
+		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 20, 0, 0 }));
+		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 10, 3, 0 }));
+		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 0, 30, 0 }));
+		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 30, 0, 0 }));
+		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 30, 30, 30 }));
 
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 1, 4, 0 }).build();
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 15, 1, 0 }).build();
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 19, 0, 30 }).build();
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
+		assertFalse(broadcastReceiver.isExposureLimitReached(context, new int[] { 1, 4, 0 }));
+		assertFalse(broadcastReceiver.isExposureLimitReached(context, new int[] { 15, 1, 0 }));
+		assertFalse(broadcastReceiver.isExposureLimitReached(context, new int[] { 19, 0, 30 }));
 	}
 
 }

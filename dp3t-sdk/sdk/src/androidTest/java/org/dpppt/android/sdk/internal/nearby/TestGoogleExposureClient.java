@@ -35,6 +35,7 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 	private int provideDiagnosisKeysCounter = 0;
 	private boolean currentDayKeyReleased = false;
 	private long time = System.currentTimeMillis();
+	private ExposureTestParameters params;
 
 	public TestGoogleExposureClient(Context context) {
 		this.context = context;
@@ -63,7 +64,7 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 	@Override
 	public Task<List<TemporaryExposureKey>> getTemporaryExposureKeyHistory() {
 		ArrayList<TemporaryExposureKey> temporaryExposureKeys = new ArrayList<>();
-		for (int i = 1; i<14; i++){
+		for (int i = 1; i < 14; i++) {
 			temporaryExposureKeys.add(new TemporaryExposureKey.TemporaryExposureKeyBuilder()
 					.setRollingStartIntervalNumber(DateUtil.getRollingStartNumberForDate(new DayDate(time).subtractDays(i)))
 					.build());
@@ -83,15 +84,9 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 			try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
 				String fileContent = reader.readLine();
 				if (fileContent.startsWith("{")) {
-					ExposureTestParameters params = Json.fromJson(fileContent, ExposureTestParameters.class);
+					params = Json.fromJson(fileContent, ExposureTestParameters.class);
 					Intent intent = new Intent(ExposureNotificationClient.ACTION_EXPOSURE_STATE_UPDATED);
-					intent.putExtra(ExposureNotificationClient.EXTRA_EXPOSURE_SUMMARY,
-							new ExposureSummary.ExposureSummaryBuilder()
-									.setAttenuationDurations(params.attenuationDurations)
-									.setMatchedKeyCount(params.matchedKeyCount)
-									.setDaysSinceLastExposure(params.daysSinceLastExposure)
-									.build());
-					intent.putExtra(ExposureNotificationClient.EXTRA_TOKEN, token);
+					intent.putExtra(ExposureNotificationClient.EXTRA_TOKEN, ExposureNotificationClient.TOKEN_A);
 					new ExposureNotificationBroadcastReceiver().onReceive(context, intent);
 				}
 			} catch (IOException e) {
@@ -103,7 +98,7 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 
 	@Override
 	public Task<List<ExposureWindow>> getExposureWindows(String s) {
-		return new DummyTask<>(new ArrayList<>());
+		return new DummyTask<>(params == null ? new ArrayList<>() : params.exposureWindows);
 	}
 
 	@Override
@@ -125,14 +120,13 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 		return provideDiagnosisKeysCounter;
 	}
 
-	public void setTime(long time){
+	public void setTime(long time) {
 		this.time = time;
 	}
 
 	public static class ExposureTestParameters {
-		public int[] attenuationDurations;
-		public int matchedKeyCount;
-		public int daysSinceLastExposure;
+
+		public List<ExposureWindow> exposureWindows;
 
 	}
 

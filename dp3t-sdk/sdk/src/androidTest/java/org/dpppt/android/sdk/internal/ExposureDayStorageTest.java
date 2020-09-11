@@ -13,6 +13,8 @@ import android.content.Context;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import java.util.Arrays;
+
 import org.dpppt.android.sdk.internal.storage.ExposureDayStorage;
 import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposureDay;
@@ -36,7 +38,7 @@ public class ExposureDayStorageTest {
 	public void testInsertion() {
 		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
 		eds.clear();
-		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis()));
+		eds.addExposureDays(context, Arrays.asList(new ExposureDay(-1, new DayDate(), System.currentTimeMillis())));
 		assertEquals(1, eds.getExposureDays().size());
 	}
 
@@ -44,20 +46,30 @@ public class ExposureDayStorageTest {
 	public void testMultiInsertion() {
 		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
 		eds.clear();
-		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis() - 10));
-		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis()));
-		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis() - 20));
-		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis()));
-		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis()));
+		eds.addExposureDays(context, Arrays.asList(new ExposureDay(-1, new DayDate(), System.currentTimeMillis() - 10)));
 		assertEquals(1, eds.getExposureDays().size());
 		assertEquals(new DayDate(), eds.getExposureDays().get(0).getExposedDate());
+
+		eds.addExposureDays(context, Arrays.asList(new ExposureDay(-1, new DayDate(), System.currentTimeMillis()),
+				new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis() - 20)));
+		assertEquals(2, eds.getExposureDays().size());
+		assertEquals(new DayDate().subtractDays(1), eds.getExposureDays().get(0).getExposedDate());
+		assertEquals(new DayDate(), eds.getExposureDays().get(1).getExposedDate());
+
+		eds.addExposureDays(context,
+				Arrays.asList(new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis())));
+		eds.addExposureDays(context,
+				Arrays.asList(new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis())));
+		assertEquals(2, eds.getExposureDays().size());
+		assertEquals(new DayDate().subtractDays(1), eds.getExposureDays().get(0).getExposedDate());
+		assertEquals(new DayDate(), eds.getExposureDays().get(1).getExposedDate());
 	}
 
 	@Test
 	public void testReset() {
 		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
 		eds.clear();
-		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis()));
+		eds.addExposureDays(context, Arrays.asList(new ExposureDay(-1, new DayDate(), System.currentTimeMillis())));
 		eds.resetExposureDays();
 		assertEquals(0, eds.getExposureDays().size());
 	}
@@ -66,9 +78,9 @@ public class ExposureDayStorageTest {
 	public void testResetReadd() {
 		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
 		eds.clear();
-		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis() - 10));
+		eds.addExposureDays(context, Arrays.asList(new ExposureDay(-1, new DayDate(), System.currentTimeMillis() - 10)));
 		eds.resetExposureDays();
-		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis()));
+		eds.addExposureDays(context, Arrays.asList(new ExposureDay(-1, new DayDate(), System.currentTimeMillis())));
 		assertEquals(0, eds.getExposureDays().size());
 	}
 
@@ -76,9 +88,10 @@ public class ExposureDayStorageTest {
 	public void testResetAddNewDay() {
 		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
 		eds.clear();
-		eds.addExposureDay(context, new ExposureDay(-1, new DayDate(), System.currentTimeMillis() - 10));
+		eds.addExposureDays(context, Arrays.asList(new ExposureDay(-1, new DayDate(), System.currentTimeMillis() - 10)));
 		eds.resetExposureDays();
-		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(1), System.currentTimeMillis()));
+		eds.addExposureDays(context, Arrays.asList(new ExposureDay(-1, new DayDate().subtractDays(1),
+				System.currentTimeMillis())));
 		assertEquals(1, eds.getExposureDays().size());
 	}
 
@@ -87,10 +100,12 @@ public class ExposureDayStorageTest {
 		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
 		eds.clear();
 		//should be returned in getExposureDays()
-		eds.addExposureDay(context, new ExposureDay(-1, new DayDate().subtractDays(11), System.currentTimeMillis() - 10));
+		eds.addExposureDays(context,
+				Arrays.asList(new ExposureDay(-1, new DayDate().subtractDays(11), System.currentTimeMillis() - 10)));
 		//should not be considered because the report date is more than 14 days in the past
-		eds.addExposureDay(context,
-				new ExposureDay(-2, new DayDate().subtractDays(16), System.currentTimeMillis() - 15 * 24 * 60 * 60 * 1000));
+		eds.addExposureDays(context,
+				Arrays.asList(new ExposureDay(-2, new DayDate().subtractDays(16),
+						System.currentTimeMillis() - 15 * 24 * 60 * 60 * 1000)));
 		assertEquals(1, eds.getExposureDays().size());
 	}
 

@@ -22,6 +22,7 @@ import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
 import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 
 import org.dpppt.android.sdk.BuildConfig;
@@ -201,11 +202,10 @@ public class SyncWorker extends Worker {
 
 							ArrayList<File> fileList = new ArrayList<>();
 							fileList.add(file);
-							String token = dateToLoad.formatAsString();
 							Logger.d(TAG,
 									"provideDiagnosisKeys for " + dateToLoad.formatAsString() + " with size " + file.length());
 							lastSyncCallTimes.put(dateToLoad, currentTime);
-							googleExposureClient.provideDiagnosisKeys(fileList, token);
+							googleExposureClient.provideDiagnosisKeys(fileList, ExposureNotificationClient.TOKEN_A);
 						} else {
 							lastSyncCallTimes.put(dateToLoad, currentTime);
 						}
