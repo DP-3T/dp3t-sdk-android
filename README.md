@@ -156,5 +156,15 @@ DP3T.sync(getContext());
 Make sure you do not call this method on the UI thread, because it will perform the sync synchronously.
 Due to rate limits on the provideDiagnosisKeys() the sync can be execute only in a very restricted manner.
 
+## Apps using the DP3T-SDK for Android
+Name | Country | Source code | Store | Release-Date
+---- | ----------- | ------------- | ------------- | -------------
+SwissCovid | Switzerland | https://github.com/DP-3T/dp3t-app-android-ch | https://play.google.com/store/apps/details?id=ch.admin.bag.dp3t | 25. Mai 2020
+ASI | Ecuador | https://minka.gob.ec/asi-ecuador/android | https://play.google.com/store/apps/details?id=ec.gob.asi.android | 2. August 2020
+Hoia | Estonia | https://koodivaramu.eesti.ee/tehik/hoia/dp3t-app-android | https://play.google.com/store/apps/details?id=ee.tehik.hoia | 18. August 2020
+STAYAWAY COVID | Portugal | https://github.com/stayawayinesctec/stayaway-app | https://play.google.com/store/apps/details?id=fct.inesctec.stayaway | 28. August 2020
+Radar COVID | Spain | https://github.com/RadarCOVID/radar-covid-android | https://play.google.com/store/apps/details?id=es.gob.radarcovid |
+
+
 ## License
 This project is licensed under the terms of the MPL 2 license. See the [LICENSE](LICENSE) file.
