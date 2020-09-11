@@ -15,9 +15,6 @@ import androidx.annotation.NonNull;
 import androidx.work.*;
 
 import java.util.HashMap;
-import java.util.List;
-
-import com.google.android.gms.nearby.exposurenotification.ExposureWindow;
 
 import org.dpppt.android.sdk.internal.logger.Logger;
 
@@ -57,7 +54,7 @@ public class MatchingWorker extends Worker {
 			} else {
 				HandshakesFragment.executeAndUploadMatching(context, experiment, new HandshakesFragment.Callback() {
 					@Override
-					public void onResult(HashMap<String, List<ExposureWindow>> result) {
+					public void onResult(HashMap<String, HandshakesFragment.ExposureResult> result) {
 						Logger.i(TAG, "matching executed and uploaded successfully!");
 					}
 

@@ -31,6 +31,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
+import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
 import com.google.android.gms.nearby.exposurenotification.ExposureWindow;
 import com.google.android.gms.nearby.exposurenotification.ScanInstance;
 import com.google.gson.Gson;
@@ -105,7 +106,7 @@ public class HandshakesFragment extends Fragment {
 							new Thread(() -> {
 								executeAndUploadMatching(context, experiment, new Callback() {
 									@Override
-									public void onResult(HashMap<String, List<ExposureWindow>> result) {
+									public void onResult(HashMap<String, ExposureResult> result) {
 										view.post(() -> {
 											textView.setText(GSON.toJson(result));
 										});
@@ -183,13 +184,15 @@ public class HandshakesFragment extends Fragment {
 			return;
 		}
 		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
-		HashMap<String, List<ExposureWindow>> result = new HashMap<>();
+		HashMap<String, ExposureResult> resultMap = new HashMap<>();
 		List<ExposureWindow> oldExposureWindows = new ArrayList<>();
 		for (Experiment.Device device : experiment.devices) {
 			try {
 				ArrayList<File> fileList = new ArrayList<>();
 				fileList.add(device.file);
 				googleExposureClient.provideDiagnosisKeys(fileList, ExposureNotificationClient.TOKEN_A);
+				String token = experiment.name + "_" + device.name + "_" + new DayDate().formatAsString();
+				googleExposureClient.provideDiagnosisKeys(fileList, token);
 				Thread.sleep(2000);
 				List<ExposureWindow> newExposureWindows = googleExposureClient.getExposureWindows();
 				Iterator<ExposureWindow> iterator = newExposureWindows.iterator();
@@ -199,21 +202,24 @@ public class HandshakesFragment extends Fragment {
 					}
 				}
 				oldExposureWindows.addAll(newExposureWindows);
-				result.put(device.getName(), newExposureWindows);
+				ExposureResult result = new ExposureResult();
+				result.exposureWindows = newExposureWindows;
+				result.exposureSummary = googleExposureClient.getExposureSummary(token);
+				resultMap.put(device.getName(), result);
 			} catch (Exception e) {
 				e.printStackTrace();
 				callback.onFailure(e);
 			}
 		}
 		try {
-			new BufferedWriter(new FileWriter(file)).append(GSON.toJson(result)).close();
+			new BufferedWriter(new FileWriter(file)).append(GSON.toJson(resultMap)).close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		new FileUploadRepository().uploadFile(file, new retrofit2.Callback<Void>() {
 			@Override
 			public void onResponse(Call<Void> call, Response<Void> response) {
-				callback.onResult(result);
+				callback.onResult(resultMap);
 			}
 
 			@Override
@@ -222,6 +228,7 @@ public class HandshakesFragment extends Fragment {
 			}
 		});
 	}
+
 
 	private static JsonSerializer<ExposureWindow> exposureWindowJsonSerializer = (src, typeOfSrc, context) -> {
 		JsonObject jsonObject = new JsonObject();
@@ -243,14 +250,35 @@ public class HandshakesFragment extends Fragment {
 		return jsonObject;
 	};
 
+	private static JsonSerializer<ExposureSummary> exposureSummaryJsonSerializer = (src, typeOfSrc, context) -> {
+		JsonObject jsonObject = new JsonObject();
+
+		jsonObject.addProperty("daysSinceLastExposure", src.getDaysSinceLastExposure());
+		jsonObject.addProperty("matchedKeyCount", src.getMatchedKeyCount());
+		jsonObject.addProperty("maximumRiskScore", src.getMaximumRiskScore());
+		jsonObject.addProperty("summationRiskScore", src.getSummationRiskScore());
+		jsonObject.add("attenuationDurationsInMinutes", context.serialize(src.getAttenuationDurationsInMinutes()));
+
+		return jsonObject;
+	};
+
 	private static final Gson GSON = new GsonBuilder()
 			.registerTypeAdapter(ExposureWindow.class, exposureWindowJsonSerializer)
 			.registerTypeAdapter(ScanInstance.class, scanInstanceJsonSerializer)
+			.registerTypeAdapter(ExposureSummary.class, exposureSummaryJsonSerializer)
 			.create();
 
 
+	public static class ExposureResult {
+
+		List<ExposureWindow> exposureWindows;
+		ExposureSummary exposureSummary;
+
+	}
+
+
 	public interface Callback {
-		void onResult(HashMap<String, List<ExposureWindow>> result);
+		void onResult(HashMap<String, ExposureResult> result);
 
 		void onFailure(Throwable t);
 
