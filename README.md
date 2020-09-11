@@ -159,11 +159,11 @@ Due to rate limits on the provideDiagnosisKeys() the sync can be execute only in
 ## Apps using the DP3T-SDK for Android
 Name | Country | Source code | Store | Release-Date
 ---- | ----------- | ------------- | ------------- | -------------
-SwissCovid | Switzerland | https://github.com/DP-3T/dp3t-app-android-ch | https://play.google.com/store/apps/details?id=ch.admin.bag.dp3t | 25. Mai 2020
-ASI | Ecuador | https://minka.gob.ec/asi-ecuador/android | https://play.google.com/store/apps/details?id=ec.gob.asi.android | 2. August 2020
-Hoia | Estonia | https://koodivaramu.eesti.ee/tehik/hoia/dp3t-app-android | https://play.google.com/store/apps/details?id=ee.tehik.hoia | 18. August 2020
-STAYAWAY COVID | Portugal | https://github.com/stayawayinesctec/stayaway-app | https://play.google.com/store/apps/details?id=fct.inesctec.stayaway | 28. August 2020
-Radar COVID | Spain | https://github.com/RadarCOVID/radar-covid-android | https://play.google.com/store/apps/details?id=es.gob.radarcovid |
+SwissCovid | Switzerland | [Github](https://github.com/DP-3T/dp3t-app-android-ch) | [PlayStore](https://play.google.com/store/apps/details?id=ch.admin.bag.dp3t) | 25. Mai 2020
+ASI | Ecuador | [minka.gob.ec](https://minka.gob.ec/asi-ecuador/android) | [PlayStore](https://play.google.com/store/apps/details?id=ec.gob.asi.android) | 2. August 2020
+Hoia | Estonia | [koodivaramu.eesti.ee](https://koodivaramu.eesti.ee/tehik/hoia/dp3t-app-android) | [PlayStore](https://play.google.com/store/apps/details?id=ee.tehik.hoia) | 18. August 2020
+STAYAWAY COVID | Portugal | [Github](https://github.com/stayawayinesctec/stayaway-app) | [PlayStore](https://play.google.com/store/apps/details?id=fct.inesctec.stayaway) | 28. August 2020
+Radar COVID | Spain | [Github](https://github.com/RadarCOVID/radar-covid-android) | [PlayStore](https://play.google.com/store/apps/details?id=es.gob.radarcovid) |
 
 
 ## License
