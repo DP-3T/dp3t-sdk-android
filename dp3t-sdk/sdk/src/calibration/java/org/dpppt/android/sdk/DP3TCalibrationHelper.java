@@ -57,7 +57,7 @@ public class DP3TCalibrationHelper {
 
 	public String getCalibrationTestDeviceName() {
 		BluetoothAdapter myDevice = BluetoothAdapter.getDefaultAdapter();
-		return sharedPrefs.getString(PREF_CALIBRATION_TEST_DEVICE_NAME, myDevice.getName().replace(' ', '_'));
+		return sharedPrefs.getString(PREF_CALIBRATION_TEST_DEVICE_NAME, myDevice.getName()).replaceAll("[^a-zA-Z0-9]", "");
 	}
 
 	public void setExperimentName(String name) {
@@ -65,7 +65,7 @@ public class DP3TCalibrationHelper {
 	}
 
 	public String getExperimentName() {
-		return sharedPrefs.getString(PREF_EXPERIMENT_NAME, "");
+		return sharedPrefs.getString(PREF_EXPERIMENT_NAME, "").replaceAll("[^a-zA-Z0-9]", "");
 	}
 
 }

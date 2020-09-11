@@ -85,7 +85,10 @@ public class ParametersFragment extends Fragment {
 		String deviceId = deviceIdEditText.getText().toString();
 		DP3TCalibrationHelper.getInstance(getContext()).setExperimentName(experimentId);
 		DP3TCalibrationHelper.getInstance(getContext()).setCalibrationTestDeviceName(deviceId);
-		String name = "experiment_" + experimentId + "_" + deviceId;
+		experimentIdEditText.setText(DP3TCalibrationHelper.getInstance(getContext()).getExperimentName());
+		deviceIdEditText.setText(DP3TCalibrationHelper.getInstance(getContext()).getCalibrationTestDeviceName());
+		String name = "experiment_" + DP3TCalibrationHelper.getInstance(getContext()).getExperimentName() + "_" +
+				DP3TCalibrationHelper.getInstance(getContext()).getCalibrationTestDeviceName();
 		GoogleExposureClient.getInstance(getContext())
 				.getTemporaryExposureKeyHistory(getActivity(), RESOLUTION_REQUEST_CODE, temporaryExposureKeys -> {
 					ProgressDialog progressDialog = new ProgressDialog(getContext());
