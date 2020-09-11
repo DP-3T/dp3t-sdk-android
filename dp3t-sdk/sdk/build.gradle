@@ -21,8 +21,8 @@ android {
 	defaultConfig {
 		minSdkVersion 23
 		targetSdkVersion 30
-		versionCode 104
-		versionName "1.0.4"
+		versionCode 105
+		versionName "1.0.5"
 		testInstrumentationRunnerArgument 'androidx.benchmark.suppressErrors', 'EMULATOR,LOW-BATTERY,ACTIVITY-MISSING,DEBUGGABLE,UNLOCKED,UNSUSTAINED-ACTIVITY-MISSING'
 		testInstrumentationRunner "androidx.benchmark.junit4.AndroidBenchmarkRunner"
 
@@ -65,21 +65,22 @@ afterEvaluate {
 				from components.productionRelease
 				groupId 'org.dpppt'
 				artifactId 'dp3t-sdk-android'
-				version android.defaultConfig.versionName
+				version android.defaultConfig.versionName + readPropertyWithDefault('bintrayVersionSuffix', '')
 				artifact androidSourcesJar
 			}
 			"sdkCalibration"(MavenPublication) {
 				from components.calibrationRelease
 				groupId 'org.dpppt'
 				artifactId 'dp3t-sdk-android'
-				version android.defaultConfig.versionName + "-calibration"
+				version android.defaultConfig.versionName + readPropertyWithDefault('bintrayVersionSuffix', '') + "-calibration"
 				artifact androidSourcesJar
 			}
 		}
 	}
 }
 
-ext.readProperty = { paramName ->
+ext.readProperty = { paramName -> readPropertyWithDefault(paramName, null) }
+ext.readPropertyWithDefault = { paramName, defaultValue ->
 	if (project.hasProperty(paramName)) {
 		return project.getProperties().get(paramName)
 	} else {
@@ -87,7 +88,11 @@ ext.readProperty = { paramName ->
 		if (project.rootProject.file('local.properties').exists()) {
 			properties.load(project.rootProject.file('local.properties').newDataInputStream())
 		}
-		return properties.getProperty(paramName)
+		if (properties.getProperty(paramName) != null) {
+			return properties.getProperty(paramName)
+		} else {
+			return defaultValue
+		}
 	}
 }
 
