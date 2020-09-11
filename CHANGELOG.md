@@ -1,5 +1,13 @@
 # Changelog for DP3T-SDK Android
 
+## version 1.1.0 (unreleased)
+
+- updated to play-services-nearby-exposurenotification-1.6.1-eap.aar, make sure to update this in your project as well!
+- use exposureWindows to compute attenuationDurations
+- exposureDays now returns all exposure days, not only the last one as in previous versions
+- updated defaults for attenuationBucketThresholds, new values are 55 and 63
+- add Experiment-Mode to calibration app to simplify experiments with multiple devices and the new ExposureWindows-API (see CALIBRATION_APP_USAGE.md for details)
+
 ## version 1.0.4 (25.8.2020)
 
 - exposed days are now deleted 14 days after reporting the exposureDay (before they were deleted 10 days after the exposure which could be only 1 day after reporting)
