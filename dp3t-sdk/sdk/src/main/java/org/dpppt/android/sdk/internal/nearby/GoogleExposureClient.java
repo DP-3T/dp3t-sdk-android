@@ -33,8 +33,6 @@ public class GoogleExposureClient {
 
 	private final ExposureNotificationClient exposureNotificationClient;
 
-	private ExposureConfiguration exposureConfiguration;
-
 	public static synchronized GoogleExposureClient getInstance(Context context) {
 		if (instance == null) {
 			instance = new GoogleExposureClient(context.getApplicationContext());
@@ -144,23 +142,38 @@ public class GoogleExposureClient {
 		}
 	}
 
-	public void setParams(int attenuationThresholdLow, int attenuationThresholdMedium) {
-		exposureConfiguration = new ExposureConfiguration.ExposureConfigurationBuilder()
-				.setMinimumRiskScore(1)
-				.setAttenuationScores(new int[] { 1, 1, 1, 1, 1, 1, 1, 1 })
-				.setAttenuationWeight(100)
-				.setDaysSinceLastExposureWeight(0)
-				.setDurationWeight(0)
-				.setTransmissionRiskWeight(0)
-				.setDurationAtAttenuationThresholds(new int[] { attenuationThresholdLow, attenuationThresholdMedium })
-				.build();
+	public void provideDiagnosisKeys(List<File> keys) throws Exception {
+		if (keys == null || keys.isEmpty()) {
+			return;
+		}
+
+		final Object syncObject = new Object();
+		Exception[] exceptions = new Exception[] { null };
+		synchronized (syncObject) {
+			exposureNotificationClient.provideDiagnosisKeys(keys)
+					.addOnSuccessListener(nothing -> {
+						Logger.d(TAG, "provideDiagnosisKeys: inserted keys successfully");
+						synchronized (syncObject) {
+							syncObject.notifyAll();
+						}
+					})
+					.addOnFailureListener(e -> {
+						Logger.e(TAG, "provideDiagnosisKeys", e);
+						exceptions[0] = e;
+						synchronized (syncObject) {
+							syncObject.notifyAll();
+						}
+					});
+
+			syncObject.wait();
+		}
+		if (exceptions[0] != null) {
+			throw exceptions[0];
+		}
 	}
 
-	public ExposureConfiguration getExposureConfiguration() {
-		return exposureConfiguration;
-	}
-
-	public void provideDiagnosisKeys(List<File> keys, String token) throws Exception {
+	@Deprecated
+	public void provideDiagnosisKeys(List<File> keys, ExposureConfiguration exposureConfiguration, String token) throws Exception {
 		if (keys == null || keys.isEmpty()) {
 			return;
 		}
@@ -193,6 +206,7 @@ public class GoogleExposureClient {
 		}
 	}
 
+	@Deprecated
 	public ExposureSummary getExposureSummary(String token) throws Exception {
 		final Object syncObject = new Object();
 		Object[] results = new Object[] { null };
@@ -228,7 +242,7 @@ public class GoogleExposureClient {
 		Object[] results = new Object[] { null };
 
 		synchronized (syncObject) {
-			exposureNotificationClient.getExposureWindows(ExposureNotificationClient.TOKEN_A)
+			exposureNotificationClient.getExposureWindows()
 					.addOnSuccessListener(list -> {
 						results[0] = list;
 						synchronized (syncObject) {
@@ -251,10 +265,6 @@ public class GoogleExposureClient {
 		} else {
 			throw new IllegalStateException("either exception or result must be set");
 		}
-	}
-
-	public Task<List<ExposureInformation>> getExposureInformation(String token) {
-		return exposureNotificationClient.getExposureInformation(token);
 	}
 
 }

@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
+import com.google.android.gms.nearby.exposurenotification.ExposureConfiguration;
 import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
 import com.google.android.gms.nearby.exposurenotification.ExposureWindow;
 import com.google.android.gms.nearby.exposurenotification.ScanInstance;
@@ -41,6 +41,7 @@ import com.google.gson.JsonSerializer;
 
 import org.dpppt.android.calibration.R;
 import org.dpppt.android.sdk.DP3TCalibrationHelper;
+import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.export.FileUploadRepository;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
@@ -183,6 +184,7 @@ public class HandshakesFragment extends Fragment {
 					"This matching has already been computed, computing it again would not lead to meaningfull results."));
 			return;
 		}
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 		HashMap<String, ExposureResult> resultMap = new HashMap<>();
 		List<ExposureWindow> oldExposureWindows = new ArrayList<>();
@@ -190,9 +192,16 @@ public class HandshakesFragment extends Fragment {
 			try {
 				ArrayList<File> fileList = new ArrayList<>();
 				fileList.add(device.file);
-				googleExposureClient.provideDiagnosisKeys(fileList, ExposureNotificationClient.TOKEN_A);
+				googleExposureClient.provideDiagnosisKeys(fileList);
 				String token = experiment.name + "_" + device.name + "_" + new DayDate().formatAsString();
-				googleExposureClient.provideDiagnosisKeys(fileList, token);
+				//noinspection deprecation
+				googleExposureClient.provideDiagnosisKeys(fileList,
+						new ExposureConfiguration.ExposureConfigurationBuilder()
+								.setDurationAtAttenuationThresholds(
+										appConfigManager.getAttenuationThresholdLow(),
+										appConfigManager.getAttenuationThresholdMedium())
+								.build(),
+						token);
 				Thread.sleep(2000);
 				List<ExposureWindow> newExposureWindows = googleExposureClient.getExposureWindows();
 				Iterator<ExposureWindow> iterator = newExposureWindows.iterator();
@@ -204,6 +213,7 @@ public class HandshakesFragment extends Fragment {
 				oldExposureWindows.addAll(newExposureWindows);
 				ExposureResult result = new ExposureResult();
 				result.exposureWindows = newExposureWindows;
+				//noinspection deprecation
 				result.exposureSummary = googleExposureClient.getExposureSummary(token);
 				resultMap.put(device.getName(), result);
 			} catch (Exception e) {

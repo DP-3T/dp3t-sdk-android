@@ -82,10 +82,6 @@ public class DP3T {
 		appConfigManager.setDevHistory(devHistory);
 		SyncWorker.setBucketSignaturePublicKey(signaturePublicKey);
 
-		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
-		googleExposureClient
-				.setParams(appConfigManager.getAttenuationThresholdLow(), appConfigManager.getAttenuationThresholdMedium());
-
 		executeInit(context.getApplicationContext(), appConfigManager);
 
 		initialized = true;

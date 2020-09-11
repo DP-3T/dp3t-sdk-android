@@ -35,15 +35,14 @@ public class ExposureNotifactionThresholdTest {
 	public void testDefault() {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.clearPreferences();
-		ExposureNotificationBroadcastReceiver broadcastReceiver = new ExposureNotificationBroadcastReceiver();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 15, 0, 0 }));
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 10, 10, 0 }));
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 0, 30, 0 }));
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 30, 30, 30 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 15, 0, 0 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 10, 10, 0 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 0, 30, 0 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 30, 30, 30 }));
 
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, new int[] { 14, 1, 0 }));
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, new int[] { 5, 19, 0 }));
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, new int[] { 0, 29, 30 }));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 14, 1, 0 }));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 5, 19, 0 }));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 0, 29, 30 }));
 	}
 
 
@@ -55,16 +54,15 @@ public class ExposureNotifactionThresholdTest {
 		appConfigManager.setAttenuationFactorMedium(2f);
 		appConfigManager.setMinDurationForExposure(10);
 
-		ExposureNotificationBroadcastReceiver broadcastReceiver = new ExposureNotificationBroadcastReceiver();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 20, 0, 0 }));
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 10, 3, 0 }));
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 0, 30, 0 }));
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 30, 0, 0 }));
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, new int[] { 30, 30, 30 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 20, 0, 0 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 10, 3, 0 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 0, 30, 0 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 30, 0, 0 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 30, 30, 30 }));
 
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, new int[] { 1, 4, 0 }));
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, new int[] { 15, 1, 0 }));
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, new int[] { 19, 0, 30 }));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 1, 4, 0 }));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 15, 1, 0 }));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 19, 0, 30 }));
 	}
 
 }

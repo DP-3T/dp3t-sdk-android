@@ -97,8 +97,18 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 	}
 
 	@Override
+	public Task<Void> provideDiagnosisKeys(List<File> list) {
+		return provideDiagnosisKeys(list, null, null);
+	}
+
+	@Override
 	public Task<List<ExposureWindow>> getExposureWindows(String s) {
 		return new DummyTask<>(params == null ? new ArrayList<>() : params.exposureWindows);
+	}
+
+	@Override
+	public Task<List<ExposureWindow>> getExposureWindows() {
+		return getExposureWindows(null);
 	}
 
 	@Override
@@ -109,6 +119,36 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 	@Override
 	public Task<List<ExposureInformation>> getExposureInformation(String s) {
 		return new DummyTask<>(new ArrayList<>());
+	}
+
+	@Override
+	public Task<Long> getVersion() {
+		return null;
+	}
+
+	@Override
+	public Task<Integer> getCalibrationConfidence() {
+		return null;
+	}
+
+	@Override
+	public Task<List<DailySummary>> getDailySummaries(DailySummariesConfig dailySummariesConfig) {
+		return null;
+	}
+
+	@Override
+	public Task<Void> setDiagnosisKeysDataMapping(DiagnosisKeysDataMapping diagnosisKeysDataMapping) {
+		return null;
+	}
+
+	@Override
+	public Task<DiagnosisKeysDataMapping> getDiagnosisKeysDataMapping() {
+		return null;
+	}
+
+	@Override
+	public boolean deviceSupportsLocationlessScanning() {
+		return false;
 	}
 
 	@Override

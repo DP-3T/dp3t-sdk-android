@@ -150,7 +150,6 @@ public class AppConfigManager {
 		}
 		sharedPrefs.edit().putInt(PREF_ATTENUATION_THRESHOLD_LOW, thresholdLow).apply();
 		sharedPrefs.edit().putInt(PREF_ATTENUATION_THRESHOLD_MEDIUM, thresholdMedium).apply();
-		googleExposureClient.setParams(thresholdLow, thresholdMedium);
 	}
 
 	public float getAttenuationFactorLow() {
