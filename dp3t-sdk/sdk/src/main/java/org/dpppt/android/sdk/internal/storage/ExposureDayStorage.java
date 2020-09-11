@@ -34,7 +34,7 @@ public class ExposureDayStorage {
 
 	private static final Type EXPOSUREDAY_LIST_TYPE = new TypeToken<LinkedList<ExposureDay>>() { }.getType();
 
-	private static final int NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS = 10;
+	private static final int NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS = 14;
 
 	private static final String PREF_KEY_EEXPOSURE_DAYS = "exposureDays";
 	private static final String PREF_KEY_LAST_ID = "last_id";
@@ -70,7 +70,7 @@ public class ExposureDayStorage {
 		DayDate maxAgeForExposureDay = new DayDate().subtractDays(NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS);
 		Iterator<ExposureDay> iterator = list.iterator();
 		while (iterator.hasNext()) {
-			if (iterator.next().getExposedDate().isBefore(maxAgeForExposureDay)) {
+			if (new DayDate(iterator.next().getReportDate()).isBefore(maxAgeForExposureDay)) {
 				iterator.remove();
 			}
 		}
@@ -95,6 +95,7 @@ public class ExposureDayStorage {
 		}
 		return list;
 	}
+
 
 	public void addExposureDay(Context context, ExposureDay exposureDay) {
 		List<ExposureDay> previousExposureDays = getExposureDaysInternal();

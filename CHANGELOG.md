@@ -1,5 +1,17 @@
 # Changelog for DP3T-SDK Android
 
+## version 1.0.4 (25.8.2020)
+
+- exposed days are now deleted 14 days after reporting the exposureDay (before they were deleted 10 days after the exposure which could be only 1 day after reporting)
+- handle same day release of TEK: if we receive the current days TEK directly, we do a fake request the next day. Otherwise, the current days TEK is uploaded the next day as before.
+- the number of uploaded keys has been increased to 30, because with same day release of keys it is possible to have more than 14 TEKs for the past 14 days
+
+## version 1.0.3 (24.7.2020)
+
+- upgraded to play-services-nearby-18.0.3-eap (adds a service for Google to restart our application after force stop starting v1.5)
+- add success and error callback to senFakeInfectedRequest
+- add response body to StatusCodeException
+
 ## version 1.0.2 (17.7.2020)
 
 - fix logic for when a sync is considered successfull in HistoryDatabase (only if no errors)

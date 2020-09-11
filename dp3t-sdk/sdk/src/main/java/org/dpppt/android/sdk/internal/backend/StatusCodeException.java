@@ -9,27 +9,52 @@
  */
 package org.dpppt.android.sdk.internal.backend;
 
+import java.io.IOException;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class StatusCodeException extends Exception {
 
 	private Response response;
+	private String body;
 
-	public StatusCodeException(@NonNull Response response) {
+	public StatusCodeException(@NonNull Response response, @Nullable ResponseBody errorBody) {
 		this.response = response;
+		this.body = readBody(errorBody);
 	}
 
 	@Nullable
 	@Override
 	public String getMessage() {
-		return "Code: " + response.code() + " Message: " + response.message();
+		StringBuilder sb = new StringBuilder()
+				.append("Code: ")
+				.append(response.code())
+				.append(" Message: ")
+				.append(response.message());
+		if (body != null) {
+			sb.append(" Body: ").append(body);
+		}
+		return sb.toString();
+	}
+
+	@Nullable
+	public String getBody() {
+		return body;
 	}
 
 	public int getCode() {
 		return response.code();
 	}
 
+	private static String readBody(ResponseBody body) {
+		try {
+			return body == null ? null : body.string();
+		} catch (IOException error) {
+			return null;
+		}
+	}
 }
