@@ -12,8 +12,8 @@ package org.dpppt.android.sdk.internal;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.PowerManager;
+import android.provider.Settings;
 import android.system.ErrnoException;
 import android.system.OsConstants;
 
@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.net.ssl.SSLException;
 
 import com.google.android.gms.common.api.ApiException;
@@ -63,7 +62,7 @@ public class ErrorHelper {
 			}
 		}
 
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R && !LocationServiceUtil.isLocationEnabled(context)) {
+		if (!deviceSupportsLocationlessScanning(context) && !LocationServiceUtil.isLocationEnabled(context)) {
 			errors.add(ErrorState.LOCATION_SERVICE_DISABLED);
 		}
 
@@ -104,6 +103,11 @@ public class ErrorHelper {
 		}
 
 		return errors;
+	}
+
+	public static boolean deviceSupportsLocationlessScanning(Context context) {
+		return Settings.Global.getInt(context.getApplicationContext().getContentResolver(),
+				"bluetooth_sanitized_exposure_notification_supported", 0) == 1;
 	}
 
 	public static Collection<ErrorState> getDelayableSyncErrors() {
