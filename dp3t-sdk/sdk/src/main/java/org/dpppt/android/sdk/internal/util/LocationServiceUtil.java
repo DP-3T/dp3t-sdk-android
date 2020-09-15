@@ -7,7 +7,6 @@
  *
  * SPDX-License-Identifier: MPL-2.0
  */
-
 package org.dpppt.android.sdk.internal.util;
 
 import android.content.Context;
@@ -17,7 +16,7 @@ import android.provider.Settings;
 
 public class LocationServiceUtil {
 
-	public static Boolean isLocationEnabled(Context context) {
+	public static boolean isLocationEnabled(Context context) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
 			LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 			return lm != null && lm.isLocationEnabled();
