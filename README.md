@@ -165,6 +165,7 @@ Hoia | Estonia | [koodivaramu.eesti.ee](https://koodivaramu.eesti.ee/tehik/hoia/
 STAYAWAY COVID | Portugal | [Github](https://github.com/stayawayinesctec/stayaway-app) | [PlayStore](https://play.google.com/store/apps/details?id=fct.inesctec.stayaway) | 28. August 2020
 Radar COVID | Spain | [Github](https://github.com/RadarCOVID/radar-covid-android) | [PlayStore](https://play.google.com/store/apps/details?id=es.gob.radarcovid) |
 
+If you're project/country is not yet listed but uses the DP3T-SDK feel free to send a pull-request to add it to the [README](README).
 
 ## License
 This project is licensed under the terms of the MPL 2 license. See the [LICENSE](LICENSE) file.
