@@ -15,10 +15,8 @@ import android.content.SharedPreferences;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
-import java.lang.IllegalArgumentException;
 
 import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
-import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.DayDate;
@@ -57,21 +55,13 @@ public class AppConfigManager {
 	private static final int DEFAULT_MIN_DURATION_FOR_EXPOSURE = 15;
 	private static final String PREF_MIN_DURATION_FOR_EXPOSURE = "minDurationForExposure";
 
-	private String appId;
 	private SharedPreferences sharedPrefs;
-	private GoogleExposureClient googleExposureClient;
 
 	private AppConfigManager(Context context) {
 		sharedPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-		googleExposureClient = GoogleExposureClient.getInstance(context);
-	}
-
-	public void setAppId(String appId) {
-		this.appId = appId;
 	}
 
 	public void setManualApplicationInfo(ApplicationInfo applicationInfo) {
-		setAppId(applicationInfo.getAppId());
 		sharedPrefs.edit().putString(PREF_APPLICATION, Json.toJson(applicationInfo)).apply();
 	}
 

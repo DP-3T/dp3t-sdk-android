@@ -30,7 +30,7 @@ public class ExposureNotificationBroadcastReceiver extends BroadcastReceiver {
 		if (ExposureNotificationClient.ACTION_EXPOSURE_STATE_UPDATED.equals(action)) {
 
 			if (BuildConfig.FLAVOR.equals("calibration")) {
-				Logger.i(TAG, "received update for " + intent.getStringExtra(ExposureNotificationClient.EXTRA_TOKEN));
+				Logger.i(TAG, "received update for " + intent.toString());
 			}
 
 			ExposureWindowMatchingWorker.startMatchingWorker(context);

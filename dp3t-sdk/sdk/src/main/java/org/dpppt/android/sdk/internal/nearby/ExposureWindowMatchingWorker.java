@@ -97,7 +97,7 @@ public class ExposureWindowMatchingWorker extends Worker {
 				Logger.d(TAG, "exposure limit not reached on " + dayDateEntry.getKey().formatAsString());
 			}
 		}
-		if (exposureDays.size() > 0) {
+		if (!exposureDays.isEmpty()) {
 			ExposureDayStorage.getInstance(context).addExposureDays(context, exposureDays);
 		}
 	}
