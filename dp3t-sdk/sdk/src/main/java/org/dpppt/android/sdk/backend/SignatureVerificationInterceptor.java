@@ -12,6 +12,7 @@ package org.dpppt.android.sdk.backend;
 import androidx.annotation.NonNull;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -21,10 +22,11 @@ import org.dpppt.android.sdk.util.SignatureUtil;
 
 import okhttp3.Interceptor;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
+import okio.BufferedSource;
+import okio.Okio;
 
 public class SignatureVerificationInterceptor implements Interceptor {
-
-	private static final long PEEK_MEMORY_LIMIT = 64 * 1024 * 1024L;
 
 	private final PublicKey publicKey;
 
@@ -56,12 +58,20 @@ public class SignatureVerificationInterceptor implements Interceptor {
 
 		byte[] signedContentHash = SignatureUtil.getVerifiedContentHash(jwsHeader, publicKey);
 
-		byte[] body = response.peekBody(PEEK_MEMORY_LIMIT).bytes();
+		ResponseBody body = response.body();
+		BufferedSource responseBuffer = Okio.buffer(Okio.source(body.byteStream()));
 
 		byte[] actualContentHash;
 		try {
 			MessageDigest digest = MessageDigest.getInstance(SignatureUtil.HASH_ALGO);
-			actualContentHash = digest.digest(body);
+			try (InputStream bodyStream = responseBuffer.peek().inputStream()) {
+				byte[] buffer = new byte[1024];
+				int len;
+				while ((len = bodyStream.read(buffer)) != -1) {
+					digest.update(buffer, 0, len);
+				}
+			}
+			actualContentHash = digest.digest();
 		} catch (NoSuchAlgorithmException e) {
 			throw new RuntimeException(e);
 		}
@@ -70,7 +80,12 @@ public class SignatureVerificationInterceptor implements Interceptor {
 			throw new SignatureException("Signature mismatch");
 		}
 
-		return response;
+		return response.newBuilder()
+				.body(ResponseBody.create(
+						body.contentType(),
+						body.contentLength(),
+						responseBuffer)
+				).build();
 	}
 
 }

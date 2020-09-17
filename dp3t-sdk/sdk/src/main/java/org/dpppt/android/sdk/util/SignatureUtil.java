@@ -7,7 +7,6 @@
  *
  * SPDX-License-Identifier: MPL-2.0
  */
-
 package org.dpppt.android.sdk.util;
 
 import android.util.Base64;
@@ -35,7 +34,7 @@ public class SignatureUtil {
 	public static final String HTTP_HEADER_JWS = "signature";
 	public static final String HASH_ALGO = "SHA-256";
 
-	private static final String JWS_CLAIM_CONTENT_HASH = "content-hash";
+	public static final String JWS_CLAIM_CONTENT_HASH = "content-hash";
 
 	public static PublicKey getPublicKeyFromBase64(String publicKeyBase64)
 			throws NoSuchAlgorithmException, InvalidKeySpecException {

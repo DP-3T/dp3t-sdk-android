@@ -156,5 +156,16 @@ DP3T.sync(getContext());
 Make sure you do not call this method on the UI thread, because it will perform the sync synchronously.
 Due to rate limits on the provideDiagnosisKeys() the sync can be execute only in a very restricted manner.
 
+## Apps using the DP3T-SDK for Android
+Name | Country | Source code | Store | Release-Date
+---- | ----------- | ------------- | ------------- | -------------
+SwissCovid | Switzerland | [Github](https://github.com/DP-3T/dp3t-app-android-ch) | [PlayStore](https://play.google.com/store/apps/details?id=ch.admin.bag.dp3t) | 25. Mai 2020
+ASI | Ecuador | [minka.gob.ec](https://minka.gob.ec/asi-ecuador/android) | [PlayStore](https://play.google.com/store/apps/details?id=ec.gob.asi.android) | 2. August 2020
+Hoia | Estonia | [koodivaramu.eesti.ee](https://koodivaramu.eesti.ee/tehik/hoia/dp3t-app-android) | [PlayStore](https://play.google.com/store/apps/details?id=ee.tehik.hoia) | 18. August 2020
+STAYAWAY COVID | Portugal | [Github](https://github.com/stayawayinesctec/stayaway-app) | [PlayStore](https://play.google.com/store/apps/details?id=fct.inesctec.stayaway) | 28. August 2020
+Radar COVID | Spain | [Github](https://github.com/RadarCOVID/radar-covid-android) | [PlayStore](https://play.google.com/store/apps/details?id=es.gob.radarcovid) |
+
+If your project/country is not yet listed but uses the DP3T-SDK feel free to send a pull-request to add it to the [README](README).
+
 ## License
 This project is licensed under the terms of the MPL 2 license. See the [LICENSE](LICENSE) file.
