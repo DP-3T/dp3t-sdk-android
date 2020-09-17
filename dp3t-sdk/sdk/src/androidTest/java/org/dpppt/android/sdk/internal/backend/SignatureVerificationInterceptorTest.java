@@ -104,7 +104,7 @@ public class SignatureVerificationInterceptorTest {
 			bucketRepository.getGaenExposees(new DayDate(), null).body().string();
 			fail();
 		} catch (SignatureException e) {
-			assertEquals(e.getMessage(), "Signature mismatch");
+			assertEquals("Signature mismatch", e.getMessage());
 		}
 	}
 
@@ -129,9 +129,8 @@ public class SignatureVerificationInterceptorTest {
 			bucketRepository.getGaenExposees(new DayDate(), null).body().string();
 			fail();
 		} catch (SignatureException e) {
-			assertEquals(e.getMessage(),
-					"JWT signature does not match locally computed signature. JWT validity cannot be asserted and should not be " +
-							"trusted.");
+			assertEquals("JWT signature does not match locally computed signature. " +
+					"JWT validity cannot be asserted and should not be trusted.", e.getMessage());
 		}
 	}
 
