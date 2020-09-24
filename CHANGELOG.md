@@ -1,5 +1,12 @@
 # Changelog for DP3T-SDK Android
 
+## version 1.0.5 (24.9.2020)
+
+- support location less scanning on Android 11
+- fix state update bug when EN are activated/deactivated outside of the app
+- update targetSdk to 30, use gradle 6.6.1 and Android-Plugin 4.0.1
+- fix https://github.com/DP-3T/dp3t-sdk-android/issues/206
+
 ## version 1.0.4 (25.8.2020)
 
 - exposed days are now deleted 14 days after reporting the exposureDay (before they were deleted 10 days after the exposure which could be only 1 day after reporting)
