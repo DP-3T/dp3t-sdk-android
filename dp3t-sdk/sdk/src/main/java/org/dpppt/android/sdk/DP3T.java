@@ -99,10 +99,12 @@ public class DP3T {
 				new BluetoothStateBroadcastReceiver(),
 				new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
 		);
-		context.registerReceiver(
-				new LocationServiceBroadcastReceiver(),
-				new IntentFilter(LocationManager.MODE_CHANGED_ACTION)
-		);
+		if (!ErrorHelper.deviceSupportsLocationlessScanning(context)) {
+			context.registerReceiver(
+					new LocationServiceBroadcastReceiver(),
+					new IntentFilter(LocationManager.MODE_CHANGED_ACTION)
+			);
+		}
 		context.registerReceiver(
 				new BatteryOptimizationBroadcastReceiver(),
 				new IntentFilter(BatteryOptimizationBroadcastReceiver.ACTION_POWER_SAVE_WHITELIST_CHANGED)
@@ -205,6 +207,7 @@ public class DP3T {
 
 	public static TracingStatus getStatus(Context context) {
 		checkInit();
+		GaenStateHelper.invalidateGaenEnabled(context);
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		Collection<TracingStatus.ErrorState> errorStates = ErrorHelper.checkTracingErrorStatus(context, appConfigManager);
 		InfectionStatus infectionStatus;

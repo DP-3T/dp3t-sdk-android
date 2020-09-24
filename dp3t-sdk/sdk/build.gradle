@@ -16,13 +16,13 @@ plugins {
 }
 
 android {
-	compileSdkVersion 29
+	compileSdkVersion 30
 
 	defaultConfig {
 		minSdkVersion 23
-		targetSdkVersion 29
-		versionCode 104
-		versionName "1.0.4"
+		targetSdkVersion 30
+		versionCode 105
+		versionName "1.0.5"
 		testInstrumentationRunnerArgument 'androidx.benchmark.suppressErrors', 'EMULATOR,LOW-BATTERY,ACTIVITY-MISSING,DEBUGGABLE,UNLOCKED,UNSUSTAINED-ACTIVITY-MISSING'
 		testInstrumentationRunner "androidx.benchmark.junit4.AndroidBenchmarkRunner"
 
@@ -65,21 +65,22 @@ afterEvaluate {
 				from components.productionRelease
 				groupId 'org.dpppt'
 				artifactId 'dp3t-sdk-android'
-				version android.defaultConfig.versionName
+				version android.defaultConfig.versionName + readPropertyWithDefault('bintrayVersionSuffix', '')
 				artifact androidSourcesJar
 			}
 			"sdkCalibration"(MavenPublication) {
 				from components.calibrationRelease
 				groupId 'org.dpppt'
 				artifactId 'dp3t-sdk-android'
-				version android.defaultConfig.versionName + "-calibration"
+				version android.defaultConfig.versionName + readPropertyWithDefault('bintrayVersionSuffix', '') + "-calibration"
 				artifact androidSourcesJar
 			}
 		}
 	}
 }
 
-ext.readProperty = { paramName ->
+ext.readProperty = { paramName -> readPropertyWithDefault(paramName, null) }
+ext.readPropertyWithDefault = { paramName, defaultValue ->
 	if (project.hasProperty(paramName)) {
 		return project.getProperties().get(paramName)
 	} else {
@@ -87,7 +88,11 @@ ext.readProperty = { paramName ->
 		if (project.rootProject.file('local.properties').exists()) {
 			properties.load(project.rootProject.file('local.properties').newDataInputStream())
 		}
-		return properties.getProperty(paramName)
+		if (properties.getProperty(paramName) != null) {
+			return properties.getProperty(paramName)
+		} else {
+			return defaultValue
+		}
 	}
 }
 
@@ -114,7 +119,8 @@ sonarqube {
 }
 
 dependencies {
-	implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+	compileOnly fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+	androidTestImplementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
 
 	implementation 'androidx.core:core:1.2.0'
 	implementation 'androidx.security:security-crypto:1.0.0-rc01'
@@ -123,9 +129,9 @@ dependencies {
 	implementation 'com.squareup.retrofit2:retrofit:2.8.1'
 	implementation 'com.squareup.retrofit2:converter-gson:2.8.1'
 
-	implementation 'io.jsonwebtoken:jjwt-api:0.11.1'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.1'
-	runtimeOnly('io.jsonwebtoken:jjwt-orgjson:0.11.1') {
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.2'
+	runtimeOnly('io.jsonwebtoken:jjwt-orgjson:0.11.2') {
 		exclude group: 'org.json', module: 'json'
 	}
 	implementation 'org.bouncycastle:bcprov-jdk15on:1.65'
