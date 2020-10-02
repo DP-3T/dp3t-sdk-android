@@ -39,9 +39,8 @@ public class AppConfigManager {
 	private static final String PREF_LAST_SYNC_NET_SUCCESS = "lastSyncNetSuccess";
 	private static final String PREF_I_AM_INFECTED = "IAmInfected";
 	private static final String PREF_I_AM_INFECTED_IS_RESETTABLE = "IAmInfectedIsResettable";
-	private static final String PREF_LAST_LOADED_TIMES = "lastLoadedTimes";
-	private static final String PREF_LAST_SYNC_CALL_TIMES = "lastExposureClientCalls";
-	private static final String PREF_LAST_SUCCESSFUL_SYNC_TIMES = "lastSuccessfulSyncTimes";
+	private static final String PREF_LAST_SYNC_CALL_TIME = "lastSyncCallTime";
+	private static final String PREF_LAST_SYNCED_KEY_PUBLISHED_UNTIL = "lastSyncedKeyPublishedUntil";
 	private static final String PREF_DEV_HISTORY = "devHistory";
 
 	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
@@ -158,29 +157,25 @@ public class AppConfigManager {
 		sharedPrefs.edit().putFloat(PREF_ATTENUATION_FACTOR_MEDIUM, factor).apply();
 	}
 
-	public HashMap<DayDate, Long> getLastLoadedTimes() {
-		return convertToDateMap(Json.fromJson(sharedPrefs.getString(PREF_LAST_LOADED_TIMES, "{}"), StringLongMap.class));
+	public long getLastSynCallTime() {
+		return sharedPrefs.getLong(PREF_LAST_SYNC_CALL_TIME, 0);
 	}
 
-	public HashMap<DayDate, Long> getLastSyncCallTimes() {
-		return convertToDateMap(Json.fromJson(sharedPrefs.getString(PREF_LAST_SYNC_CALL_TIMES, "{}"), StringLongMap.class));
+	public void setLastSyncCallTime(long time) {
+		sharedPrefs.edit().putLong(PREF_LAST_SYNC_CALL_TIME, time).apply();
 	}
 
-	public HashMap<DayDate, Long> getLastSuccessfulSyncTimes() {
-		return convertToDateMap(Json.fromJson(sharedPrefs.getString(PREF_LAST_SUCCESSFUL_SYNC_TIMES, "{}"), StringLongMap.class));
+	public Long getSyncedKeyPublishedUntil() {
+		long lastSyncedKeyPublishedUntil = sharedPrefs.getLong(PREF_LAST_SYNCED_KEY_PUBLISHED_UNTIL, -1);
+		if (lastSyncedKeyPublishedUntil == -1) {
+			return null;
+		} else {
+			return lastSyncedKeyPublishedUntil;
+		}
 	}
 
-	public void setLastLoadedTimes(HashMap<DayDate, Long> lastLoadedTimes) {
-		sharedPrefs.edit().putString(PREF_LAST_LOADED_TIMES, Json.toJson(convertFromDateMap(lastLoadedTimes))).apply();
-	}
-
-	public void setLastSyncCallTimes(HashMap<DayDate, Long> lastExposureClientCalls) {
-		sharedPrefs.edit().putString(PREF_LAST_SYNC_CALL_TIMES, Json.toJson(convertFromDateMap(lastExposureClientCalls))).apply();
-	}
-
-	public void setLastSuccessfulSyncTimes(HashMap<DayDate, Long> lastSuccessfulSyncTimes) {
-		sharedPrefs.edit().putString(PREF_LAST_SUCCESSFUL_SYNC_TIMES, Json.toJson(convertFromDateMap(lastSuccessfulSyncTimes)))
-				.apply();
+	public void setSyncedKeyPublishedUntil(long time) {
+		sharedPrefs.edit().putLong(PREF_LAST_SYNCED_KEY_PUBLISHED_UNTIL, time).apply();
 	}
 
 	public void setDevHistory(boolean devHistory) {

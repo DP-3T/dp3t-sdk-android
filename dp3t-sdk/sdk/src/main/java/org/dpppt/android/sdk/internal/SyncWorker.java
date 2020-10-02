@@ -19,7 +19,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
@@ -54,6 +55,8 @@ public class SyncWorker extends Worker {
 	private static final String TAG = "SyncWorker";
 	private static final String WORK_TAG = "org.dpppt.android.sdk.internal.SyncWorker";
 	private static final String KEYFILE_PREFIX = "keyfile_";
+
+	private static final long SYNC_INTERVAL = BuildConfig.FLAVOR.equals("calibration") ? 5 * 60 * 1000L : 4 * 60 * 60 * 1000L;
 
 	private static PublicKey bucketSignaturePublicKey;
 
@@ -150,128 +153,65 @@ public class SyncWorker extends Worker {
 			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 			ApplicationInfo appConfig = appConfigManager.getAppConfig();
 
-			Exception lastException = null;
-			HashMap<DayDate, Long> lastLoadedTimes = appConfigManager.getLastLoadedTimes();
-			HashMap<DayDate, Long> lastSyncCallTimes = appConfigManager.getLastSyncCallTimes();
-			HashMap<DayDate, Long> lastSuccessfulSyncTimes = appConfigManager.getLastSuccessfulSyncTimes();
-
 			BackendBucketRepository backendBucketRepository =
 					new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
 			GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 
-			DayDate lastDateToCheck = new DayDate(currentTime).subtractDays(9);
-			DayDate dateToLoad = new DayDate(currentTime);
-			int numInstantErrors = 0;
-			int numDelayedErrors = 0;
-			int numSuccesses = 0;
-			while (lastDateToCheck.isBeforeOrEquals(dateToLoad)) {
-				Long lastSynCallTime = lastSyncCallTimes.get(dateToLoad);
-				if (lastSynCallTime == null) {
-					// if there is no last sync call time recorded, set it to 5:59:59.999 on the current day, to make sure the
-					// first sync happens after 6am, otherwise we risk running into the 20 calls ratelimit.
-					Calendar cal = new GregorianCalendar();
-					cal.setTimeZone(TimeZone.getTimeZone("Europe/Zurich"));
-					cal.setTimeInMillis(currentTime);
-					cal.set(Calendar.HOUR_OF_DAY, 5);
-					cal.set(Calendar.MINUTE, 59);
-					cal.set(Calendar.SECOND, 59);
-					cal.set(Calendar.MILLISECOND, 999);
-					lastSynCallTime = cal.getTimeInMillis();
-					Logger.d(TAG, "never loaded " + dateToLoad.formatAsString() +
-							" before, set last sync time to 5:59:59 to prevent rate limit issues");
-				}
+			if (appConfigManager.getLastSynCallTime() < System.currentTimeMillis() - SYNC_INTERVAL) {
+				try {
+					Logger.d(TAG, "loading exposees");
+					Response<ResponseBody> result =
+							backendBucketRepository.getGaenExposees(appConfigManager.getSyncedKeyPublishedUntil());
 
-				if (lastSynCallTime < getLastDesiredSyncTime()) {
-					try {
-						Logger.d(TAG, "loading exposees for " + dateToLoad.formatAsString());
-						Response<ResponseBody> result =
-								backendBucketRepository.getGaenExposees(dateToLoad, lastLoadedTimes.get(dateToLoad));
-
-						if (result.code() != 204) {
-							File file = new File(context.getCacheDir(),
-									KEYFILE_PREFIX + dateToLoad.formatAsString() + "_" + lastLoadedTimes.get(dateToLoad) + ".zip");
-							try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file))) {
-								byte[] bytesIn = new byte[1024];
-								int read;
-								InputStream bodyStream = result.body().byteStream();
-								while ((read = bodyStream.read(bytesIn)) != -1) {
-									bos.write(bytesIn, 0, read);
-								}
+					if (result.code() != 204) {
+						File file = new File(context.getCacheDir(),
+								KEYFILE_PREFIX + appConfigManager.getSyncedKeyPublishedUntil() + ".zip");
+						try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file))) {
+							byte[] bytesIn = new byte[1024];
+							int read;
+							InputStream bodyStream = result.body().byteStream();
+							while ((read = bodyStream.read(bytesIn)) != -1) {
+								bos.write(bytesIn, 0, read);
 							}
+						}
 
-							ArrayList<File> fileList = new ArrayList<>();
-							fileList.add(file);
-							Logger.d(TAG,
-									"provideDiagnosisKeys for " + dateToLoad.formatAsString() + " with size " + file.length());
-							lastSyncCallTimes.put(dateToLoad, currentTime);
-							googleExposureClient.provideDiagnosisKeys(fileList);
-						} else {
-							lastSyncCallTimes.put(dateToLoad, currentTime);
-						}
-						lastLoadedTimes.put(dateToLoad, Long.parseLong(result.headers().get("x-published-until")));
-						lastSuccessfulSyncTimes.put(dateToLoad, currentTime);
-						numSuccesses++;
-					} catch (Exception e) {
-						e.printStackTrace();
-						if (!lastSuccessfulSyncTimes.containsKey(dateToLoad)) {
-							lastSuccessfulSyncTimes.put(dateToLoad, currentTime);
-						}
-						long lastSuccessfulSyncTime = lastSuccessfulSyncTimes.get(dateToLoad);
-						boolean isDelayWithinGracePeriod =
-								lastSuccessfulSyncTime > currentTime - SyncErrorState.getInstance().getSyncErrorGracePeriod();
-						if (isDelayWithinGracePeriod && ErrorHelper.isDelayableSyncError(e)) {
-							numDelayedErrors++;
-						} else {
-							numInstantErrors++;
-							lastException = e;
-						}
+						ArrayList<File> fileList = new ArrayList<>();
+						fileList.add(file);
+						Logger.d(TAG,
+								"provideDiagnosisKeys with size " + file.length());
+						appConfigManager.setLastSyncCallTime(currentTime);
+						googleExposureClient.provideDiagnosisKeys(fileList);
+					} else {
+						appConfigManager.setLastSyncCallTime(currentTime);
+					}
+					appConfigManager.setSyncedKeyPublishedUntil(Long.parseLong(result.headers().get("x-published-until")));
+					appConfigManager.setLastSyncDate(currentTime);
+					addHistoryEntry(false, false);
+				} catch (Exception e) {
+					Logger.e(TAG, "error while syncing new keys", e);
+					long lastSuccessfulSyncTime = appConfigManager.getLastSyncDate();
+					boolean isDelayWithinGracePeriod =
+							lastSuccessfulSyncTime > currentTime - SyncErrorState.getInstance().getSyncErrorGracePeriod();
+					if (isDelayWithinGracePeriod && ErrorHelper.isDelayableSyncError(e)) {
+						addHistoryEntry(false, true);
+					} else {
+						addHistoryEntry(true, false);
+						throw e;
 					}
 				}
 
-				dateToLoad = dateToLoad.subtractDays(1);
+				cleanupOldKeyFiles(context);
 			}
+		}
 
-			DayDate lastDateToKeep = new DayDate(currentTime).subtractDays(10);
-			Iterator<DayDate> lastLoadedTimesIterator = lastLoadedTimes.keySet().iterator();
-			while (lastLoadedTimesIterator.hasNext()) {
-				if (lastLoadedTimesIterator.next().isBefore(lastDateToKeep)) {
-					lastLoadedTimesIterator.remove();
-				}
-			}
-			Iterator<DayDate> lastSyncCallTimesIterator = lastSyncCallTimes.keySet().iterator();
-			while (lastSyncCallTimesIterator.hasNext()) {
-				if (lastSyncCallTimesIterator.next().isBefore(lastDateToKeep)) {
-					lastSyncCallTimesIterator.remove();
-				}
-			}
-			Iterator<DayDate> lastSuccessfulSyncTimesIterator = lastSuccessfulSyncTimes.keySet().iterator();
-			while (lastSuccessfulSyncTimesIterator.hasNext()) {
-				if (lastSuccessfulSyncTimesIterator.next().isBefore(lastDateToKeep)) {
-					lastSuccessfulSyncTimesIterator.remove();
-				}
-			}
-
-			cleanupOldKeyFiles(context);
-
-			appConfigManager.setLastLoadedTimes(lastLoadedTimes);
-			appConfigManager.setLastSyncCallTimes(lastSyncCallTimes);
-			appConfigManager.setLastSuccessfulSyncTimes(lastSuccessfulSyncTimes);
-
-			if (numInstantErrors > 0 || numDelayedErrors > 0 || numSuccesses > 0) {
-				int base = 'A';
-				String historyStatus =
-						String.valueOf((char) (base + numInstantErrors)) + (char) (base + numDelayedErrors) +
-								(char) (base + numSuccesses);
-				HistoryDatabase.getInstance(context).addEntry(
-						new HistoryEntry(HistoryEntryType.SYNC, historyStatus, numInstantErrors == 0 && numDelayedErrors == 0,
-								System.currentTimeMillis()));
-			}
-
-			if (lastException != null) {
-				throw lastException;
-			} else {
-				appConfigManager.setLastSyncDate(currentTime);
-			}
+		private void addHistoryEntry(boolean instantError, boolean delayedError) {
+			int base = 'A';
+			String historyStatus =
+					String.valueOf((char) (base + (instantError ? 1 : 0))) + (char) (base + (delayedError ? 1 : 0)) +
+							(char) (base + (!instantError && !delayedError ? 1 : 0));
+			HistoryDatabase.getInstance(context).addEntry(
+					new HistoryEntry(HistoryEntryType.SYNC, historyStatus, !instantError && !delayedError,
+							System.currentTimeMillis()));
 		}
 
 		private void cleanupOldKeyFiles(Context context) {
@@ -281,34 +221,6 @@ public class SyncWorker extends Worker {
 						Logger.w(TAG, "Unable to delete file " + file.getName());
 					}
 				}
-			}
-		}
-
-		private long getLastDesiredSyncTime() {
-			if (BuildConfig.FLAVOR.equals("calibration")) {
-				return currentTime - (currentTime % (5 * 60 * 1000L));
-			} else {
-				Calendar cal = new GregorianCalendar();
-				cal.setTimeZone(TimeZone.getTimeZone("Europe/Zurich"));
-				cal.setTimeInMillis(currentTime);
-				if (cal.get(Calendar.HOUR_OF_DAY) < 6) {
-					if (new DayDate(currentTime).equals(new DayDate(currentTime - 6 * 60 * 60 * 1000L))) {
-						//only if it is still the same UTC day like 6h ago we allow a sync before 6am, otherwise we might run into
-						//the ratelimit on the next day because we check before 6am, at 6am and at 6pm
-						cal.add(Calendar.DATE, -1);
-						cal.set(Calendar.HOUR_OF_DAY, 18);
-					} else {
-						cal.setTimeInMillis(0);
-					}
-				} else if (cal.get(Calendar.HOUR_OF_DAY) < 18) {
-					cal.set(Calendar.HOUR_OF_DAY, 6);
-				} else {
-					cal.set(Calendar.HOUR_OF_DAY, 18);
-				}
-				cal.set(Calendar.MINUTE, 0);
-				cal.set(Calendar.SECOND, 0);
-				cal.set(Calendar.MILLISECOND, 0);
-				return cal.getTimeInMillis();
 			}
 		}
 
