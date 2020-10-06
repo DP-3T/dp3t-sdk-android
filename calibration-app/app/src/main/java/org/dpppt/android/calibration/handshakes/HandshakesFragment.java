@@ -272,10 +272,20 @@ public class HandshakesFragment extends Fragment {
 		return jsonObject;
 	};
 
+	private static JsonSerializer<ExposureResult> exposureResultJsonSerializer = (src, typeOfSrc, context) -> {
+		JsonObject jsonObject = new JsonObject();
+
+		jsonObject.add("exposureSummary", context.serialize(src.exposureSummary));
+		jsonObject.add("exposureWindows", context.serialize(src.exposureWindows));
+
+		return jsonObject;
+	};
+
 	private static final Gson GSON = new GsonBuilder()
 			.registerTypeAdapter(ExposureWindow.class, exposureWindowJsonSerializer)
 			.registerTypeAdapter(ScanInstance.class, scanInstanceJsonSerializer)
 			.registerTypeAdapter(ExposureSummary.class, exposureSummaryJsonSerializer)
+			.registerTypeAdapter(ExposureResult.class, exposureResultJsonSerializer)
 			.create();
 
 
