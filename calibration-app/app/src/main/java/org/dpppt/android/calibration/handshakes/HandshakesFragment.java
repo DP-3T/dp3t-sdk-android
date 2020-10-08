@@ -187,7 +187,12 @@ public class HandshakesFragment extends Fragment {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 		HashMap<String, ExposureResult> resultMap = new HashMap<>();
-		List<ExposureWindow> oldExposureWindows = new ArrayList<>();
+		List<ExposureWindow> oldExposureWindows = null;
+		try {
+			oldExposureWindows = googleExposureClient.getExposureWindows();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		for (Experiment.Device device : experiment.devices) {
 			try {
 				ArrayList<File> fileList = new ArrayList<>();
