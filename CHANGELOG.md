@@ -2,7 +2,7 @@
 
 ## version 1.1.0 (unreleased)
 
-- updated to play-services-nearby-exposurenotification-1.6.1-eap.aar, make sure to update this in your project as well!
+- updated to play-services-nearby-exposurenotification-1.7.1-eap.aar, make sure to update this in your project as well!
 - use exposureWindows to compute attenuationDurations
 - exposureDays now returns all exposure days, not only the last one as in previous versions
 - updated defaults for attenuationBucketThresholds, new values are 55 and 63

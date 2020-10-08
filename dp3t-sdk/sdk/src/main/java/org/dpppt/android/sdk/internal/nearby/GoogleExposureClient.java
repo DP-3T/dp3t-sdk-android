@@ -241,4 +241,27 @@ public class GoogleExposureClient {
 		}
 	}
 
+	public Integer getCalibrationConfidence() throws Exception {
+		CountDownLatch countDownLatch = new CountDownLatch(1);
+		Object[] results = new Object[] { null };
+
+		exposureNotificationClient.getCalibrationConfidence()
+				.addOnSuccessListener(confidence -> {
+					results[0] = confidence;
+					countDownLatch.countDown();
+				})
+				.addOnFailureListener(e -> {
+					results[0] = e;
+					countDownLatch.countDown();
+				});
+		countDownLatch.await();
+		if (results[0] instanceof Exception) {
+			throw (Exception) results[0];
+		} else if (results[0] instanceof Integer) {
+			return (Integer) results[0];
+		} else {
+			throw new IllegalStateException(EITHER_EXCEPTION_OR_RESULT_MUST_BE_SET);
+		}
+	}
+
 }

@@ -217,6 +217,7 @@ public class HandshakesFragment extends Fragment {
 				}
 				oldExposureWindows.addAll(newExposureWindows);
 				ExposureResult result = new ExposureResult();
+				result.deviceCalibrationConfidence = googleExposureClient.getCalibrationConfidence();
 				result.exposureWindows = newExposureWindows;
 				//noinspection deprecation
 				result.exposureSummary = googleExposureClient.getExposureSummary(token);
@@ -250,6 +251,8 @@ public class HandshakesFragment extends Fragment {
 
 		jsonObject.addProperty("dateMillisSinceEpoch", src.getDateMillisSinceEpoch());
 		jsonObject.addProperty("reportType", src.getReportType());
+		jsonObject.addProperty("infectiousness", src.getInfectiousness());
+		jsonObject.addProperty("calibrationConfidence", src.getCalibrationConfidence());
 		jsonObject.add("scanInstances", context.serialize(src.getScanInstances()));
 
 		return jsonObject;
@@ -280,6 +283,7 @@ public class HandshakesFragment extends Fragment {
 	private static JsonSerializer<ExposureResult> exposureResultJsonSerializer = (src, typeOfSrc, context) -> {
 		JsonObject jsonObject = new JsonObject();
 
+		jsonObject.addProperty("deviceCalibrationConfidence", src.deviceCalibrationConfidence);
 		jsonObject.add("exposureSummary", context.serialize(src.exposureSummary));
 		jsonObject.add("exposureWindows", context.serialize(src.exposureWindows));
 
@@ -296,6 +300,7 @@ public class HandshakesFragment extends Fragment {
 
 	public static class ExposureResult {
 
+		Integer deviceCalibrationConfidence;
 		List<ExposureWindow> exposureWindows;
 		ExposureSummary exposureSummary;
 
