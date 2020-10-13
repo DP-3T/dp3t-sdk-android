@@ -2,7 +2,7 @@ name: Upload AAR to bintray
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ develop, feature/include-google-en-api-1-5 ]
 
 jobs:
   build:
