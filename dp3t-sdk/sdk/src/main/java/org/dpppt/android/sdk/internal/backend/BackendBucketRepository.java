@@ -43,10 +43,10 @@ public class BackendBucketRepository implements Repository {
 		bucketService = bucketRetrofit.create(BucketService.class);
 	}
 
-	public Response<ResponseBody> getGaenExposees(Long lastPublishedUntil)
+	public Response<ResponseBody> getGaenExposees(Long lastKeyBundleTag)
 			throws IOException, StatusCodeException, ServerTimeOffsetException, SignatureException {
 		Response<ResponseBody> response;
-		response = bucketService.getGaenExposees(lastPublishedUntil).execute();
+		response = bucketService.getGaenExposees(lastKeyBundleTag).execute();
 		if (response.isSuccessful()) {
 			return response;
 		} else {

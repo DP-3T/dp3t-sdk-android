@@ -40,7 +40,7 @@ public class AppConfigManager {
 	private static final String PREF_I_AM_INFECTED = "IAmInfected";
 	private static final String PREF_I_AM_INFECTED_IS_RESETTABLE = "IAmInfectedIsResettable";
 	private static final String PREF_LAST_SYNC_CALL_TIME = "lastSyncCallTime";
-	private static final String PREF_LAST_SYNCED_KEY_PUBLISHED_UNTIL = "lastSyncedKeyPublishedUntil";
+	private static final String PREF_LAST_KEY_BUNDLE_TAG = "lastKeyBundleTag";
 	private static final String PREF_DEV_HISTORY = "devHistory";
 	private static final String EN_MODULE_VERSION = "enModuleVersion";
 
@@ -166,8 +166,8 @@ public class AppConfigManager {
 		sharedPrefs.edit().putLong(PREF_LAST_SYNC_CALL_TIME, time).apply();
 	}
 
-	public Long getSyncedKeyPublishedUntil() {
-		long lastSyncedKeyPublishedUntil = sharedPrefs.getLong(PREF_LAST_SYNCED_KEY_PUBLISHED_UNTIL, -1);
+	public Long getLastKeyBundleTag() {
+		long lastSyncedKeyPublishedUntil = sharedPrefs.getLong(PREF_LAST_KEY_BUNDLE_TAG, -1);
 		if (lastSyncedKeyPublishedUntil == -1) {
 			return null;
 		} else {
@@ -175,8 +175,8 @@ public class AppConfigManager {
 		}
 	}
 
-	public void setSyncedKeyPublishedUntil(long time) {
-		sharedPrefs.edit().putLong(PREF_LAST_SYNCED_KEY_PUBLISHED_UNTIL, time).apply();
+	public void setLastKeyBundleTag(long time) {
+		sharedPrefs.edit().putLong(PREF_LAST_KEY_BUNDLE_TAG, time).apply();
 	}
 
 	public void setDevHistory(boolean devHistory) {

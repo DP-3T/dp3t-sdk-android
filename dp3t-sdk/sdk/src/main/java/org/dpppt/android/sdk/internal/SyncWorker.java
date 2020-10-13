@@ -161,11 +161,11 @@ public class SyncWorker extends Worker {
 				try {
 					Logger.d(TAG, "loading exposees");
 					Response<ResponseBody> result =
-							backendBucketRepository.getGaenExposees(appConfigManager.getSyncedKeyPublishedUntil());
+							backendBucketRepository.getGaenExposees(appConfigManager.getLastKeyBundleTag());
 
 					if (result.code() != 204) {
 						File file = new File(context.getCacheDir(),
-								KEYFILE_PREFIX + appConfigManager.getSyncedKeyPublishedUntil() + ".zip");
+								KEYFILE_PREFIX + appConfigManager.getLastKeyBundleTag() + ".zip");
 						try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file))) {
 							byte[] bytesIn = new byte[1024];
 							int read;
@@ -184,7 +184,7 @@ public class SyncWorker extends Worker {
 					} else {
 						appConfigManager.setLastSyncCallTime(currentTime);
 					}
-					appConfigManager.setSyncedKeyPublishedUntil(Long.parseLong(result.headers().get("x-published-until")));
+					appConfigManager.setLastKeyBundleTag(Long.parseLong(result.headers().get("x-key-bundle-tag")));
 					appConfigManager.setLastSyncDate(currentTime);
 					addHistoryEntry(false, false);
 				} catch (Exception e) {
