@@ -42,6 +42,7 @@ public class AppConfigManager {
 	private static final String PREF_LAST_SYNC_CALL_TIME = "lastSyncCallTime";
 	private static final String PREF_LAST_SYNCED_KEY_PUBLISHED_UNTIL = "lastSyncedKeyPublishedUntil";
 	private static final String PREF_DEV_HISTORY = "devHistory";
+	private static final String EN_MODULE_VERSION = "enModuleVersion";
 
 	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
 	private static final String PREF_ATTENUATION_THRESHOLD_MEDIUM = "attenuationThresholdMedium";
@@ -184,6 +185,14 @@ public class AppConfigManager {
 
 	public boolean getDevHistory() {
 		return sharedPrefs.getBoolean(PREF_DEV_HISTORY, false);
+	}
+
+	public void setENModuleVersion(long version) {
+		sharedPrefs.edit().putLong(EN_MODULE_VERSION, version).apply();
+	}
+
+	public long getENModuleVersion(){
+		return sharedPrefs.getLong(EN_MODULE_VERSION, 0);
 	}
 
 	private HashMap<DayDate, Long> convertToDateMap(HashMap<String, Long> map) {

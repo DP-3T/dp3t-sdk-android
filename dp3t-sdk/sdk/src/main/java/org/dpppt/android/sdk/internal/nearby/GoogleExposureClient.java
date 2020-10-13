@@ -21,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.exposurenotification.*;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
@@ -239,6 +240,12 @@ public class GoogleExposureClient {
 		} else {
 			throw new IllegalStateException(EITHER_EXCEPTION_OR_RESULT_MUST_BE_SET);
 		}
+	}
+
+	public void getVersion(OnSuccessListener<Long> onSuccessListener, OnFailureListener onFailureListener) {
+		exposureNotificationClient.getVersion()
+				.addOnSuccessListener(onSuccessListener)
+				.addOnFailureListener(onFailureListener);
 	}
 
 	public Integer getCalibrationConfidence() throws Exception {

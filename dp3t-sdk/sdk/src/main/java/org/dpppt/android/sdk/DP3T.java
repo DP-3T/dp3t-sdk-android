@@ -224,6 +224,11 @@ public class DP3T {
 		);
 	}
 
+	public static long getENModuleVersion(Context context) {
+		checkInit();
+		return AppConfigManager.getInstance(context).getENModuleVersion();
+	}
+
 	public static void checkGaenAvailability(Context context, Consumer<GaenAvailability> availabilityCallback) {
 		GaenStateHelper.checkGaenAvailability(context, availabilityCallback);
 	}

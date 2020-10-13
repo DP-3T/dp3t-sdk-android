@@ -18,6 +18,7 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
 
 import org.dpppt.android.sdk.GaenAvailability;
+import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.PackageManagerUtil;
 
@@ -35,6 +36,7 @@ public class GaenStateHelper {
 		boolean enModuleAvailable = enSettingsIntent.resolveActivity(context.getPackageManager()) != null;
 		if (enModuleAvailable || SET_GAEN_AVAILABILITY_AVAILABLE_FOR_TESTS) {
 			Logger.d(TAG, "checkGaenAvailability: EN available");
+			updateGaenVersion(context, callback);
 			publishGaenAvailability(context, callback, GaenAvailability.AVAILABLE);
 			return;
 		}
@@ -61,6 +63,18 @@ public class GaenStateHelper {
 			Logger.w(TAG, "checkGaenAvailability: not installed");
 			publishGaenAvailability(context, callback, GaenAvailability.UNAVAILABLE);
 		}
+	}
+
+	private static void updateGaenVersion(Context context, Consumer<GaenAvailability> callback) {
+		GoogleExposureClient.getInstance(context).getVersion(
+				version -> {
+					if (version != null) {
+						AppConfigManager.getInstance(context).setENModuleVersion(version);
+					}
+				},
+				exception -> {
+					//ignore exception, if getVersion call is not yet supported we just assume default module version 0.
+				});
 	}
 
 	private static void publishGaenAvailability(Context context, Consumer<GaenAvailability> callback,
