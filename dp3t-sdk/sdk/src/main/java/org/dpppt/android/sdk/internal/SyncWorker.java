@@ -157,7 +157,7 @@ public class SyncWorker extends Worker {
 					new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
 			GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 
-			if (appConfigManager.getLastSynCallTime() < System.currentTimeMillis() - SYNC_INTERVAL) {
+			if (appConfigManager.getLastSynCallTime() < currentTime - SYNC_INTERVAL) {
 				try {
 					Logger.d(TAG, "loading exposees");
 					Response<ResponseBody> result =
