@@ -26,6 +26,7 @@ import java.util.concurrent.CancellationException;
 import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 
 import org.dpppt.android.sdk.backend.ResponseCallback;
+import org.dpppt.android.sdk.backend.UserAgentInterceptor;
 import org.dpppt.android.sdk.internal.*;
 import org.dpppt.android.sdk.internal.backend.CertificatePinning;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
@@ -64,8 +65,7 @@ public class DP3T {
 
 	private static boolean initialized = false;
 
-	private static String appId;
-	private static String userAgent = "dp3t-sdk-android";
+	private static UserAgentInterceptor.UserAgentGenerator userAgent = () -> "dp3t-sdk-android";
 
 	private static PendingStartCallbacks pendingStartCallbacks;
 	private static PendingIAmInfectedRequest pendingIAmInfectedRequest;
@@ -75,7 +75,6 @@ public class DP3T {
 	}
 
 	public static void init(Context context, ApplicationInfo applicationInfo, PublicKey signaturePublicKey, boolean devHistory) {
-		DP3T.appId = applicationInfo.getAppId();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.setManualApplicationInfo(applicationInfo);
 		appConfigManager.setDevHistory(devHistory);
@@ -399,11 +398,11 @@ public class DP3T {
 		CertificatePinning.setCertificatePinner(certificatePinner);
 	}
 
-	public static void setUserAgent(String userAgent) {
+	public static void setUserAgent(UserAgentInterceptor.UserAgentGenerator userAgent) {
 		DP3T.userAgent = userAgent;
 	}
 
-	public static String getUserAgent() {
+	public static UserAgentInterceptor.UserAgentGenerator getUserAgent() {
 		return userAgent;
 	}
 

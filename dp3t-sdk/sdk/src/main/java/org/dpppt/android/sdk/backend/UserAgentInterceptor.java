@@ -10,10 +10,10 @@ import okhttp3.Response;
 
 public class UserAgentInterceptor implements Interceptor {
 
-	private final String userAgent;
+	private final UserAgentGenerator userAgentGenerator;
 
-	public UserAgentInterceptor(String userAgent) {
-		this.userAgent = userAgent;
+	public UserAgentInterceptor(UserAgentGenerator userAgentGenerator) {
+		this.userAgentGenerator = userAgentGenerator;
 	}
 
 	@NonNull
@@ -21,9 +21,15 @@ public class UserAgentInterceptor implements Interceptor {
 	public Response intercept(Chain chain) throws IOException {
 		Request request = chain.request()
 				.newBuilder()
-				.header("User-Agent", userAgent)
+				.header("User-Agent", userAgentGenerator.getUserAgent())
 				.build();
 		return chain.proceed(request);
+	}
+
+	public interface UserAgentGenerator {
+
+		String getUserAgent();
+
 	}
 
 }
