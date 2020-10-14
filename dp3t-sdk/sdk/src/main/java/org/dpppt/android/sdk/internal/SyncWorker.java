@@ -56,6 +56,8 @@ public class SyncWorker extends Worker {
 	private static final String WORK_TAG = "org.dpppt.android.sdk.internal.SyncWorker";
 	private static final String KEYFILE_PREFIX = "keyfile_";
 
+	protected static final String KEY_BUNDLE_TAG_HEADER = "x-key-bundle-tag";
+
 	private static final long SYNC_INTERVAL = BuildConfig.FLAVOR.equals("calibration") ? 5 * 60 * 1000L : 4 * 60 * 60 * 1000L;
 
 	private static PublicKey bucketSignaturePublicKey;
@@ -157,7 +159,7 @@ public class SyncWorker extends Worker {
 					new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
 			GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 
-			if (appConfigManager.getLastSynCallTime() < currentTime - SYNC_INTERVAL) {
+			if (appConfigManager.getLastSynCallTime() <= currentTime - SYNC_INTERVAL) {
 				try {
 					Logger.d(TAG, "loading exposees");
 					Response<ResponseBody> result =
@@ -184,7 +186,7 @@ public class SyncWorker extends Worker {
 					} else {
 						appConfigManager.setLastSyncCallTime(currentTime);
 					}
-					appConfigManager.setLastKeyBundleTag(Long.parseLong(result.headers().get("x-key-bundle-tag")));
+					appConfigManager.setLastKeyBundleTag(Long.parseLong(result.headers().get(KEY_BUNDLE_TAG_HEADER)));
 					appConfigManager.setLastSyncDate(currentTime);
 					addHistoryEntry(false, false);
 				} catch (Exception e) {

@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.google.android.gms.common.api.Api;
 import com.google.android.gms.common.api.internal.ApiKey;
@@ -102,6 +103,11 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 	}
 
 	@Override
+	public Task<Void> provideDiagnosisKeys(DiagnosisKeyFileProvider diagnosisKeyFileProvider) {
+		return null;
+	}
+
+	@Override
 	public Task<List<ExposureWindow>> getExposureWindows(String s) {
 		return new DummyTask<>(params == null ? new ArrayList<>() : params.exposureWindows);
 	}
@@ -123,7 +129,7 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 
 	@Override
 	public Task<Long> getVersion() {
-		return null;
+		return new DummyTask<>(17203704005L);
 	}
 
 	@Override
@@ -149,6 +155,16 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 	@Override
 	public boolean deviceSupportsLocationlessScanning() {
 		return false;
+	}
+
+	@Override
+	public Task<Set<ExposureNotificationStatus>> getStatus() {
+		return null;
+	}
+
+	@Override
+	public Task<PackageConfiguration> getPackageConfiguration() {
+		return null;
 	}
 
 	@Override
