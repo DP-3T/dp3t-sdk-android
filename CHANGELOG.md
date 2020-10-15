@@ -1,6 +1,6 @@
 # Changelog for DP3T-SDK Android
 
-## version 1.1.0 (unreleased)
+## version 2.0.0 (unreleased)
 
 - updated to play-services-nearby-exposurenotification-1.7.1-eap.aar, make sure to update this in your project as well!
 - use exposureWindows to compute attenuationDurations
