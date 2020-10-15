@@ -196,7 +196,8 @@ public class ControlsFragment extends Fragment {
 		uploadDB.setOnClickListener(v -> {
 			setUploadDbLoadingViewVisible(true);
 			new FileUploadRepository()
-					.uploadDatabase(requireContext(), DP3TCalibrationHelper.getInstance(getContext()).getCalibrationTestDeviceName(),
+					.uploadDatabase(requireContext(),
+							DP3TCalibrationHelper.getInstance(getContext()).getCalibrationTestDeviceName(),
 							new Callback<Void>() {
 								@Override
 								public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
@@ -326,6 +327,8 @@ public class ControlsFragment extends Fragment {
 				.append(getString(R.string.status_self_infected, status.getInfectionStatus() == InfectionStatus.INFECTED))
 				.append("\n")
 				.append(getString(R.string.status_been_exposed, status.getInfectionStatus() == InfectionStatus.EXPOSED))
+				.append("\n")
+				.append("EN-Version: " + DP3T.getENModuleVersion(getContext()))
 				.append("\n");
 
 		Collection<TracingStatus.ErrorState> errors = status.getErrors();
