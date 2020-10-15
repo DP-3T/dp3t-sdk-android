@@ -38,7 +38,7 @@ public class AppConfigManager {
 	private static final String PREF_LAST_KEY_BUNDLE_TAG = "lastKeyBundleTag";
 	private static final String PREF_DEV_HISTORY = "devHistory";
 	private static final String PREF_EN_MODULE_VERSION = "enModuleVersion";
-	private static final String PREF_NUMBERR_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE = "numberOfDaysToConsiderrForExposure";
+	private static final String PREF_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE = "numberOfDaysToConsiderForExposure";
 	private static final String PREF_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS = "numberOfDaysToKeepExposedDays";
 
 	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
@@ -158,11 +158,11 @@ public class AppConfigManager {
 	}
 
 	public int getNumberOfDaysToConsiderForExposure() {
-		return sharedPrefs.getInt(PREF_NUMBERR_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE, DEFAULT_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE);
+		return sharedPrefs.getInt(PREF_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE, DEFAULT_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE);
 	}
 
 	public void setNumberOfDaysToConsiderForExposure(int days) {
-		sharedPrefs.edit().putInt(PREF_NUMBERR_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE, days).apply();
+		sharedPrefs.edit().putInt(PREF_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE, days).apply();
 	}
 
 	public int getNumberOfDaysToKeepExposedDays() {
