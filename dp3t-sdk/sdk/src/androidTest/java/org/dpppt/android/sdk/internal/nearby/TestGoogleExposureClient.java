@@ -80,8 +80,20 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 
 	@Override
 	public Task<Void> provideDiagnosisKeys(List<File> list, ExposureConfiguration exposureConfiguration, String token) {
+		return provideDiagnosisKeys(new DiagnosisKeyFileProvider(list));
+	}
+
+	@Override
+	public Task<Void> provideDiagnosisKeys(List<File> list) {
+		return provideDiagnosisKeys(list, null, null);
+	}
+
+	@Override
+	public Task<Void> provideDiagnosisKeys(DiagnosisKeyFileProvider diagnosisKeyFileProvider) {
 		provideDiagnosisKeysCounter++;
-		for (File file : list) {
+
+		while (diagnosisKeyFileProvider.zza()) {
+			File file = diagnosisKeyFileProvider.zzb();
 			try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
 				String fileContent = reader.readLine();
 				if (fileContent.startsWith("{")) {
@@ -94,17 +106,8 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 				e.printStackTrace();
 			}
 		}
+
 		return new DummyTask<>(null);
-	}
-
-	@Override
-	public Task<Void> provideDiagnosisKeys(List<File> list) {
-		return provideDiagnosisKeys(list, null, null);
-	}
-
-	@Override
-	public Task<Void> provideDiagnosisKeys(DiagnosisKeyFileProvider diagnosisKeyFileProvider) {
-		return null;
 	}
 
 	@Override
