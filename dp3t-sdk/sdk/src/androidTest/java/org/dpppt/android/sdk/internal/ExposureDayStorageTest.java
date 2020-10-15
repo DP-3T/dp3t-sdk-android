@@ -117,11 +117,12 @@ public class ExposureDayStorageTest {
 	public void testKeepTestsFor10DaysAfterReport() {
 		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
 		eds.clear();
+		//change config to keep exposure days only for 10 days after the report date
 		DP3T.setNumberOfDaysToKeepExposedDays(context, 10);
 		//should be returned in getExposureDays()
 		eds.addExposureDays(context,
 				Arrays.asList(new ExposureDay(-1, new DayDate().subtractDays(11), System.currentTimeMillis() - 10)));
-		//should not be considered because the report date is more than 14 days in the past
+		//should not be considered because the report date is more than 10 days in the past
 		eds.addExposureDays(context,
 				Arrays.asList(new ExposureDay(-2, new DayDate().subtractDays(16),
 						System.currentTimeMillis() - 11 * 24 * 60 * 60 * 1000)));
