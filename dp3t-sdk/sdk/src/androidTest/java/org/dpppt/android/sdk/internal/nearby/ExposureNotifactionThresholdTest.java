@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static junit.framework.TestCase.assertTrue;
+import static org.dpppt.android.sdk.internal.nearby.ExposureWindowMatchingWorker.convertAttenuationDurationsToMinutes;
 import static org.junit.Assert.assertFalse;
 
 @RunWith(AndroidJUnit4.class)
@@ -63,6 +64,20 @@ public class ExposureNotifactionThresholdTest {
 		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 1, 4, 0 }));
 		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 15, 1, 0 }));
 		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 19, 0, 30 }));
+	}
+
+	@Test
+	public void testDefaultWithSeconds() {
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		appConfigManager.clearPreferences();
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, convertAttenuationDurationsToMinutes(new int[] { 14*60+1, 0, 0 })));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, convertAttenuationDurationsToMinutes(new int[] { 10*60, 10*60, 0 })));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, convertAttenuationDurationsToMinutes(new int[] { 0, 29*60+1, 0 })));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, convertAttenuationDurationsToMinutes(new int[] { 30*60, 30*60, 30*60 })));
+
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, convertAttenuationDurationsToMinutes(new int[] { 14*60, 1, 0 })));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, convertAttenuationDurationsToMinutes(new int[] { 5*60, 19*60, 0 })));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, convertAttenuationDurationsToMinutes(new int[] { 0, 29*60, 30*60 })));
 	}
 
 }

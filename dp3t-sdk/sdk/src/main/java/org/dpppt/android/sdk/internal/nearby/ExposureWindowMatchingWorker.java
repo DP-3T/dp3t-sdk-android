@@ -67,30 +67,48 @@ public class ExposureWindowMatchingWorker extends Worker {
 
 	protected static void addDaysWhereExposureLimitIsReached(Context context, List<ExposureWindow> exposureWindows) {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		HashMap<DayDate, int[]> attenuationDurationsInMinutesForDate = new HashMap<>();
+		HashMap<DayDate, int[]> attenuationDurationsInSecondsForDate = new HashMap<>();
 		for (ExposureWindow exposureWindow : exposureWindows) {
 
 			DayDate windowDate = new DayDate(exposureWindow.getDateMillisSinceEpoch());
-			if (!attenuationDurationsInMinutesForDate.containsKey(windowDate)) {
-				attenuationDurationsInMinutesForDate.put(windowDate, new int[] { 0, 0, 0 });
+			if (!attenuationDurationsInSecondsForDate.containsKey(windowDate)) {
+				attenuationDurationsInSecondsForDate.put(windowDate, new int[] { 0, 0, 0 });
 			}
-			int[] attenuationDurationsInMinutes = attenuationDurationsInMinutesForDate.get(windowDate);
+			int[] attenuationDurationsInSeconds = attenuationDurationsInSecondsForDate.get(windowDate);
 
 			for (ScanInstance scanInstance : exposureWindow.getScanInstances()) {
 				if (scanInstance.getTypicalAttenuationDb() < appConfigManager.getAttenuationThresholdLow()) {
-					attenuationDurationsInMinutes[0] += scanInstance.getSecondsSinceLastScan() / 60;
+					attenuationDurationsInSeconds[0] += scanInstance.getSecondsSinceLastScan();
 				} else if (scanInstance.getTypicalAttenuationDb() < appConfigManager.getAttenuationThresholdMedium()) {
-					attenuationDurationsInMinutes[1] += scanInstance.getSecondsSinceLastScan() / 60;
+					attenuationDurationsInSeconds[1] += scanInstance.getSecondsSinceLastScan();
 				} else {
-					attenuationDurationsInMinutes[2] += scanInstance.getSecondsSinceLastScan() / 60;
+					attenuationDurationsInSeconds[2] += scanInstance.getSecondsSinceLastScan();
 				}
 			}
 		}
 
+		List<ExposureDay> exposureDays = getExposureDaysFromAttenuationDurations(context, attenuationDurationsInSecondsForDate);
+		if (!exposureDays.isEmpty()) {
+			ExposureDayStorage.getInstance(context).addExposureDays(context, exposureDays);
+		}
+	}
+
+	private static List<ExposureDay> getExposureDaysFromAttenuationDurations(Context context,
+			HashMap<DayDate, int[]> attenuationDurationsInSecondsForDate) {
+
 		List<ExposureDay> exposureDays = new ArrayList<>();
-		DayDate maxAgeForExposure = new DayDate().subtractDays(appConfigManager.getNumberOfDaysToConsiderForExposure());
-		for (Map.Entry<DayDate, int[]> dayDateEntry : attenuationDurationsInMinutesForDate.entrySet()) {
-			if (isExposureLimitReached(context, dayDateEntry.getValue()) && maxAgeForExposure.isBefore(dayDateEntry.getKey())) {
+		DayDate maxAgeForExposure =
+				new DayDate().subtractDays(AppConfigManager.getInstance(context).getNumberOfDaysToConsiderForExposure());
+
+		for (Map.Entry<DayDate, int[]> dayDateEntry : attenuationDurationsInSecondsForDate.entrySet()) {
+
+			if (dayDateEntry.getKey().isBefore(maxAgeForExposure)) {
+				Logger.d(TAG, "exposure too far in the past on " + dayDateEntry.getKey().formatAsString());
+				continue;
+			}
+
+			int[] attenuationDurationsInMinutes = convertAttenuationDurationsToMinutes(dayDateEntry.getValue());
+			if (isExposureLimitReached(context, attenuationDurationsInMinutes)) {
 				Logger.d(TAG, "exposure limit reached on " + dayDateEntry.getKey().formatAsString());
 				ExposureDay exposureDay = new ExposureDay(-1, dayDateEntry.getKey(), System.currentTimeMillis());
 				exposureDays.add(exposureDay);
@@ -98,9 +116,15 @@ public class ExposureWindowMatchingWorker extends Worker {
 				Logger.d(TAG, "exposure limit not reached on " + dayDateEntry.getKey().formatAsString());
 			}
 		}
-		if (!exposureDays.isEmpty()) {
-			ExposureDayStorage.getInstance(context).addExposureDays(context, exposureDays);
+		return exposureDays;
+	}
+
+	protected static int[] convertAttenuationDurationsToMinutes(int[] attenuationDurationsInSeconds) {
+		int[] attenuationDurationsInMinutes = new int[3];
+		for (int i = 0; i < 3; i++) {
+			attenuationDurationsInMinutes[i] = (int) Math.ceil(attenuationDurationsInSeconds[i] / 60.0);
 		}
+		return attenuationDurationsInMinutes;
 	}
 
 	protected static boolean isExposureLimitReached(Context context, int[] attenuationDurationsInMinutes) {
@@ -109,7 +133,7 @@ public class ExposureWindowMatchingWorker extends Worker {
 				appConfigManager.getMinDurationForExposure();
 	}
 
-	private static float computeExposureDuration(AppConfigManager appConfigManager, int[] attenuationDurationsInMinutes) {
+	private static double computeExposureDuration(AppConfigManager appConfigManager, int[] attenuationDurationsInMinutes) {
 		return attenuationDurationsInMinutes[0] * appConfigManager.getAttenuationFactorLow() +
 				attenuationDurationsInMinutes[1] * appConfigManager.getAttenuationFactorMedium();
 	}
