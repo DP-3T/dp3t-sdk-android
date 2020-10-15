@@ -15,7 +15,9 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import java.util.Arrays;
 
+import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.internal.storage.ExposureDayStorage;
+import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposureDay;
 import org.junit.Before;
@@ -32,6 +34,7 @@ public class ExposureDayStorageTest {
 	@Before
 	public void setup() {
 		context = InstrumentationRegistry.getInstrumentation().getContext();
+		DP3T.init(context, new ApplicationInfo("", ""), null);
 	}
 
 	@Test
@@ -106,6 +109,22 @@ public class ExposureDayStorageTest {
 		eds.addExposureDays(context,
 				Arrays.asList(new ExposureDay(-2, new DayDate().subtractDays(16),
 						System.currentTimeMillis() - 15 * 24 * 60 * 60 * 1000)));
+		assertEquals(1, eds.getExposureDays().size());
+	}
+
+
+	@Test
+	public void testKeepTestsFor10DaysAfterReport() {
+		ExposureDayStorage eds = ExposureDayStorage.getInstance(context);
+		eds.clear();
+		DP3T.setNumberOfDaysToKeepExposedDays(context, 10);
+		//should be returned in getExposureDays()
+		eds.addExposureDays(context,
+				Arrays.asList(new ExposureDay(-1, new DayDate().subtractDays(11), System.currentTimeMillis() - 10)));
+		//should not be considered because the report date is more than 14 days in the past
+		eds.addExposureDays(context,
+				Arrays.asList(new ExposureDay(-2, new DayDate().subtractDays(16),
+						System.currentTimeMillis() - 11 * 24 * 60 * 60 * 1000)));
 		assertEquals(1, eds.getExposureDays().size());
 	}
 

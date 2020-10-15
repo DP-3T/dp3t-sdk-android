@@ -9,6 +9,8 @@
 - add Experiment-Mode to calibration app to simplify experiments with multiple devices and the new ExposureWindows-API (see CALIBRATION_APP_USAGE.md for details)
 - expose EN-Module version, this can be used to extend the userAgent to be able to handle potential bugs in future EN versions from the backend
 - Version 1.1.0 of the SDK will require EN module version >= 1.6, if run on older versions a notification will be generated asking the user to update Google Play Services
+- add config option DP3T.setNumberOfDaysToConsiderForExposure() to define how many days after the exposure an exposure should be considered
+- add config option DP3T.setNumberOfDaysToKeepExposedDays() to define how many days after an exposure is reported, this should be kept
 
 ## version 1.0.4 (25.8.2020)
 

@@ -42,7 +42,9 @@ public class AppConfigManager {
 	private static final String PREF_LAST_SYNC_CALL_TIME = "lastSyncCallTime";
 	private static final String PREF_LAST_KEY_BUNDLE_TAG = "lastKeyBundleTag";
 	private static final String PREF_DEV_HISTORY = "devHistory";
-	private static final String EN_MODULE_VERSION = "enModuleVersion";
+	private static final String PREF_EN_MODULE_VERSION = "enModuleVersion";
+	private static final String PREF_NUMBERR_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE = "numberOfDaysToConsiderrForExposure";
+	private static final String PREF_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS = "numberOfDaysToKeepExposedDays";
 
 	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
 	private static final String PREF_ATTENUATION_THRESHOLD_MEDIUM = "attenuationThresholdMedium";
@@ -54,6 +56,8 @@ public class AppConfigManager {
 	private static final float DEFAULT_ATTENUATION_FACTOR_MEDIUM = 0.5f;
 	private static final int DEFAULT_MIN_DURATION_FOR_EXPOSURE = 15;
 	private static final String PREF_MIN_DURATION_FOR_EXPOSURE = "minDurationForExposure";
+	public static final int DEFAULT_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE = 10;
+	public static final int DEFAULT_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS = 14;
 
 	private SharedPreferences sharedPrefs;
 
@@ -158,6 +162,22 @@ public class AppConfigManager {
 		sharedPrefs.edit().putFloat(PREF_ATTENUATION_FACTOR_MEDIUM, factor).apply();
 	}
 
+	public int getNumberOfDaysToConsiderForExposure() {
+		return sharedPrefs.getInt(PREF_NUMBERR_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE, DEFAULT_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE);
+	}
+
+	public void setNumberOfDaysToConsiderForExposure(int days) {
+		sharedPrefs.edit().putInt(PREF_NUMBERR_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE, days).apply();
+	}
+
+	public int getNumberOfDaysToKeepExposedDays() {
+		return sharedPrefs.getInt(PREF_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS, DEFAULT_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS);
+	}
+
+	public void setNumberOfDaysToKeepExposedDays(int days) {
+		sharedPrefs.edit().putInt(PREF_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS, days).apply();
+	}
+
 	public long getLastSynCallTime() {
 		return sharedPrefs.getLong(PREF_LAST_SYNC_CALL_TIME, 0);
 	}
@@ -188,11 +208,11 @@ public class AppConfigManager {
 	}
 
 	public void setENModuleVersion(long version) {
-		sharedPrefs.edit().putLong(EN_MODULE_VERSION, version).apply();
+		sharedPrefs.edit().putLong(PREF_EN_MODULE_VERSION, version).apply();
 	}
 
-	public long getENModuleVersion(){
-		return sharedPrefs.getLong(EN_MODULE_VERSION, 0);
+	public long getENModuleVersion() {
+		return sharedPrefs.getLong(PREF_EN_MODULE_VERSION, 0);
 	}
 
 	private HashMap<DayDate, Long> convertToDateMap(HashMap<String, Long> map) {

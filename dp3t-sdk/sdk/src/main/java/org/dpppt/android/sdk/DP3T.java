@@ -429,6 +429,45 @@ public class DP3T {
 		appConfigManager.setMinDurationForExposure(minDurationForExposure);
 	}
 
+	/**
+	 * Defines the number of days after an exposure that it is considered for generating an exposure day.
+	 * This can be used to make sure only exposure days are generated that are still in the quarantine duration,
+	 * because it does not make much sense to inform the user about a possible exposure that is longer ago then he/she
+	 * would need to quarantine after the exposure.
+	 * <p>
+	 * Google only stores exposure data for 14 days, so any value >= 14 will have the same effect of considering all exposures
+	 * returned by the Google Exposure Notification framework.
+	 * <p>
+	 * The default value used is
+	 * {@value org.dpppt.android.sdk.internal.AppConfigManager#DEFAULT_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE}
+	 * <p>
+	 * @param context
+	 * @param days
+	 */
+	public static void setNumberOfDaysToConsiderForExposure(Context context, int days) {
+		checkInit();
+
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		appConfigManager.setNumberOfDaysToConsiderForExposure(days);
+	}
+
+	/**
+	 * Defines the number of days after the report date (not the exposure date!) of an exposure day that the SDK will
+	 * store the exposure day and return it to the client app.
+	 * <p>
+	 * The default value used is
+	 * {@value org.dpppt.android.sdk.internal.AppConfigManager#DEFAULT_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS}
+	 * <p>
+	 * @param context
+	 * @param days
+	 */
+	public static void setNumberOfDaysToKeepExposedDays(Context context, int days) {
+		checkInit();
+
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		appConfigManager.setNumberOfDaysToKeepExposedDays(days);
+	}
+
 	public static void clearData(Context context) {
 		checkInit();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);

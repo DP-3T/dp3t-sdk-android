@@ -257,6 +257,84 @@ public class SyncWorkerTest {
 		assertEquals(InfectionStatus.HEALTHY, status.getInfectionStatus());
 	}
 
+	@Test
+	public void testExposureTooLongAgo() {
+		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
+		params.exposureWindows = new ArrayList<>();
+		ArrayList<ScanInstance> scanInstances = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			scanInstances.add(new ScanInstance.Builder()
+					.setMinAttenuationDb(50)
+					.setTypicalAttenuationDb(50)
+					.setSecondsSinceLastScan(120)
+					.build());
+		}
+		ExposureWindow window = new ExposureWindow.Builder()
+				.setDateMillisSinceEpoch(new DayDate().subtractDays(12).getStartOfDayTimestamp())
+				.setScanInstances(scanInstances)
+				.build();
+		params.exposureWindows.add(window);
+
+		testExposure(params);
+
+		TracingStatus status = DP3T.getStatus(context);
+		assertEquals(InfectionStatus.HEALTHY, status.getInfectionStatus());
+	}
+
+	@Test
+	public void testExposureTooLongAgoWithChangedPeriod() {
+
+		DP3T.setNumberOfDaysToConsiderForExposure(context, 12);
+
+		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
+		params.exposureWindows = new ArrayList<>();
+		ArrayList<ScanInstance> scanInstances = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			scanInstances.add(new ScanInstance.Builder()
+					.setMinAttenuationDb(50)
+					.setTypicalAttenuationDb(50)
+					.setSecondsSinceLastScan(120)
+					.build());
+		}
+		ExposureWindow window = new ExposureWindow.Builder()
+				.setDateMillisSinceEpoch(new DayDate().subtractDays(13).getStartOfDayTimestamp())
+				.setScanInstances(scanInstances)
+				.build();
+		params.exposureWindows.add(window);
+
+		testExposure(params);
+
+		TracingStatus status = DP3T.getStatus(context);
+		assertEquals(InfectionStatus.HEALTHY, status.getInfectionStatus());
+	}
+
+	@Test
+	public void testExposureLongAgoWithChangedPeriod() {
+
+		DP3T.setNumberOfDaysToConsiderForExposure(context, 14);
+
+		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
+		params.exposureWindows = new ArrayList<>();
+		ArrayList<ScanInstance> scanInstances = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			scanInstances.add(new ScanInstance.Builder()
+					.setMinAttenuationDb(50)
+					.setTypicalAttenuationDb(50)
+					.setSecondsSinceLastScan(120)
+					.build());
+		}
+		ExposureWindow window = new ExposureWindow.Builder()
+				.setDateMillisSinceEpoch(new DayDate().subtractDays(13).getStartOfDayTimestamp())
+				.setScanInstances(scanInstances)
+				.build();
+		params.exposureWindows.add(window);
+
+		testExposure(params);
+
+		TracingStatus status = DP3T.getStatus(context);
+		assertEquals(InfectionStatus.EXPOSED, status.getInfectionStatus());
+	}
+
 	private void testExposure(TestGoogleExposureClient.ExposureTestParameters params) {
 		AtomicLong time = new AtomicLong(yesterdayAt8am());
 		server.setDispatcher(new Dispatcher() {

@@ -88,8 +88,9 @@ public class ExposureWindowMatchingWorker extends Worker {
 		}
 
 		List<ExposureDay> exposureDays = new ArrayList<>();
+		DayDate maxAgeForExposure = new DayDate().subtractDays(appConfigManager.getNumberOfDaysToConsiderForExposure());
 		for (Map.Entry<DayDate, int[]> dayDateEntry : attenuationDurationsInMinutesForDate.entrySet()) {
-			if (isExposureLimitReached(context, dayDateEntry.getValue())) {
+			if (isExposureLimitReached(context, dayDateEntry.getValue()) && maxAgeForExposure.isBefore(dayDateEntry.getKey())) {
 				Logger.d(TAG, "exposure limit reached on " + dayDateEntry.getKey().formatAsString());
 				ExposureDay exposureDay = new ExposureDay(-1, dayDateEntry.getKey(), System.currentTimeMillis());
 				exposureDays.add(exposureDay);
