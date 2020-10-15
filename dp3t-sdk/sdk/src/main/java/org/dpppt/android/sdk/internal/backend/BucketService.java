@@ -17,6 +17,6 @@ import retrofit2.http.Query;
 interface BucketService {
 
 	@GET("v2/gaen/exposed")
-	Call<ResponseBody> getGaenExposees(@Query("lastKeyBundleTag") Long lastKeyBundleTag);
+	Call<ResponseBody> getGaenExposees(@Query("lastKeyBundleTag") String lastKeyBundleTag);
 
 }

@@ -186,7 +186,7 @@ public class SyncWorker extends Worker {
 					} else {
 						appConfigManager.setLastSyncCallTime(currentTime);
 					}
-					appConfigManager.setLastKeyBundleTag(Long.parseLong(result.headers().get(KEY_BUNDLE_TAG_HEADER)));
+					appConfigManager.setLastKeyBundleTag(result.headers().get(KEY_BUNDLE_TAG_HEADER));
 					appConfigManager.setLastSyncDate(currentTime);
 					addHistoryEntry(false, false);
 				} catch (Exception e) {

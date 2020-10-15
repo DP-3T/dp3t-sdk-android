@@ -186,17 +186,12 @@ public class AppConfigManager {
 		sharedPrefs.edit().putLong(PREF_LAST_SYNC_CALL_TIME, time).apply();
 	}
 
-	public Long getLastKeyBundleTag() {
-		long lastSyncedKeyPublishedUntil = sharedPrefs.getLong(PREF_LAST_KEY_BUNDLE_TAG, -1);
-		if (lastSyncedKeyPublishedUntil == -1) {
-			return null;
-		} else {
-			return lastSyncedKeyPublishedUntil;
-		}
+	public String getLastKeyBundleTag() {
+		return sharedPrefs.getString(PREF_LAST_KEY_BUNDLE_TAG, null);
 	}
 
-	public void setLastKeyBundleTag(long time) {
-		sharedPrefs.edit().putLong(PREF_LAST_KEY_BUNDLE_TAG, time).apply();
+	public void setLastKeyBundleTag(String tag) {
+		sharedPrefs.edit().putString(PREF_LAST_KEY_BUNDLE_TAG, tag).apply();
 	}
 
 	public void setDevHistory(boolean devHistory) {
