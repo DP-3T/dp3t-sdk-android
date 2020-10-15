@@ -12,6 +12,13 @@
 - add config option DP3T.setNumberOfDaysToConsiderForExposure() to define how many days after the exposure an exposure should be considered
 - add config option DP3T.setNumberOfDaysToKeepExposedDays() to define how many days after an exposure is reported, this should be kept
 
+## version 1.0.5 (24.9.2020)
+
+- support location less scanning on Android 11
+- fix state update bug when EN are activated/deactivated outside of the app
+- update targetSdk to 30, use gradle 6.6.1 and Android-Plugin 4.0.1
+- fix https://github.com/DP-3T/dp3t-sdk-android/issues/206
+
 ## version 1.0.4 (25.8.2020)
 
 - exposed days are now deleted 14 days after reporting the exposureDay (before they were deleted 10 days after the exposure which could be only 1 day after reporting)
