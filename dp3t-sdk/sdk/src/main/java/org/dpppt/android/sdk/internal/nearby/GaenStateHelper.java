@@ -36,7 +36,7 @@ public class GaenStateHelper {
 		boolean enModuleAvailable = enSettingsIntent.resolveActivity(context.getPackageManager()) != null;
 		if (enModuleAvailable || SET_GAEN_AVAILABILITY_AVAILABLE_FOR_TESTS) {
 			Logger.d(TAG, "checkGaenAvailability: EN available");
-			updateGaenVersion(context, callback);
+			updateGaenVersion(context);
 			publishGaenAvailability(context, callback, GaenAvailability.AVAILABLE);
 			return;
 		}
@@ -65,7 +65,7 @@ public class GaenStateHelper {
 		}
 	}
 
-	private static void updateGaenVersion(Context context, Consumer<GaenAvailability> callback) {
+	private static void updateGaenVersion(Context context) {
 		GoogleExposureClient.getInstance(context).getVersion(
 				version -> {
 					if (version != null) {

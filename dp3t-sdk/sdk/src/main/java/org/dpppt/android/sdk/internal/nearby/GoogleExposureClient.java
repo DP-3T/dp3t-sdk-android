@@ -149,7 +149,7 @@ public class GoogleExposureClient {
 
 		CountDownLatch countDownLatch = new CountDownLatch(1);
 		Exception[] exceptions = new Exception[] { null };
-		exposureNotificationClient.provideDiagnosisKeys(keys)
+		exposureNotificationClient.provideDiagnosisKeys(new DiagnosisKeyFileProvider(keys))
 				.addOnSuccessListener(nothing -> {
 					Logger.d(TAG, "provideDiagnosisKeys: inserted keys successfully");
 					countDownLatch.countDown();
@@ -165,6 +165,9 @@ public class GoogleExposureClient {
 		}
 	}
 
+	/**
+	 * @deprecated
+	 */
 	@Deprecated
 	public void provideDiagnosisKeys(List<File> keys, ExposureConfiguration exposureConfiguration, String token) throws Exception {
 		if (keys == null || keys.isEmpty()) {
@@ -193,6 +196,9 @@ public class GoogleExposureClient {
 		}
 	}
 
+	/**
+	 * @deprecated
+	 */
 	@Deprecated
 	public ExposureSummary getExposureSummary(String token) throws Exception {
 		CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -244,6 +250,7 @@ public class GoogleExposureClient {
 
 	public void getVersion(OnSuccessListener<Long> onSuccessListener, OnFailureListener onFailureListener) {
 		exposureNotificationClient.getVersion()
+
 				.addOnSuccessListener(onSuccessListener)
 				.addOnFailureListener(onFailureListener);
 	}

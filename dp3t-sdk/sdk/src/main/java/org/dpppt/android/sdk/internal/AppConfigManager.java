@@ -12,14 +12,9 @@ package org.dpppt.android.sdk.internal;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.ApplicationInfo;
-import org.dpppt.android.sdk.models.DayDate;
 
 public class AppConfigManager {
 
@@ -209,27 +204,5 @@ public class AppConfigManager {
 	public long getENModuleVersion() {
 		return sharedPrefs.getLong(PREF_EN_MODULE_VERSION, 0);
 	}
-
-	private HashMap<DayDate, Long> convertToDateMap(HashMap<String, Long> map) {
-		HashMap<DayDate, Long> result = new HashMap<>();
-		for (Map.Entry<String, Long> stringLongEntry : map.entrySet()) {
-			try {
-				result.put(new DayDate(stringLongEntry.getKey()), stringLongEntry.getValue());
-			} catch (ParseException e) {
-				e.printStackTrace();
-			}
-		}
-		return result;
-	}
-
-	private HashMap<String, Long> convertFromDateMap(HashMap<DayDate, Long> map) {
-		HashMap<String, Long> result = new HashMap<>();
-		for (Map.Entry<DayDate, Long> stringLongEntry : map.entrySet()) {
-			result.put(stringLongEntry.getKey().formatAsString(), stringLongEntry.getValue());
-		}
-		return result;
-	}
-
-	private static class StringLongMap extends HashMap<String, Long> { }
 
 }
