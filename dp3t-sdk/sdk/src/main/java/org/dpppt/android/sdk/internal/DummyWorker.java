@@ -11,7 +11,11 @@ package org.dpppt.android.sdk.internal;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.work.*;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import androidx.work.Worker;
+import androidx.work.WorkerParameters;
 
 import java.util.concurrent.TimeUnit;
 
@@ -23,14 +27,7 @@ public class DummyWorker extends Worker {
 	private static final String WORK_TAG = "DummyWorker";
 
 	public static void startDummyWorker(Context context) {
-
-		Constraints constraints = new Constraints.Builder()
-				.setRequiredNetworkType(NetworkType.CONNECTED)
-				.build();
-
-		PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(SyncWorker.class, 1, TimeUnit.DAYS)
-				.setConstraints(constraints)
-				.build();
+		PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(SyncWorker.class, 1, TimeUnit.DAYS).build();
 
 		WorkManager workManager = WorkManager.getInstance(context);
 		workManager.enqueueUniquePeriodicWork(WORK_TAG, ExistingPeriodicWorkPolicy.REPLACE, periodicWorkRequest);
