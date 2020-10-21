@@ -12,6 +12,8 @@ DP-3T is a free-standing effort started at EPFL and ETHZ that produced this prot
 ## Introduction
 This is the implementation of the DP-3T protocol using the [Exposure Notification](https://www.google.com/covid19/exposurenotifications/) Framework of Apple/Google. Only approved government public health authorities can access the APIs. Therefore, using this SDK will result in an API error unless either your account is whitelisted as test account or your app is approved by Google and signed with the production certificate.
 
+As of version 2.0 of this SDK we use version features added in v1.5 of the Google framework and for iOS features that were added in v2.0 of the Apple framework. Make sure to use also use at least version 2.0 of the [dp3t-sdk-backend](https://github.com/DP-3T/dp3t-sdk-backend) to be compatible with the DP3T Android SDK 2.0. See [EXPOSURE_NOTIFICATION_API_USAGE.md](EXPOSURE_NOTIFICATION_API_USAGE.md) for a detailed description of how we use the Google EN Api.
+
 Our prestandard solution that is not using the Apple/Google framework can be found under the [tag prestandard](https://github.com/DP-3T/dp3t-sdk-android/tree/prestandard).
 
 ## Repositories
@@ -26,6 +28,8 @@ The full set of documents for DP3T is at https://github.com/DP-3T/documents. Ple
 
 ## Calibration App
 Included in this repository is a Calibration App that can run, debug and test the SDK directly without implementing it in a new app first. It collects additional data and stores it locally into a database to allow for tests with phones from different vendors. Various parameters of the SDK are exposed and can be changed at runtime. Additionally it provides an overview of how to use the SDK.
+
+See [CALIBRATION_APP_USAGE.md ](CALIBRATION_APP_USAGE.md) for more information on how to use the calibration app.
 
 <p align="center">
   <img src="calibration-app/screenshots/1.png" width="256">
