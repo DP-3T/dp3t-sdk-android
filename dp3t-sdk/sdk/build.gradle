@@ -21,8 +21,8 @@ android {
 	defaultConfig {
 		minSdkVersion 23
 		targetSdkVersion 30
-		versionCode 105
-		versionName "1.0.5"
+		versionCode 200
+		versionName "2.0.0"
 		testInstrumentationRunnerArgument 'androidx.benchmark.suppressErrors', 'EMULATOR,LOW-BATTERY,ACTIVITY-MISSING,DEBUGGABLE,UNLOCKED,UNSUSTAINED-ACTIVITY-MISSING'
 		testInstrumentationRunner "androidx.benchmark.junit4.AndroidBenchmarkRunner"
 
@@ -145,4 +145,5 @@ dependencies {
 	androidTestImplementation 'androidx.test.ext:junit:1.1.1'
 	androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 	androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.14.7'
+	androidTestImplementation 'androidx.work:work-testing:2.3.4'
 }

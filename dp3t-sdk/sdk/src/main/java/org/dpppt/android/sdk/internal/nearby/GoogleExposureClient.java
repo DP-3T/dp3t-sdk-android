@@ -16,10 +16,12 @@ import androidx.core.util.Consumer;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.exposurenotification.*;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
@@ -29,11 +31,11 @@ public class GoogleExposureClient {
 
 	private static final String TAG = "GoogleExposureClient";
 
+	private static final String EITHER_EXCEPTION_OR_RESULT_MUST_BE_SET = "either exception or result must be set";
+
 	private static GoogleExposureClient instance;
 
 	private final ExposureNotificationClient exposureNotificationClient;
-
-	private ExposureConfiguration exposureConfiguration;
 
 	public static synchronized GoogleExposureClient getInstance(Context context) {
 		if (instance == null) {
@@ -115,52 +117,59 @@ public class GoogleExposureClient {
 	}
 
 	public List<TemporaryExposureKey> getTemporaryExposureKeyHistorySynchronous() throws Exception {
-		final Object syncObject = new Object();
+
+		CountDownLatch countDownLatch = new CountDownLatch(1);
 		Object[] results = new Object[] { null };
 
-		synchronized (syncObject) {
-			exposureNotificationClient.getTemporaryExposureKeyHistory()
-					.addOnSuccessListener(list -> {
-						results[0] = list;
-						synchronized (syncObject) {
-							syncObject.notifyAll();
-						}
-					})
-					.addOnFailureListener(e -> {
-						results[0] = e;
-						synchronized (syncObject) {
-							syncObject.notifyAll();
-						}
-					});
+		exposureNotificationClient.getTemporaryExposureKeyHistory()
+				.addOnSuccessListener(list -> {
+					results[0] = list;
+					countDownLatch.countDown();
+				})
+				.addOnFailureListener(e -> {
+					results[0] = e;
+					countDownLatch.countDown();
+				});
 
-			syncObject.wait();
-		}
+		countDownLatch.await();
+
 		if (results[0] instanceof Exception) {
 			throw (Exception) results[0];
 		} else if (results[0] instanceof List) {
 			return (List<TemporaryExposureKey>) results[0];
 		} else {
-			throw new IllegalStateException("either exception or result must be set");
+			throw new IllegalStateException(EITHER_EXCEPTION_OR_RESULT_MUST_BE_SET);
 		}
 	}
 
-	public void setParams(int attenuationThresholdLow, int attenuationThresholdMedium) {
-		exposureConfiguration = new ExposureConfiguration.ExposureConfigurationBuilder()
-				.setMinimumRiskScore(1)
-				.setAttenuationScores(new int[] { 1, 1, 1, 1, 1, 1, 1, 1 })
-				.setAttenuationWeight(100)
-				.setDaysSinceLastExposureWeight(0)
-				.setDurationWeight(0)
-				.setTransmissionRiskWeight(0)
-				.setDurationAtAttenuationThresholds(new int[] { attenuationThresholdLow, attenuationThresholdMedium })
-				.build();
+	public void provideDiagnosisKeys(List<File> keys) throws Exception {
+		if (keys == null || keys.isEmpty()) {
+			return;
+		}
+
+		CountDownLatch countDownLatch = new CountDownLatch(1);
+		Exception[] exceptions = new Exception[] { null };
+		exposureNotificationClient.provideDiagnosisKeys(new DiagnosisKeyFileProvider(keys))
+				.addOnSuccessListener(nothing -> {
+					Logger.d(TAG, "provideDiagnosisKeys: inserted keys successfully");
+					countDownLatch.countDown();
+				})
+				.addOnFailureListener(e -> {
+					Logger.e(TAG, "provideDiagnosisKeys", e);
+					exceptions[0] = e;
+					countDownLatch.countDown();
+				});
+		countDownLatch.await();
+		if (exceptions[0] != null) {
+			throw exceptions[0];
+		}
 	}
 
-	public ExposureConfiguration getExposureConfiguration() {
-		return exposureConfiguration;
-	}
-
-	public void provideDiagnosisKeys(List<File> keys, String token) throws Exception {
+	/**
+	 * @deprecated
+	 */
+	@Deprecated
+	public void provideDiagnosisKeys(List<File> keys, ExposureConfiguration exposureConfiguration, String token) throws Exception {
 		if (keys == null || keys.isEmpty()) {
 			return;
 		}
@@ -168,37 +177,105 @@ public class GoogleExposureClient {
 			throw new IllegalStateException("must call setParams()");
 		}
 
-		final Object syncObject = new Object();
+		CountDownLatch countDownLatch = new CountDownLatch(1);
 		Exception[] exceptions = new Exception[] { null };
-		synchronized (syncObject) {
-			exposureNotificationClient.provideDiagnosisKeys(keys, exposureConfiguration, token)
-					.addOnSuccessListener(nothing -> {
-						Logger.d(TAG, "provideDiagnosisKeys: inserted keys successfully for token " + token);
-						synchronized (syncObject) {
-							syncObject.notifyAll();
-						}
-					})
-					.addOnFailureListener(e -> {
-						Logger.e(TAG, "provideDiagnosisKeys for token " + token, e);
-						exceptions[0] = e;
-						synchronized (syncObject) {
-							syncObject.notifyAll();
-						}
-					});
+		exposureNotificationClient.provideDiagnosisKeys(keys, exposureConfiguration, token)
+				.addOnSuccessListener(nothing -> {
+					Logger.d(TAG, "provideDiagnosisKeys: inserted keys successfully for token " + token);
+					countDownLatch.countDown();
+				})
+				.addOnFailureListener(e -> {
+					Logger.e(TAG, "provideDiagnosisKeys for token " + token, e);
+					exceptions[0] = e;
+					countDownLatch.countDown();
+				});
+		countDownLatch.await();
 
-			syncObject.wait();
-		}
 		if (exceptions[0] != null) {
 			throw exceptions[0];
 		}
 	}
 
-	public Task<ExposureSummary> getExposureSummary(String token) {
-		return exposureNotificationClient.getExposureSummary(token);
+	/**
+	 * @deprecated
+	 */
+	@Deprecated
+	public ExposureSummary getExposureSummary(String token) throws Exception {
+		CountDownLatch countDownLatch = new CountDownLatch(1);
+		Object[] results = new Object[] { null };
+
+		exposureNotificationClient.getExposureSummary(token)
+				.addOnSuccessListener(summary -> {
+					results[0] = summary;
+					countDownLatch.countDown();
+				})
+				.addOnFailureListener(e -> {
+					results[0] = e;
+					countDownLatch.countDown();
+				});
+
+		countDownLatch.await();
+
+		if (results[0] instanceof Exception) {
+			throw (Exception) results[0];
+		} else if (results[0] instanceof ExposureSummary) {
+			return (ExposureSummary) results[0];
+		} else {
+			throw new IllegalStateException(EITHER_EXCEPTION_OR_RESULT_MUST_BE_SET);
+		}
 	}
 
-	public Task<List<ExposureInformation>> getExposureInformation(String token) {
-		return exposureNotificationClient.getExposureInformation(token);
+	public List<ExposureWindow> getExposureWindows() throws Exception {
+		CountDownLatch countDownLatch = new CountDownLatch(1);
+		Object[] results = new Object[] { null };
+
+		exposureNotificationClient.getExposureWindows()
+				.addOnSuccessListener(list -> {
+					results[0] = list;
+					countDownLatch.countDown();
+				})
+				.addOnFailureListener(e -> {
+					results[0] = e;
+					countDownLatch.countDown();
+				});
+		countDownLatch.await();
+		if (results[0] instanceof Exception) {
+			throw (Exception) results[0];
+		} else if (results[0] instanceof List) {
+			return (List<ExposureWindow>) results[0];
+		} else {
+			throw new IllegalStateException(EITHER_EXCEPTION_OR_RESULT_MUST_BE_SET);
+		}
+	}
+
+	public void getVersion(OnSuccessListener<Long> onSuccessListener, OnFailureListener onFailureListener) {
+		exposureNotificationClient.getVersion()
+
+				.addOnSuccessListener(onSuccessListener)
+				.addOnFailureListener(onFailureListener);
+	}
+
+	public Integer getCalibrationConfidence() throws Exception {
+		CountDownLatch countDownLatch = new CountDownLatch(1);
+		Object[] results = new Object[] { null };
+
+		exposureNotificationClient.getCalibrationConfidence()
+				.addOnSuccessListener(confidence -> {
+					results[0] = confidence;
+					countDownLatch.countDown();
+				})
+				.addOnFailureListener(e -> {
+					results[0] = e;
+					countDownLatch.countDown();
+				});
+		countDownLatch.await();
+		if (results[0] instanceof Exception) {
+			throw (Exception) results[0];
+		} else if (results[0] instanceof Integer) {
+			return (Integer) results[0];
+		} else {
+			throw new IllegalStateException(EITHER_EXCEPTION_OR_RESULT_MUST_BE_SET);
+		}
 	}
 
 }

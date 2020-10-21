@@ -13,14 +13,13 @@ import android.content.Context;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
-
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static junit.framework.TestCase.assertTrue;
+import static org.dpppt.android.sdk.internal.nearby.ExposureWindowMatchingWorker.convertAttenuationDurationsToMinutes;
 import static org.junit.Assert.assertFalse;
 
 @RunWith(AndroidJUnit4.class)
@@ -37,23 +36,14 @@ public class ExposureNotifactionThresholdTest {
 	public void testDefault() {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.clearPreferences();
-		ExposureNotificationBroadcastReceiver broadcastReceiver = new ExposureNotificationBroadcastReceiver();
-		ExposureSummary exposureSummary =
-				new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 15, 0, 0 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 10, 10, 0 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 0, 30, 0 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 30, 30, 30 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 15, 0, 0 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 10, 10, 0 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 0, 30, 0 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 30, 30, 30 }));
 
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 14, 1, 0 }).build();
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 5, 19, 0 }).build();
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 0, 29, 30 }).build();
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 14, 1, 0 }));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 5, 19, 0 }));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 0, 29, 30 }));
 	}
 
 
@@ -65,25 +55,29 @@ public class ExposureNotifactionThresholdTest {
 		appConfigManager.setAttenuationFactorMedium(2f);
 		appConfigManager.setMinDurationForExposure(10);
 
-		ExposureNotificationBroadcastReceiver broadcastReceiver = new ExposureNotificationBroadcastReceiver();
-		ExposureSummary exposureSummary =
-				new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 20, 0, 0 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 10, 3, 0 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 0, 30, 0 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 30, 0, 0 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 30, 30, 30 }).build();
-		assertTrue(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 20, 0, 0 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 10, 3, 0 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 0, 30, 0 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 30, 0, 0 }));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 30, 30, 30 }));
 
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 1, 4, 0 }).build();
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 15, 1, 0 }).build();
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
-		exposureSummary = new ExposureSummary.ExposureSummaryBuilder().setAttenuationDurations(new int[] { 19, 0, 30 }).build();
-		assertFalse(broadcastReceiver.isExposureLimitReached(context, exposureSummary));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 1, 4, 0 }));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 15, 1, 0 }));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, new int[] { 19, 0, 30 }));
+	}
+
+	@Test
+	public void testDefaultWithSeconds() {
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		appConfigManager.clearPreferences();
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, convertAttenuationDurationsToMinutes(new int[] { 14*60+1, 0, 0 })));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, convertAttenuationDurationsToMinutes(new int[] { 10*60, 10*60, 0 })));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, convertAttenuationDurationsToMinutes(new int[] { 0, 29*60+1, 0 })));
+		assertTrue(ExposureWindowMatchingWorker.isExposureLimitReached(context, convertAttenuationDurationsToMinutes(new int[] { 30*60, 30*60, 30*60 })));
+
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, convertAttenuationDurationsToMinutes(new int[] { 14*60, 1, 0 })));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, convertAttenuationDurationsToMinutes(new int[] { 5*60, 19*60, 0 })));
+		assertFalse(ExposureWindowMatchingWorker.isExposureLimitReached(context, convertAttenuationDurationsToMinutes(new int[] { 0, 29*60, 30*60 })));
 	}
 
 }

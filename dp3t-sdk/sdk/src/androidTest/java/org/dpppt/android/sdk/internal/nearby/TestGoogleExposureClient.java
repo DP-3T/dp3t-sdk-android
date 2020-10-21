@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.google.android.gms.common.api.Api;
 import com.google.android.gms.common.api.internal.ApiKey;
@@ -35,6 +36,7 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 	private int provideDiagnosisKeysCounter = 0;
 	private boolean currentDayKeyReleased = false;
 	private long time = System.currentTimeMillis();
+	private ExposureTestParameters params;
 
 	public TestGoogleExposureClient(Context context) {
 		this.context = context;
@@ -63,7 +65,7 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 	@Override
 	public Task<List<TemporaryExposureKey>> getTemporaryExposureKeyHistory() {
 		ArrayList<TemporaryExposureKey> temporaryExposureKeys = new ArrayList<>();
-		for (int i = 1; i<14; i++){
+		for (int i = 1; i < 14; i++) {
 			temporaryExposureKeys.add(new TemporaryExposureKey.TemporaryExposureKeyBuilder()
 					.setRollingStartIntervalNumber(DateUtil.getRollingStartNumberForDate(new DayDate(time).subtractDays(i)))
 					.build());
@@ -78,32 +80,44 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 
 	@Override
 	public Task<Void> provideDiagnosisKeys(List<File> list, ExposureConfiguration exposureConfiguration, String token) {
+		return provideDiagnosisKeys(new DiagnosisKeyFileProvider(list));
+	}
+
+	@Override
+	public Task<Void> provideDiagnosisKeys(List<File> list) {
+		return provideDiagnosisKeys(list, null, null);
+	}
+
+	@Override
+	public Task<Void> provideDiagnosisKeys(DiagnosisKeyFileProvider diagnosisKeyFileProvider) {
 		provideDiagnosisKeysCounter++;
-		for (File file : list) {
+
+		while (diagnosisKeyFileProvider.zza()) {
+			File file = diagnosisKeyFileProvider.zzb();
 			try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
 				String fileContent = reader.readLine();
 				if (fileContent.startsWith("{")) {
-					ExposureTestParameters params = Json.fromJson(fileContent, ExposureTestParameters.class);
+					params = Json.fromJson(fileContent, ExposureTestParameters.class);
 					Intent intent = new Intent(ExposureNotificationClient.ACTION_EXPOSURE_STATE_UPDATED);
-					intent.putExtra(ExposureNotificationClient.EXTRA_EXPOSURE_SUMMARY,
-							new ExposureSummary.ExposureSummaryBuilder()
-									.setAttenuationDurations(params.attenuationDurations)
-									.setMatchedKeyCount(params.matchedKeyCount)
-									.setDaysSinceLastExposure(params.daysSinceLastExposure)
-									.build());
-					intent.putExtra(ExposureNotificationClient.EXTRA_TOKEN, token);
+					intent.putExtra(ExposureNotificationClient.EXTRA_TOKEN, ExposureNotificationClient.TOKEN_A);
 					new ExposureNotificationBroadcastReceiver().onReceive(context, intent);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
+
 		return new DummyTask<>(null);
 	}
 
 	@Override
 	public Task<List<ExposureWindow>> getExposureWindows(String s) {
-		return new DummyTask<>(new ArrayList<>());
+		return new DummyTask<>(params == null ? new ArrayList<>() : params.exposureWindows);
+	}
+
+	@Override
+	public Task<List<ExposureWindow>> getExposureWindows() {
+		return getExposureWindows(null);
 	}
 
 	@Override
@@ -117,6 +131,46 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 	}
 
 	@Override
+	public Task<Long> getVersion() {
+		return new DummyTask<>(17203704005L);
+	}
+
+	@Override
+	public Task<Integer> getCalibrationConfidence() {
+		return null;
+	}
+
+	@Override
+	public Task<List<DailySummary>> getDailySummaries(DailySummariesConfig dailySummariesConfig) {
+		return null;
+	}
+
+	@Override
+	public Task<Void> setDiagnosisKeysDataMapping(DiagnosisKeysDataMapping diagnosisKeysDataMapping) {
+		return null;
+	}
+
+	@Override
+	public Task<DiagnosisKeysDataMapping> getDiagnosisKeysDataMapping() {
+		return null;
+	}
+
+	@Override
+	public boolean deviceSupportsLocationlessScanning() {
+		return false;
+	}
+
+	@Override
+	public Task<Set<ExposureNotificationStatus>> getStatus() {
+		return null;
+	}
+
+	@Override
+	public Task<PackageConfiguration> getPackageConfiguration() {
+		return null;
+	}
+
+	@Override
 	public ApiKey<Api.ApiOptions.NoOptions> getApiKey() {
 		return null;
 	}
@@ -125,14 +179,13 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 		return provideDiagnosisKeysCounter;
 	}
 
-	public void setTime(long time){
+	public void setTime(long time) {
 		this.time = time;
 	}
 
 	public static class ExposureTestParameters {
-		public int[] attenuationDurations;
-		public int matchedKeyCount;
-		public int daysSinceLastExposure;
+
+		public List<ExposureWindow> exposureWindows;
 
 	}
 
