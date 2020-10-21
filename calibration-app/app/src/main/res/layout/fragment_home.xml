@@ -59,11 +59,11 @@
 			tools:text="This textview displays the status of the STAR SDK on one or multiple lines." />
 
 		<Button
-			android:id="@+id/home_button_start_stop_tracking"
-			style="@style/Sample.Button.Tracking"
+			android:id="@+id/home_button_start_stop_tracing"
+			style="@style/Sample.Button.Tracing"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:text="@string/button_tracking_start" />
+			android:text="@string/button_tracing_start" />
 
 		<Button
 			android:id="@+id/home_button_sync"

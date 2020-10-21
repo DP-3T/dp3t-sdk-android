@@ -37,11 +37,11 @@ Now you have a clean setup of the app where device and experiment name are alrea
 
 
 ## Run experiment
-To start an experiment open the app and press the red "START TRACKING" button. An additional popup will show up where you have to agree to enable Exposure Notifications.
+To start an experiment open the app and press the red "START TRACING" button. An additional popup will show up where you have to agree to enable Exposure Notifications.
 
 At the end of the experiment go to the parameters tab (second icon at the bottom) and press "UPLOAD KEYS FOR EXPERIMENT". Make sure that the parameters from the setup phase are set correctly.
 
-To stop tracing and prevent any side-effects go back to the controls tab (first icon at the bottom) and press "STOP TRACKING".
+To stop tracing and prevent any side-effects go back to the controls tab (first icon at the bottom) and press "STOP TRACING".
 
 ## Execute matching
 

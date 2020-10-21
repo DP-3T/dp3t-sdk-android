@@ -267,12 +267,12 @@ public class ControlsFragment extends Fragment {
 		TextView statusText = view.findViewById(R.id.home_status_text);
 		statusText.setText(formatStatusString(status));
 
-		Button buttonStartStopTracking = view.findViewById(R.id.home_button_start_stop_tracking);
+		Button buttonStartStopTracing = view.findViewById(R.id.home_button_start_stop_tracing);
 		boolean isRunning = status.isTracingEnabled();
-		buttonStartStopTracking.setSelected(isRunning);
-		buttonStartStopTracking.setText(getString(isRunning ? R.string.button_tracking_stop
-															: R.string.button_tracking_start));
-		buttonStartStopTracking.setOnClickListener(v -> {
+		buttonStartStopTracing.setSelected(isRunning);
+		buttonStartStopTracing.setText(getString(isRunning ? R.string.button_tracing_stop
+															: R.string.button_tracing_start));
+		buttonStartStopTracing.setOnClickListener(v -> {
 			if (isRunning) {
 				DP3T.stop(v.getContext());
 			} else {
@@ -314,8 +314,8 @@ public class ControlsFragment extends Fragment {
 
 	private SpannableString formatStatusString(TracingStatus status) {
 		SpannableStringBuilder builder = new SpannableStringBuilder();
-		boolean isTracking = status.isTracingEnabled();
-		builder.append(getString(isTracking ? R.string.status_tracking_active : R.string.status_tracking_inactive)).append("\n")
+		boolean isTracing = status.isTracingEnabled();
+		builder.append(getString(isTracing ? R.string.status_tracing_active : R.string.status_tracing_inactive)).append("\n")
 				.setSpan(new StyleSpan(Typeface.BOLD), 0, builder.length() - 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
 		builder.append(getString(R.string.status_advertising, status.isTracingEnabled())).append("\n")
 				.append(getString(R.string.status_receiving, status.isTracingEnabled())).append("\n");
