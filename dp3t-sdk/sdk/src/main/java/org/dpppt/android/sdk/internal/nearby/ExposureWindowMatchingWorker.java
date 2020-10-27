@@ -18,6 +18,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +72,7 @@ public class ExposureWindowMatchingWorker extends Worker {
 		for (ExposureWindow exposureWindow : exposureWindows) {
 
 			DayDate windowDate = new DayDate(exposureWindow.getDateMillisSinceEpoch());
+			Logger.d(TAG, "Received ExposureWindow for " + windowDate.formatAsString() + ": " + exposureWindow.toString());
 			if (!attenuationDurationsInSecondsForDate.containsKey(windowDate)) {
 				attenuationDurationsInSecondsForDate.put(windowDate, new int[] { 0, 0, 0 });
 			}
@@ -107,6 +109,7 @@ public class ExposureWindowMatchingWorker extends Worker {
 				continue;
 			}
 
+			Logger.d(TAG, "Checking exposure limit for " + dayDateEntry.getKey().formatAsString() + ": " + Arrays.toString(dayDateEntry.getValue()));
 			int[] attenuationDurationsInMinutes = convertAttenuationDurationsToMinutes(dayDateEntry.getValue());
 			if (isExposureLimitReached(context, attenuationDurationsInMinutes)) {
 				Logger.d(TAG, "exposure limit reached on " + dayDateEntry.getKey().formatAsString());
