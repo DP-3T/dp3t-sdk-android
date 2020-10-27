@@ -134,7 +134,11 @@ public class SyncWorker extends Worker {
 					uploadPendingKeys(context);
 
 					if (DP3T.isTracingEnabled(context) && !Boolean.FALSE.equals(GaenStateCache.isGaenEnabled())) {
-						doSyncInternal(context);
+						boolean syncWasExecuted = doSyncInternal(context);
+						if (!syncWasExecuted) {
+							Logger.i(TAG, "sync skipped due to rate limit");
+							return;
+						}
 						Logger.i(TAG, "synced");
 						AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
 					}
@@ -151,7 +155,7 @@ public class SyncWorker extends Worker {
 			}
 		}
 
-		private void doSyncInternal(Context context) throws Exception {
+		private boolean doSyncInternal(Context context) throws Exception {
 			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 			ApplicationInfo appConfig = appConfigManager.getAppConfig();
 
@@ -203,6 +207,10 @@ public class SyncWorker extends Worker {
 				}
 
 				cleanupOldKeyFiles(context);
+
+				return true;
+			} else {
+				return false;
 			}
 		}
 
