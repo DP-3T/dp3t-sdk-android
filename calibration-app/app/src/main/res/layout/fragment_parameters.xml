@@ -8,7 +8,6 @@
   ~ SPDX-License-Identifier: MPL-2.0
   -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent">
 
@@ -24,41 +23,30 @@
 			android:layout_height="wrap_content"
 			android:layout_marginTop="@dimen/spacing_large"
 			android:layout_marginBottom="@dimen/spacing_medium"
-			android:text="@string/bucket_thresholds" />
-
-		<androidx.appcompat.widget.AppCompatSeekBar
-			android:id="@+id/parameter_seekbar_attenuation_bucket1"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:layout_marginBottom="@dimen/spacing_small" />
+			android:text="@string/experiment_config" />
 
 		<EditText
-			android:id="@+id/parameter_seekbar_attenuation_bucket1_value"
-			style="@style/Sample.Text"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_gravity="center_horizontal"
-			android:imeOptions="actionDone"
-			android:inputType="textNoSuggestions|numberSigned"
-			android:selectAllOnFocus="true"
-			tools:text="0" />
-
-		<androidx.appcompat.widget.AppCompatSeekBar
-			android:id="@+id/parameter_seekbar_attenuation_bucket2"
+			android:id="@+id/experiment_id"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:layout_marginBottom="@dimen/spacing_small" />
+			android:hint="Experiment name"
+			android:maxLines="1"
+			android:digits="0123456789AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZ"/>
 
 		<EditText
-			android:id="@+id/parameter_seekbar_attenuation_bucket2_value"
-			style="@style/Sample.Text"
+			android:id="@+id/experiment_device_id"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:hint="Device name"
+			android:maxLines="1"
+			android:digits="0123456789AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZ" />
+
+		<Button
+			android:id="@+id/deanonymization_key_upload_button"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:layout_gravity="center_horizontal"
-			android:imeOptions="actionDone"
-			android:inputType="textNoSuggestions|numberSigned"
-			android:selectAllOnFocus="true"
-			tools:text="0" />
+			android:layout_gravity="center"
+			android:text="@string/deanonymization_test_mode" />
 
 		<TextView
 			style="@style/Sample.Text.Title"

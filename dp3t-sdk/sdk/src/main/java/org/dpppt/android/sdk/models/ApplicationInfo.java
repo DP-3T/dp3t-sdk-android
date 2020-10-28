@@ -11,18 +11,12 @@ package org.dpppt.android.sdk.models;
 
 public class ApplicationInfo {
 
-	private String appId;
 	private String reportBaseUrl;
 	private String bucketBaseUrl;
 
-	public ApplicationInfo(String appId, String reportBaseUrl, String bucketBaseUrl) {
-		this.appId = appId;
+	public ApplicationInfo(String reportBaseUrl, String bucketBaseUrl) {
 		this.reportBaseUrl = reportBaseUrl;
 		this.bucketBaseUrl = bucketBaseUrl;
-	}
-
-	public String getAppId() {
-		return appId;
 	}
 
 	public String getReportBaseUrl() {

@@ -25,6 +25,7 @@ import java.util.List;
 
 import com.google.gson.reflect.TypeToken;
 
+import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.BroadcastHelper;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.DayDate;
@@ -34,14 +35,13 @@ public class ExposureDayStorage {
 
 	private static final Type EXPOSUREDAY_LIST_TYPE = new TypeToken<LinkedList<ExposureDay>>() { }.getType();
 
-	private static final int NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS = 14;
-
 	private static final String PREF_KEY_EEXPOSURE_DAYS = "exposureDays";
 	private static final String PREF_KEY_LAST_ID = "last_id";
 
 	private static ExposureDayStorage instance;
 
 	private SharedPreferences esp;
+	private AppConfigManager appConfigManager;
 
 	public static synchronized ExposureDayStorage getInstance(Context context) {
 		if (instance == null) {
@@ -61,13 +61,14 @@ public class ExposureDayStorage {
 		} catch (GeneralSecurityException | IOException ex) {
 			ex.printStackTrace();
 		}
+		appConfigManager = AppConfigManager.getInstance(context);
 	}
 
 	private List<ExposureDay> getExposureDaysInternal() {
 		List<ExposureDay> list =
 				Json.safeFromJson(esp.getString(PREF_KEY_EEXPOSURE_DAYS, "[]"), EXPOSUREDAY_LIST_TYPE, ArrayList::new);
 
-		DayDate maxAgeForExposureDay = new DayDate().subtractDays(NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS);
+		DayDate maxAgeForExposureDay = new DayDate().subtractDays(appConfigManager.getNumberOfDaysToKeepExposedDays());
 		Iterator<ExposureDay> iterator = list.iterator();
 		while (iterator.hasNext()) {
 			if (new DayDate(iterator.next().getReportDate()).isBefore(maxAgeForExposureDay)) {
@@ -88,26 +89,29 @@ public class ExposureDayStorage {
 				iterator.remove();
 			}
 		}
-		if (list.size() > 0) {
-			ExposureDay lastDay = list.get(list.size() - 1);
-			list = new ArrayList<>();
-			list.add(lastDay);
-		}
 		return list;
 	}
 
-
-	public void addExposureDay(Context context, ExposureDay exposureDay) {
+	public void addExposureDays(Context context, List<ExposureDay> newExposureDays) {
 		List<ExposureDay> previousExposureDays = getExposureDaysInternal();
-		for (ExposureDay previousExposureDay : previousExposureDays) {
-			if (previousExposureDay.getExposedDate().equals(exposureDay.getExposedDate())) {
-				return;//exposure day was already added
+		int id = esp.getInt(PREF_KEY_LAST_ID, 0);
+		for (ExposureDay exposureDay : newExposureDays) {
+			boolean alreadyInserted = false;
+			for (ExposureDay previousExposureDay : previousExposureDays) {
+				if (previousExposureDay.getExposedDate().equals(exposureDay.getExposedDate())) {
+					alreadyInserted = true;
+					break;//exposure day was already added
+				}
 			}
+			if (alreadyInserted) {
+				continue;
+			}
+
+			id++;
+			exposureDay.setId(id);
+			previousExposureDays.add(exposureDay);
 		}
 
-		int id = esp.getInt(PREF_KEY_LAST_ID, 0) + 1;
-		exposureDay.setId(id);
-		previousExposureDays.add(exposureDay);
 		esp.edit()
 				.putInt(PREF_KEY_LAST_ID, id)
 				.putString(PREF_KEY_EEXPOSURE_DAYS, Json.toJson(previousExposureDays))

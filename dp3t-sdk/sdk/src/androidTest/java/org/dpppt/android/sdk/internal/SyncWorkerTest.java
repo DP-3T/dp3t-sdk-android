@@ -10,14 +10,22 @@
 package org.dpppt.android.sdk.internal;
 
 import android.content.Context;
+import android.util.Log;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.work.Configuration;
+import androidx.work.impl.utils.SynchronousExecutor;
+import androidx.work.testing.WorkManagerTestInitHelper;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicLong;
+
+import com.google.android.gms.nearby.exposurenotification.ExposureWindow;
+import com.google.android.gms.nearby.exposurenotification.ScanInstance;
 
 import org.dpppt.android.sdk.BuildConfig;
 import org.dpppt.android.sdk.DP3T;
@@ -41,6 +49,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 
+import static org.dpppt.android.sdk.internal.SyncWorker.KEY_BUNDLE_TAG_HEADER;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(AndroidJUnit4.class)
@@ -56,6 +65,14 @@ public class SyncWorkerTest {
 
 		Logger.init(context, LogLevel.DEBUG);
 
+		// Initialize WorkManager for instrumentation tests.
+		Configuration config = new Configuration.Builder()
+				// Set log level to Log.DEBUG to make it easier to debug
+				.setMinimumLoggingLevel(Log.DEBUG)
+				.setExecutor(new SynchronousExecutor())
+				.build();
+		WorkManagerTestInitHelper.initializeTestWorkManager(context, config);
+
 		testGoogleExposureClient = new TestGoogleExposureClient(context);
 		GoogleExposureClient.wrapTestClient(testGoogleExposureClient);
 		ProxyConfig.DISABLE_SYSTEM_PROXY = true;
@@ -64,11 +81,11 @@ public class SyncWorkerTest {
 		server = new MockWebServer();
 		server.start();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		DP3T.init(context, new ApplicationInfo("test", server.url("/bucket/").toString(), server.url("/report/").toString()),
+		DP3T.init(context, new ApplicationInfo(server.url("/bucket/").toString(), server.url("/report/").toString()),
 				null);
 		appConfigManager.setTracingEnabled(false);
 		DP3T.clearData(context);
-		DP3T.init(context, new ApplicationInfo("test", server.url("/bucket/").toString(), server.url("/report/").toString()),
+		DP3T.init(context, new ApplicationInfo(server.url("/bucket/").toString(), server.url("/report/").toString()),
 				null);
 		appConfigManager.setTracingEnabled(true);
 	}
@@ -94,7 +111,7 @@ public class SyncWorkerTest {
 					return new MockResponse()
 							.setResponseCode(200)
 							.setBody("randomdatabecauseitdoesnotmatter")
-							.addHeader("x-published-until", time.get() - 2 * 60 * 60 * 1000l);
+							.addHeader(KEY_BUNDLE_TAG_HEADER, time.get() - 2 * 60 * 60 * 1000l);
 				}
 			}
 		});
@@ -108,7 +125,7 @@ public class SyncWorkerTest {
 			time.set(time.get() + 1 * 60 * 60 * 1000l);
 		}
 
-		assertEquals(40, testGoogleExposureClient.getProvideDiagnosisKeysCounter());
+		assertEquals(11, testGoogleExposureClient.getProvideDiagnosisKeysCounter());
 	}
 
 	@Test
@@ -124,7 +141,7 @@ public class SyncWorkerTest {
 				return new MockResponse()
 						.setResponseCode(200)
 						.setBody("randomdatabecauseitdoesnotmatter")
-						.addHeader("x-published-until", time.get() - 2 * 60 * 60 * 1000l);
+						.addHeader(KEY_BUNDLE_TAG_HEADER, time.get() - 2 * 60 * 60 * 1000l);
 			}
 		});
 
@@ -133,7 +150,7 @@ public class SyncWorkerTest {
 			time.set(time.get() + 1 * 60 * 60 * 1000l);
 		}
 
-		assertEquals(410, testGoogleExposureClient.getProvideDiagnosisKeysCounter());
+		assertEquals(120, testGoogleExposureClient.getProvideDiagnosisKeysCounter());
 	}
 
 	@Test
@@ -149,7 +166,7 @@ public class SyncWorkerTest {
 				return new MockResponse()
 						.setResponseCode(200)
 						.setBody("randomdatabecauseitdoesnotmatter")
-						.addHeader("x-published-until", time.get() - 2 * 60 * 60 * 1000l);
+						.addHeader(KEY_BUNDLE_TAG_HEADER, time.get() - 2 * 60 * 60 * 1000l);
 			}
 		});
 
@@ -168,7 +185,7 @@ public class SyncWorkerTest {
 		time.set(time.get() + 12 * 60 * 60 * 1000l);
 		new SyncWorker.SyncImpl(context, time.get()).doSync();
 
-		assertEquals(30, testGoogleExposureClient.getProvideDiagnosisKeysCounter());
+		assertEquals(4, testGoogleExposureClient.getProvideDiagnosisKeysCounter());
 	}
 
 	@Test
@@ -177,7 +194,7 @@ public class SyncWorkerTest {
 		server.setDispatcher(new Dispatcher() {
 			@Override
 			public MockResponse dispatch(RecordedRequest request) {
-				return new MockResponse().setResponseCode(204).addHeader("x-published-until", time.get());
+				return new MockResponse().setResponseCode(204).addHeader(KEY_BUNDLE_TAG_HEADER, time.get());
 			}
 		});
 
@@ -188,9 +205,20 @@ public class SyncWorkerTest {
 	@Test
 	public void testExposure() {
 		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
-		params.attenuationDurations = new int[] { 20, 0, 0 };
-		params.daysSinceLastExposure = 1;
-		params.matchedKeyCount = 1;
+		params.exposureWindows = new ArrayList<>();
+		ArrayList<ScanInstance> scanInstances = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			scanInstances.add(new ScanInstance.Builder()
+					.setMinAttenuationDb(50)
+					.setTypicalAttenuationDb(50)
+					.setSecondsSinceLastScan(120)
+					.build());
+		}
+		ExposureWindow window = new ExposureWindow.Builder()
+				.setDateMillisSinceEpoch(new DayDate().subtractDays(1).getStartOfDayTimestamp())
+				.setScanInstances(scanInstances)
+				.build();
+		params.exposureWindows.add(window);
 
 		testExposure(params);
 
@@ -201,9 +229,27 @@ public class SyncWorkerTest {
 	@Test
 	public void testExposureNotLongEnough() {
 		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
-		params.attenuationDurations = new int[] { 10, 8, 0 };
-		params.daysSinceLastExposure = 1;
-		params.matchedKeyCount = 1;
+		params.exposureWindows = new ArrayList<>();
+		ArrayList<ScanInstance> scanInstances = new ArrayList<>();
+		for (int i = 0; i < 5; i++) {
+			scanInstances.add(new ScanInstance.Builder()
+					.setMinAttenuationDb(50)
+					.setTypicalAttenuationDb(50)
+					.setSecondsSinceLastScan(120)
+					.build());
+		}
+		for (int i = 0; i < 4; i++) {
+			scanInstances.add(new ScanInstance.Builder()
+					.setMinAttenuationDb(60)
+					.setTypicalAttenuationDb(60)
+					.setSecondsSinceLastScan(120)
+					.build());
+		}
+		ExposureWindow window = new ExposureWindow.Builder()
+				.setDateMillisSinceEpoch(new DayDate().subtractDays(1).getStartOfDayTimestamp())
+				.setScanInstances(scanInstances)
+				.build();
+		params.exposureWindows.add(window);
 
 		testExposure(params);
 
@@ -211,22 +257,94 @@ public class SyncWorkerTest {
 		assertEquals(InfectionStatus.HEALTHY, status.getInfectionStatus());
 	}
 
+	@Test
+	public void testExposureTooLongAgo() {
+		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
+		params.exposureWindows = new ArrayList<>();
+		ArrayList<ScanInstance> scanInstances = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			scanInstances.add(new ScanInstance.Builder()
+					.setMinAttenuationDb(50)
+					.setTypicalAttenuationDb(50)
+					.setSecondsSinceLastScan(120)
+					.build());
+		}
+		ExposureWindow window = new ExposureWindow.Builder()
+				.setDateMillisSinceEpoch(new DayDate().subtractDays(12).getStartOfDayTimestamp())
+				.setScanInstances(scanInstances)
+				.build();
+		params.exposureWindows.add(window);
+
+		testExposure(params);
+
+		TracingStatus status = DP3T.getStatus(context);
+		assertEquals(InfectionStatus.HEALTHY, status.getInfectionStatus());
+	}
+
+	@Test
+	public void testExposureTooLongAgoWithChangedPeriod() {
+
+		DP3T.setNumberOfDaysToConsiderForExposure(context, 12);
+
+		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
+		params.exposureWindows = new ArrayList<>();
+		ArrayList<ScanInstance> scanInstances = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			scanInstances.add(new ScanInstance.Builder()
+					.setMinAttenuationDb(50)
+					.setTypicalAttenuationDb(50)
+					.setSecondsSinceLastScan(120)
+					.build());
+		}
+		ExposureWindow window = new ExposureWindow.Builder()
+				.setDateMillisSinceEpoch(new DayDate().subtractDays(13).getStartOfDayTimestamp())
+				.setScanInstances(scanInstances)
+				.build();
+		params.exposureWindows.add(window);
+
+		testExposure(params);
+
+		TracingStatus status = DP3T.getStatus(context);
+		assertEquals(InfectionStatus.HEALTHY, status.getInfectionStatus());
+	}
+
+	@Test
+	public void testExposureLongAgoWithChangedPeriod() {
+
+		DP3T.setNumberOfDaysToConsiderForExposure(context, 14);
+
+		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
+		params.exposureWindows = new ArrayList<>();
+		ArrayList<ScanInstance> scanInstances = new ArrayList<>();
+		for (int i = 0; i < 10; i++) {
+			scanInstances.add(new ScanInstance.Builder()
+					.setMinAttenuationDb(50)
+					.setTypicalAttenuationDb(50)
+					.setSecondsSinceLastScan(120)
+					.build());
+		}
+		ExposureWindow window = new ExposureWindow.Builder()
+				.setDateMillisSinceEpoch(new DayDate().subtractDays(13).getStartOfDayTimestamp())
+				.setScanInstances(scanInstances)
+				.build();
+		params.exposureWindows.add(window);
+
+		testExposure(params);
+
+		TracingStatus status = DP3T.getStatus(context);
+		assertEquals(InfectionStatus.EXPOSED, status.getInfectionStatus());
+	}
+
 	private void testExposure(TestGoogleExposureClient.ExposureTestParameters params) {
 		AtomicLong time = new AtomicLong(yesterdayAt8am());
 		server.setDispatcher(new Dispatcher() {
 			@Override
 			public MockResponse dispatch(RecordedRequest request) {
-				String content;
-				if (request.getPath().endsWith(String.valueOf(new DayDate(time.get()).subtractDays(1).getStartOfDayTimestamp()))) {
-
-					content = Json.toJson(params);
-				} else {
-					content = "randomcontent";
-				}
+				String content = Json.toJson(params);
 				return new MockResponse()
 						.setResponseCode(200)
 						.setBody(content)
-						.addHeader("x-published-until", time.get());
+						.addHeader(KEY_BUNDLE_TAG_HEADER, time.get());
 			}
 		});
 

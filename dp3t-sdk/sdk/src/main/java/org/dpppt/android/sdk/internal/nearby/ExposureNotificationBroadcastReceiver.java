@@ -14,14 +14,9 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
-import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
 
 import org.dpppt.android.sdk.BuildConfig;
-import org.dpppt.android.sdk.internal.AppConfigManager;
-import org.dpppt.android.sdk.internal.storage.ExposureDayStorage;
 import org.dpppt.android.sdk.internal.logger.Logger;
-import org.dpppt.android.sdk.models.DayDate;
-import org.dpppt.android.sdk.models.ExposureDay;
 
 public class ExposureNotificationBroadcastReceiver extends BroadcastReceiver {
 
@@ -33,33 +28,13 @@ public class ExposureNotificationBroadcastReceiver extends BroadcastReceiver {
 		Logger.i(TAG, "received " + action);
 
 		if (ExposureNotificationClient.ACTION_EXPOSURE_STATE_UPDATED.equals(action)) {
-			ExposureSummary exposureSummary = intent.getParcelableExtra(ExposureNotificationClient.EXTRA_EXPOSURE_SUMMARY);
 
 			if (BuildConfig.FLAVOR.equals("calibration")) {
-				Logger.i(TAG, "received update for " + intent.getStringExtra(ExposureNotificationClient.EXTRA_TOKEN) + " " +
-						exposureSummary.toString());
+				Logger.i(TAG, "received update for " + intent.toString());
 			}
 
-			if (isExposureLimitReached(context, exposureSummary)) {
-				Logger.d(TAG, "exposure limit reached");
-				DayDate dayOfExposure = new DayDate().subtractDays(exposureSummary.getDaysSinceLastExposure());
-				ExposureDay exposureDay = new ExposureDay(-1, dayOfExposure, System.currentTimeMillis());
-				ExposureDayStorage.getInstance(context).addExposureDay(context, exposureDay);
-			} else {
-				Logger.d(TAG, "exposure limit not reached");
-			}
+			ExposureWindowMatchingWorker.startMatchingWorker(context);
 		}
-	}
-
-	protected boolean isExposureLimitReached(Context context, ExposureSummary exposureSummary) {
-		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		return computeExposureDuration(appConfigManager, exposureSummary.getAttenuationDurationsInMinutes()) >=
-				appConfigManager.getMinDurationForExposure();
-	}
-
-	private float computeExposureDuration(AppConfigManager appConfigManager, int[] attenuationDurationsInMinutes) {
-		return attenuationDurationsInMinutes[0] * appConfigManager.getAttenuationFactorLow() +
-				attenuationDurationsInMinutes[1] * appConfigManager.getAttenuationFactorMedium();
 	}
 
 }

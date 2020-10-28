@@ -48,7 +48,7 @@ public class MainApplication extends Application {
 						"RZ0FFdkxXZHVFWThqcnA4aWNSNEpVSlJaU0JkOFh2UgphR2FLeUg2VlFnTXV2Zk1JcmxrNk92QmtKeH" +
 						"dhbUdNRnFWYW9zOW11di9rWGhZdjF1a1p1R2RjREJBPT0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t");
 		DP3T.init(context,
-				new ApplicationInfo("org.dpppt.demo", BASE_URL, BASE_URL),
+				new ApplicationInfo(BASE_URL, BASE_URL),
 				signaturePublicKey);
 
 		if (!BuildConfig.DEBUG) {
@@ -58,12 +58,13 @@ public class MainApplication extends Application {
 			DP3T.setCertificatePinner(certificatePinner);
 		}
 
-		String userAgent = BuildConfig.APPLICATION_ID + ";" +
-				BuildConfig.VERSION_NAME + ";" +
-				BuildConfig.VERSION_CODE + ";" +
-				"Android;" +
-				Build.VERSION.SDK_INT;
-		DP3T.setUserAgent(userAgent);
+		DP3T.setUserAgent(() ->
+				BuildConfig.APPLICATION_ID + ";" +
+						BuildConfig.VERSION_NAME + ";" +
+						BuildConfig.VERSION_CODE + ";" +
+						"Android;" +
+						Build.VERSION.SDK_INT
+		);
 	}
 
 	@Override
