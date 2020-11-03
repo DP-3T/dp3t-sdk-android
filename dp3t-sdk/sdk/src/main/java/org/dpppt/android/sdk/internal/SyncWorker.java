@@ -58,8 +58,6 @@ public class SyncWorker extends Worker {
 
 	protected static final String KEY_BUNDLE_TAG_HEADER = "x-key-bundle-tag";
 
-	private static final long SYNC_INTERVAL = BuildConfig.FLAVOR.equals("calibration") ? 5 * 60 * 1000L : 4 * 60 * 60 * 1000L;
-
 	private static PublicKey bucketSignaturePublicKey;
 
 	public static void startSyncWorker(Context context) {
@@ -163,7 +161,7 @@ public class SyncWorker extends Worker {
 					new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
 			GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
 
-			if (appConfigManager.getLastSynCallTime() <= currentTime - SYNC_INTERVAL) {
+			if (appConfigManager.getLastSynCallTime() <= currentTime - getSyncInterval()) {
 				try {
 					Logger.d(TAG, "loading exposees");
 					Response<ResponseBody> result =
@@ -211,6 +209,15 @@ public class SyncWorker extends Worker {
 				return true;
 			} else {
 				return false;
+			}
+		}
+
+		private long getSyncInterval() {
+			if(BuildConfig.FLAVOR.equals("calibration")) {
+				return 5 * 60 * 1000L;
+			} else {
+				int syncsPerDay = AppConfigManager.getInstance(context).getSyncsPerDay();
+				return 24 * 60 * 60 * 1000L / syncsPerDay;
 			}
 		}
 
