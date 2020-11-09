@@ -114,7 +114,6 @@ public class DP3T {
 
 		if (appConfigManager.isTracingEnabled()) {
 			SyncWorker.startSyncWorker(context);
-			DummyWorker.startDummyWorker(context);
 			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 		}
 	}
