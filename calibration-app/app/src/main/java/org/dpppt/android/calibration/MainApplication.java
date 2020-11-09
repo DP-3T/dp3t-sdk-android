@@ -25,8 +25,6 @@ import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.util.SignatureUtil;
 
-import okhttp3.CertificatePinner;
-
 public class MainApplication extends Application {
 
 	public static final String BASE_URL = "https://demo.dpppt.org/";
@@ -51,12 +49,16 @@ public class MainApplication extends Application {
 				new ApplicationInfo(BASE_URL, BASE_URL),
 				signaturePublicKey);
 
+		/*
+		* In a production environment you would want to pin your server certificate, for the calibration app we do not pin
+		* the certificate to allow network proxies for analyzing the network requests.
+		*
 		if (!BuildConfig.DEBUG) {
 			CertificatePinner certificatePinner = new CertificatePinner.Builder()
 					.add("demo.dpppt.org", "sha256/YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=")
 					.build();
 			DP3T.setCertificatePinner(certificatePinner);
-		}
+		}*/
 
 		DP3T.setUserAgent(() ->
 				BuildConfig.APPLICATION_ID + ";" +
