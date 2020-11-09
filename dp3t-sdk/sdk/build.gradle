@@ -29,8 +29,8 @@ android {
 		consumerProguardFiles 'consumer-rules.pro'
 
 		buildConfigField "long", "BUILD_TIME", System.currentTimeMillis() + "L"
-		buildConfigField 'int', 'VERSION_CODE', "${versionCode}"
-		buildConfigField 'String', 'VERSION_NAME', "\"${versionName}\""
+		buildConfigField 'int', 'LIBRARY_VERSION_CODE', "${versionCode}"
+		buildConfigField 'String', 'LIBRARY_VERSION_NAME', "\"${versionName}\""
 	}
 
 	defaultPublishConfig "productionRelease"

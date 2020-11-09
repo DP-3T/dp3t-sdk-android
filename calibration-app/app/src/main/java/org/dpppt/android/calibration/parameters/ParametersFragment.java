@@ -76,7 +76,7 @@ public class ParametersFragment extends Fragment {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		sdf.setTimeZone(TimeZone.getTimeZone("Europe/Zurich"));
 		version_info.setText(
-				BuildConfig.VERSION_NAME + " / " + sdf.format(BuildConfig.BUILD_TIME) + " / " + BuildConfig.FLAVOR + " / " +
+				BuildConfig.LIBRARY_VERSION_NAME + " / " + sdf.format(BuildConfig.BUILD_TIME) + " / " + BuildConfig.FLAVOR + " / " +
 						BuildConfig.BUILD_TYPE);
 	}
 
