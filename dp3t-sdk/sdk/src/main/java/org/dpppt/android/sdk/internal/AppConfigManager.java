@@ -31,7 +31,10 @@ public class AppConfigManager {
 	private static final String PREF_APPLICATION = "application";
 	private static final String PREF_TRACING_ENABLED = "tracingEnabled";
 	private static final String PREF_LAST_SYNC_DATE = "lastSyncDate";
-	private static final String PREF_LAST_SYNC_NET_SUCCESS = "lastSyncNetSuccess";
+    private static final String PREF_NUMBER_OF_SYNCS_PER_DAY = "numberOfSyncsPerDay";
+    public static final int MAX_SYNCS_PER_DAY = 6;
+    public static final int MIN_SYNCS_PER_DAY = 1;
+    private static final String PREF_LAST_SYNC_NET_SUCCESS = "lastSyncNetSuccess";
 	private static final String PREF_I_AM_INFECTED = "IAmInfected";
 	private static final String PREF_I_AM_INFECTED_IS_RESETTABLE = "IAmInfectedIsResettable";
 	private static final String PREF_LAST_SYNC_CALL_TIME = "lastSyncCallTime";
@@ -84,6 +87,18 @@ public class AppConfigManager {
 		return sharedPrefs.getLong(PREF_LAST_SYNC_DATE, 0);
 	}
 
+    public void setSyncsPerDay(int syncsPerDay) {
+	    if (syncsPerDay > MAX_SYNCS_PER_DAY) {
+            syncsPerDay = MAX_SYNCS_PER_DAY;
+        } else if (syncsPerDay < MIN_SYNCS_PER_DAY) {
+            syncsPerDay = MIN_SYNCS_PER_DAY;
+        }
+        sharedPrefs.edit().putInt(PREF_NUMBER_OF_SYNCS_PER_DAY, syncsPerDay).apply();
+    }
+
+    public int getSyncsPerDay() {
+        return sharedPrefs.getInt(PREF_NUMBER_OF_SYNCS_PER_DAY, MAX_SYNCS_PER_DAY);
+    }
 	public void setLastSyncNetworkSuccess(boolean success) {
 		sharedPrefs.edit().putBoolean(PREF_LAST_SYNC_NET_SUCCESS, success).apply();
 	}

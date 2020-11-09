@@ -431,6 +431,16 @@ public class DP3T {
 	}
 
 	/**
+	 * Sets the number of syncs per day with max valid value {@link AppConfigManager#MAX_SYNCS_PER_DAY} and
+	 * min valid value {@link AppConfigManager#MIN_SYNCS_PER_DAY}
+	 * @param context
+	 * @param syncsPerDay
+	 */
+	public static void setSyncsPerDay(Context context, int syncsPerDay) {
+		AppConfigManager.getInstance(context).setSyncsPerDay(syncsPerDay);
+	}
+
+	/**
 	 * Defines the number of days after an exposure that it is considered for generating an exposure day.
 	 * This can be used to make sure only exposure days are generated that are still in the quarantine duration,
 	 * because it does not make much sense to inform the user about a possible exposure that is longer ago then he/she
