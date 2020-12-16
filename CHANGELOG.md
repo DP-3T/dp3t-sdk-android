@@ -1,5 +1,10 @@
 # Changelog for DP3T-SDK Android
 
+## version 2.0.1 (unreleased)
+
+- updated all dependencies
+- updated to play-services-nearby-exposurenotification-1.7.2-eap.aar, make sure to update this in your project as well!
+
 ## version 2.0.0 (28.10.2020)
 
 - updated to play-services-nearby-exposurenotification-1.7.1-eap.aar, make sure to update this in your project as well!
