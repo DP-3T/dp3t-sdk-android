@@ -18,7 +18,7 @@ import java.util.Map;
 import java.lang.IllegalArgumentException;
 
 import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
-import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.DayDate;
@@ -60,11 +60,11 @@ public class AppConfigManager {
 
 	private String appId;
 	private SharedPreferences sharedPrefs;
-	private GoogleExposureClient googleExposureClient;
+	private PlatformAPIWrapper platformAPIWrapper;
 
 	private AppConfigManager(Context context) {
 		sharedPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-		googleExposureClient = GoogleExposureClient.getInstance(context);
+		platformAPIWrapper = PlatformAPIWrapper.getInstance(context);
 	}
 
 	public void setAppId(String appId) {
@@ -159,7 +159,7 @@ public class AppConfigManager {
 		}
 		sharedPrefs.edit().putInt(PREF_ATTENUATION_THRESHOLD_LOW, thresholdLow).apply();
 		sharedPrefs.edit().putInt(PREF_ATTENUATION_THRESHOLD_MEDIUM, thresholdMedium).apply();
-		googleExposureClient.setParams(thresholdLow, thresholdMedium);
+		platformAPIWrapper.setParams(thresholdLow, thresholdMedium);
 	}
 
 	public float getAttenuationFactorLow() {

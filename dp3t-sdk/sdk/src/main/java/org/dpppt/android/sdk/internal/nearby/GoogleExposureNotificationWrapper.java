@@ -19,43 +19,27 @@ import java.util.List;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.Nearby;
-import com.google.android.gms.nearby.exposurenotification.*;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
+import com.google.android.gms.nearby.exposurenotification.ExposureNotificationStatusCodes;
+import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
+import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 
 import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 
-public class GoogleExposureClient {
+public class GoogleExposureNotificationWrapper extends PlatformAPIWrapper {
 
 	private static final String TAG = "GoogleExposureClient";
 
-	private static GoogleExposureClient instance;
-
 	private final ExposureNotificationClient exposureNotificationClient;
 
-	private ExposureConfiguration exposureConfiguration;
-
-	public static synchronized GoogleExposureClient getInstance(Context context) {
-		if (instance == null) {
-			instance = new GoogleExposureClient(context.getApplicationContext());
-		}
-		return instance;
-	}
-
-	public static GoogleExposureClient wrapTestClient(ExposureNotificationClient testClient) {
-		instance = new GoogleExposureClient(testClient);
-		return instance;
-	}
-
-	private GoogleExposureClient(Context context) {
+	public GoogleExposureNotificationWrapper(Context context) {
 		exposureNotificationClient = Nearby.getExposureNotificationClient(context);
 	}
 
-	private GoogleExposureClient(ExposureNotificationClient fakeClient) {
-		exposureNotificationClient = fakeClient;
-	}
-
-	public void start(Activity activity, int resolutionRequestCode, Runnable successCallback, Consumer<Exception> errorCallback) {
+	@Override
+	public void start(Activity activity, int resolutionRequestCode, Runnable successCallback, Runnable cancelledCallback,
+			Consumer<Exception> errorCallback) {
 		exposureNotificationClient.start()
 				.addOnSuccessListener(nothing -> {
 					Logger.i(TAG, "start: started successfully");
@@ -79,22 +63,27 @@ public class GoogleExposureClient {
 				});
 	}
 
+	@Override
 	public void stop() {
 		exposureNotificationClient.stop()
 				.addOnSuccessListener(nothing -> Logger.i(TAG, "stop: stopped successfully"))
 				.addOnFailureListener(e -> Logger.e(TAG, "stop", e));
 	}
 
-	public Task<Boolean> isEnabled() {
-		return exposureNotificationClient.isEnabled();
+	@Override
+	public void isEnabled(Consumer<Boolean> successCallback, Consumer<Exception> errorCallback) {
+		exposureNotificationClient.isEnabled()
+				.addOnSuccessListener(enabled -> successCallback.accept(enabled))
+				.addOnFailureListener(e -> errorCallback.accept(e));
 	}
 
+	@Override
 	public void getTemporaryExposureKeyHistory(Activity activity, int resolutionRequestCode,
-			OnSuccessListener<List<TemporaryExposureKey>> successCallback, Consumer<Exception> errorCallback) {
+			Consumer<List<TemporaryExposureKey>> successCallback, Consumer<Exception> errorCallback) {
 		exposureNotificationClient.getTemporaryExposureKeyHistory()
 				.addOnSuccessListener(temporaryExposureKeys -> {
 					Logger.d(TAG, "getTemporaryExposureKeyHistory: success");
-					successCallback.onSuccess(temporaryExposureKeys);
+					successCallback.accept(temporaryExposureKeys);
 				})
 				.addOnFailureListener(e -> {
 					if (e instanceof ApiException) {
@@ -114,6 +103,7 @@ public class GoogleExposureClient {
 				});
 	}
 
+	@Override
 	public List<TemporaryExposureKey> getTemporaryExposureKeyHistorySynchronous() throws Exception {
 		final Object syncObject = new Object();
 		Object[] results = new Object[] { null };
@@ -144,22 +134,7 @@ public class GoogleExposureClient {
 		}
 	}
 
-	public void setParams(int attenuationThresholdLow, int attenuationThresholdMedium) {
-		exposureConfiguration = new ExposureConfiguration.ExposureConfigurationBuilder()
-				.setMinimumRiskScore(1)
-				.setAttenuationScores(new int[] { 1, 1, 1, 1, 1, 1, 1, 1 })
-				.setAttenuationWeight(100)
-				.setDaysSinceLastExposureWeight(0)
-				.setDurationWeight(0)
-				.setTransmissionRiskWeight(0)
-				.setDurationAtAttenuationThresholds(new int[] { attenuationThresholdLow, attenuationThresholdMedium })
-				.build();
-	}
-
-	public ExposureConfiguration getExposureConfiguration() {
-		return exposureConfiguration;
-	}
-
+	@Override
 	public void provideDiagnosisKeys(List<File> keys, String token) throws Exception {
 		if (keys == null || keys.isEmpty()) {
 			return;
@@ -193,12 +168,11 @@ public class GoogleExposureClient {
 		}
 	}
 
-	public Task<ExposureSummary> getExposureSummary(String token) {
-		return exposureNotificationClient.getExposureSummary(token);
-	}
-
-	public Task<List<ExposureInformation>> getExposureInformation(String token) {
-		return exposureNotificationClient.getExposureInformation(token);
+	@Override
+	public void getExposureSummary(String token, Consumer<ExposureSummary> successCallback, Consumer<Exception> errorCallback) {
+		exposureNotificationClient.getExposureSummary(token)
+				.addOnSuccessListener(exposureSummary -> successCallback.accept(exposureSummary))
+				.addOnFailureListener(e -> errorCallback.accept(e));
 	}
 
 }

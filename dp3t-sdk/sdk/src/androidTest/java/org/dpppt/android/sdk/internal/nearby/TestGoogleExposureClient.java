@@ -9,8 +9,10 @@
  */
 package org.dpppt.android.sdk.internal.nearby;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import androidx.core.util.Consumer;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,16 +22,16 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.android.gms.common.api.Api;
-import com.google.android.gms.common.api.internal.ApiKey;
-import com.google.android.gms.nearby.exposurenotification.*;
-import com.google.android.gms.tasks.Task;
+import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
+import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
+import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.util.DateUtil;
 
-public class TestGoogleExposureClient implements ExposureNotificationClient {
+public class TestGoogleExposureClient extends PlatformAPIWrapper {
 
 	private Context context;
 	private int provideDiagnosisKeysCounter = 0;
@@ -46,24 +48,35 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 	}
 
 	@Override
-	public Task<Void> start() {
-		return new DummyTask<>(null);
+	public void start(Activity activity, int resolutionRequestCode, Runnable successCallback, Runnable cancelledCallback,
+			Consumer<Exception> errorCallback) {
+		successCallback.run();
 	}
 
 	@Override
-	public Task<Void> stop() {
-		return new DummyTask<>(null);
+	public void stop() {
+		//do nothing
 	}
 
 	@Override
-	public Task<Boolean> isEnabled() {
-		return new DummyTask<>(true);
+	public void isEnabled(Consumer<Boolean> successCallback, Consumer<Exception> errorCallback) {
+		successCallback.accept(true);
 	}
 
 	@Override
-	public Task<List<TemporaryExposureKey>> getTemporaryExposureKeyHistory() {
+	public void getTemporaryExposureKeyHistory(Activity activity, int resolutionRequestCode,
+			Consumer<List<TemporaryExposureKey>> successCallback, Consumer<Exception> errorCallback) {
+		try {
+			successCallback.accept(getTemporaryExposureKeyHistorySynchronous());
+		} catch (Exception e) {
+			errorCallback.accept(e);
+		}
+	}
+
+	@Override
+	public List<TemporaryExposureKey> getTemporaryExposureKeyHistorySynchronous() throws Exception {
 		ArrayList<TemporaryExposureKey> temporaryExposureKeys = new ArrayList<>();
-		for (int i = 1; i<14; i++){
+		for (int i = 1; i < 14; i++) {
 			temporaryExposureKeys.add(new TemporaryExposureKey.TemporaryExposureKeyBuilder()
 					.setRollingStartIntervalNumber(DateUtil.getRollingStartNumberForDate(new DayDate(time).subtractDays(i)))
 					.build());
@@ -73,13 +86,13 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 					.setRollingStartIntervalNumber(DateUtil.getRollingStartNumberForDate(new DayDate(time)))
 					.build());
 		}
-		return new DummyTask<>(temporaryExposureKeys);
+		return temporaryExposureKeys;
 	}
 
 	@Override
-	public Task<Void> provideDiagnosisKeys(List<File> list, ExposureConfiguration exposureConfiguration, String token) {
+	public void provideDiagnosisKeys(List<File> keys, String token) throws Exception {
 		provideDiagnosisKeysCounter++;
-		for (File file : list) {
+		for (File file : keys) {
 			try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
 				String fileContent = reader.readLine();
 				if (fileContent.startsWith("{")) {
@@ -98,34 +111,18 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 				e.printStackTrace();
 			}
 		}
-		return new DummyTask<>(null);
 	}
 
 	@Override
-	public Task<List<ExposureWindow>> getExposureWindows(String s) {
-		return new DummyTask<>(new ArrayList<>());
-	}
-
-	@Override
-	public Task<ExposureSummary> getExposureSummary(String s) {
-		return new DummyTask<>(new ExposureSummary.ExposureSummaryBuilder().build());
-	}
-
-	@Override
-	public Task<List<ExposureInformation>> getExposureInformation(String s) {
-		return new DummyTask<>(new ArrayList<>());
-	}
-
-	@Override
-	public ApiKey<Api.ApiOptions.NoOptions> getApiKey() {
-		return null;
+	public void getExposureSummary(String token, Consumer<ExposureSummary> successCallback, Consumer<Exception> errorCallback) {
+		successCallback.accept(new ExposureSummary.ExposureSummaryBuilder().build());
 	}
 
 	public int getProvideDiagnosisKeysCounter() {
 		return provideDiagnosisKeysCounter;
 	}
 
-	public void setTime(long time){
+	public void setTime(long time) {
 		this.time = time;
 	}
 

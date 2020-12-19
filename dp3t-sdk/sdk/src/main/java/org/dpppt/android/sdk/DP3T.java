@@ -35,9 +35,9 @@ import org.dpppt.android.sdk.internal.history.HistoryDatabase;
 import org.dpppt.android.sdk.internal.history.HistoryEntry;
 import org.dpppt.android.sdk.internal.history.HistoryEntryType;
 import org.dpppt.android.sdk.internal.logger.Logger;
-import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
-import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
-import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIStateCache;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIStateHelper;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 import org.dpppt.android.sdk.internal.storage.ErrorNotificationStorage;
 import org.dpppt.android.sdk.internal.storage.ExposureDayStorage;
 import org.dpppt.android.sdk.internal.storage.PendingKeyUploadStorage;
@@ -81,8 +81,8 @@ public class DP3T {
 		appConfigManager.setDevHistory(devHistory);
 		SyncWorker.setBucketSignaturePublicKey(signaturePublicKey);
 
-		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
-		googleExposureClient
+		PlatformAPIWrapper platformAPIWrapper = PlatformAPIWrapper.getInstance(context);
+		platformAPIWrapper
 				.setParams(appConfigManager.getAttenuationThresholdLow(), appConfigManager.getAttenuationThresholdMedium());
 
 		executeInit(context.getApplicationContext(), appConfigManager);
@@ -114,8 +114,8 @@ public class DP3T {
 				new IntentFilter(DP3T.ACTION_UPDATE_ERRORS)
 		);
 
-		GaenStateHelper.invalidateGaenAvailability(context);
-		GaenStateHelper.invalidateGaenEnabled(context);
+		PlatformAPIStateHelper.invalidatePlatformAPIAvailability(context);
+		PlatformAPIStateHelper.invalidatePlatformAPIEnabled(context);
 
 		if (appConfigManager.isTracingEnabled()) {
 			SyncWorker.startSyncWorker(context);
@@ -137,13 +137,17 @@ public class DP3T {
 			Runnable cancelledCallback) {
 		pendingStartCallbacks = new PendingStartCallbacks(successCallback, errorCallback, cancelledCallback);
 
-		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(activity);
-		googleExposureClient.start(activity, REQUEST_CODE_START_CONFIRMATION,
+		PlatformAPIWrapper platformAPIWrapper = PlatformAPIWrapper.getInstance(activity);
+		platformAPIWrapper.start(activity, REQUEST_CODE_START_CONFIRMATION,
 				() -> {
 					resetStartCallbacks();
-					GaenStateCache.setGaenEnabled(true, null, activity);
+					PlatformAPIStateCache.setPlatformAPIEnabled(true, null, activity);
 					startInternal(activity);
 					successCallback.run();
+				},
+				() -> {
+					resetStartCallbacks();
+					cancelledCallback.run();
 				},
 				e -> {
 					resetStartCallbacks();
@@ -207,7 +211,7 @@ public class DP3T {
 
 	public static TracingStatus getStatus(Context context) {
 		checkInit();
-		GaenStateHelper.invalidateGaenEnabled(context);
+		PlatformAPIStateHelper.invalidatePlatformAPIEnabled(context);
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		Collection<TracingStatus.ErrorState> errorStates = ErrorHelper.checkTracingErrorStatus(context, appConfigManager);
 		InfectionStatus infectionStatus;
@@ -228,8 +232,8 @@ public class DP3T {
 		);
 	}
 
-	public static void checkGaenAvailability(Context context, Consumer<GaenAvailability> availabilityCallback) {
-		GaenStateHelper.checkGaenAvailability(context, availabilityCallback);
+	public static void checkGaenAvailability(Context context, Consumer<PlatformAPIAvailability> availabilityCallback) {
+		PlatformAPIStateHelper.checkPlatformAPIAvailability(context, availabilityCallback);
 	}
 
 	public static void sendIAmInfected(Activity activity, Date onset, ExposeeAuthMethod exposeeAuthMethod,
@@ -247,7 +251,7 @@ public class DP3T {
 		}
 		DayDate onsetDate = new DayDate(pendingIAmInfectedRequest.onset.getTime());
 
-		GoogleExposureClient.getInstance(activity)
+		PlatformAPIWrapper.getInstance(activity)
 				.getTemporaryExposureKeyHistory(activity, REQUEST_CODE_EXPORT_KEYS,
 						temporaryExposureKeys -> {
 							List<TemporaryExposureKey> filteredKeys = new ArrayList<>();
@@ -366,12 +370,12 @@ public class DP3T {
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.setTracingEnabled(false);
 
-		GoogleExposureClient.getInstance(context).stop();
+		PlatformAPIWrapper.getInstance(context).stop();
 
 		SyncWorker.stopSyncWorker(context);
 		BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 
-		GaenStateHelper.invalidateGaenEnabled(context);
+		PlatformAPIStateHelper.invalidatePlatformAPIEnabled(context);
 	}
 
 	public static void resetExposureDays(Context context) {

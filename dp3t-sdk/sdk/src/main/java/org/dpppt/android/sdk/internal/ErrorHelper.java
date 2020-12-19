@@ -27,7 +27,7 @@ import javax.net.ssl.SSLException;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.exposurenotification.ExposureNotificationStatusCodes;
 
-import org.dpppt.android.sdk.GaenAvailability;
+import org.dpppt.android.sdk.PlatformAPIAvailability;
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
 import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
@@ -35,7 +35,7 @@ import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.ApiExceptionUtil;
-import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIStateCache;
 import org.dpppt.android.sdk.internal.util.LocationServiceUtil;
 
 public class ErrorHelper {
@@ -84,14 +84,14 @@ public class ErrorHelper {
 			errors.add(syncError);
 		}
 
-		GaenAvailability gaenAvailability = GaenStateCache.getGaenAvailability();
-		if (gaenAvailability != null && gaenAvailability != GaenAvailability.AVAILABLE) {
+		PlatformAPIAvailability platformAPIAvailability = PlatformAPIStateCache.getPlatformAPIAvailability();
+		if (platformAPIAvailability != null && platformAPIAvailability != PlatformAPIAvailability.AVAILABLE) {
 			errors.add(ErrorState.GAEN_NOT_AVAILABLE);
 		}
 
-		if (appConfigManager.isTracingEnabled() && Boolean.FALSE.equals(GaenStateCache.isGaenEnabled())) {
+		if (appConfigManager.isTracingEnabled() && Boolean.FALSE.equals(PlatformAPIStateCache.isPlatformAPIEnabled())) {
 			ErrorState errorState = ErrorState.GAEN_UNEXPECTEDLY_DISABLED;
-			Exception exception = GaenStateCache.getApiException();
+			Exception exception = PlatformAPIStateCache.getApiException();
 			if (exception == null) {
 				errorState.setErrorCode("GAUD-00");
 			} else if (exception instanceof ApiException) {

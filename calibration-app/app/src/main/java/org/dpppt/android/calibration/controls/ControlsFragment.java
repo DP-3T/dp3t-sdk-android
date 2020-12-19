@@ -54,14 +54,14 @@ import org.dpppt.android.calibration.util.DialogUtil;
 import org.dpppt.android.calibration.util.RequirementsUtil;
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.DP3TCalibrationHelper;
-import org.dpppt.android.sdk.GaenAvailability;
+import org.dpppt.android.sdk.PlatformAPIAvailability;
 import org.dpppt.android.sdk.InfectionStatus;
 import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.export.FileUploadRepository;
-import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
 import org.dpppt.android.sdk.util.DateUtil;
 
@@ -226,7 +226,7 @@ public class ControlsFragment extends Fragment {
 		deanonymizationButton.setOnClickListener(v -> {
 			String deviceId = deanonymizationDeviceId.getText().toString();
 			DP3TCalibrationHelper.setCalibrationTestDeviceName(getContext(), deviceId);
-			GoogleExposureClient.getInstance(getContext())
+			PlatformAPIWrapper.getInstance(getContext())
 					.getTemporaryExposureKeyHistory(getActivity(), 123, temporaryExposureKeys -> {
 						GaenRequest exposeeListRequest =
 								new GaenRequest(temporaryExposureKeys, DateUtil.getCurrentRollingStartNumber());
@@ -258,7 +258,7 @@ public class ControlsFragment extends Fragment {
 
 		Button gaenButton = view.findViewById(R.id.home_button_gaen);
 		DP3T.checkGaenAvailability(getContext(), gaenAvailability -> {
-			boolean available = gaenAvailability == GaenAvailability.AVAILABLE;
+			boolean available = gaenAvailability == PlatformAPIAvailability.AVAILABLE;
 			gaenButton.setEnabled(!available);
 			gaenButton.setText(available ? R.string.req_gaen_availabe : R.string.req_gaen_unavailabe);
 

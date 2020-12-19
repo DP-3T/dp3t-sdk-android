@@ -28,7 +28,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.dpppt.android.calibration.R;
-import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 import org.dpppt.android.sdk.models.DayDate;
 
 import okhttp3.ResponseBody;
@@ -67,7 +67,7 @@ public class HandshakesFragment extends Fragment {
 		layout.removeAllViews();
 		new Thread(() -> {
 			try {
-				GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
+				PlatformAPIWrapper platformAPIWrapper = PlatformAPIWrapper.getInstance(context);
 				long currentTime = System.currentTimeMillis();
 				long batchReleaseTime = new DayDate().addDays(1).getStartOfDayTimestamp();
 				BackendUserBucketRepository backendBucketRepository = new BackendUserBucketRepository(context);
@@ -87,7 +87,7 @@ public class HandshakesFragment extends Fragment {
 					zis.closeEntry();
 
 					String token = zipEntry.getName() + " " + currentTime + "_" +
-							googleExposureClient.getExposureConfiguration().toString().hashCode();
+							platformAPIWrapper.getExposureConfiguration().toString().hashCode();
 
 					getView().post(() -> {
 						View view = getLayoutInflater().inflate(R.layout.item_handshake, layout, false);
@@ -100,13 +100,14 @@ public class HandshakesFragment extends Fragment {
 								try {
 									ArrayList<File> fileList = new ArrayList<>();
 									fileList.add(file);
-									googleExposureClient.provideDiagnosisKeys(fileList, token);
+									platformAPIWrapper.provideDiagnosisKeys(fileList, token);
 									Thread.sleep(2000);
-									googleExposureClient.getExposureSummary(token)
-											.addOnSuccessListener(exposureSummary ->
-													view.post(() -> {
-														textView.setText(exposureSummary.toString());
-													}));
+									platformAPIWrapper.getExposureSummary(token, exposureSummary ->
+											view.post(() -> {
+												textView.setText(exposureSummary.toString());
+											}), exception -> {
+										exception.printStackTrace();
+									});
 								} catch (Exception e) {
 									e.printStackTrace();
 									view.post(() -> {

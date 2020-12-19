@@ -35,9 +35,9 @@ import org.dpppt.android.sdk.internal.history.HistoryDatabase;
 import org.dpppt.android.sdk.internal.history.HistoryEntry;
 import org.dpppt.android.sdk.internal.history.HistoryEntryType;
 import org.dpppt.android.sdk.internal.logger.Logger;
-import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
-import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
-import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIStateCache;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIStateHelper;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 import org.dpppt.android.sdk.internal.storage.PendingKeyUploadStorage;
 import org.dpppt.android.sdk.internal.storage.models.PendingKey;
 import org.dpppt.android.sdk.models.ApplicationInfo;
@@ -122,13 +122,13 @@ public class SyncWorker extends Worker {
 
 		public void doSync() throws Exception {
 			synchronized (SyncImpl.class) {
-				GaenStateHelper.invalidateGaenAvailability(context);
-				GaenStateHelper.invalidateGaenEnabled(context);
+				PlatformAPIStateHelper.invalidatePlatformAPIAvailability(context);
+				PlatformAPIStateHelper.invalidatePlatformAPIEnabled(context);
 
 				try {
 					uploadPendingKeys(context);
 
-					if (DP3T.isTracingEnabled(context) && !Boolean.FALSE.equals(GaenStateCache.isGaenEnabled())) {
+					if (DP3T.isTracingEnabled(context) && !Boolean.FALSE.equals(PlatformAPIStateCache.isPlatformAPIEnabled())) {
 						doSyncInternal(context);
 						Logger.i(TAG, "synced");
 						AppConfigManager.getInstance(context).setLastSyncNetworkSuccess(true);
@@ -157,7 +157,7 @@ public class SyncWorker extends Worker {
 
 			BackendBucketRepository backendBucketRepository =
 					new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
-			GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
+			PlatformAPIWrapper platformAPIWrapper = PlatformAPIWrapper.getInstance(context);
 
 			DayDate lastDateToCheck = new DayDate(currentTime).subtractDays(9);
 			DayDate dateToLoad = new DayDate(currentTime);
@@ -205,7 +205,7 @@ public class SyncWorker extends Worker {
 							Logger.d(TAG,
 									"provideDiagnosisKeys for " + dateToLoad.formatAsString() + " with size " + file.length());
 							lastSyncCallTimes.put(dateToLoad, currentTime);
-							googleExposureClient.provideDiagnosisKeys(fileList, token);
+							platformAPIWrapper.provideDiagnosisKeys(fileList, token);
 						} else {
 							lastSyncCallTimes.put(dateToLoad, currentTime);
 						}
@@ -331,7 +331,7 @@ public class SyncWorker extends Worker {
 					GaenKey gaenKey = null;
 					if (!pendingKey.isFake()) {
 						List<TemporaryExposureKey> keys =
-								GoogleExposureClient.getInstance(context).getTemporaryExposureKeyHistorySynchronous();
+								PlatformAPIWrapper.getInstance(context).getTemporaryExposureKeyHistorySynchronous();
 
 						for (TemporaryExposureKey key : keys) {
 							if (key.getRollingStartIntervalNumber() == pendingKey.getRollingStartNumber()) {

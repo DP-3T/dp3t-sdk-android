@@ -9,7 +9,7 @@
  */
 package org.dpppt.android.sdk;
 
-public enum GaenAvailability {
+public enum PlatformAPIAvailability {
 	/** Ready to go */
 	AVAILABLE,
 	/** Google Play Services need to be updated */
