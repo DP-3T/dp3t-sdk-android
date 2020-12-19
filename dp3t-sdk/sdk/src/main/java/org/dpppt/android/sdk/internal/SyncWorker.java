@@ -36,9 +36,9 @@ import org.dpppt.android.sdk.internal.history.HistoryDatabase;
 import org.dpppt.android.sdk.internal.history.HistoryEntry;
 import org.dpppt.android.sdk.internal.history.HistoryEntryType;
 import org.dpppt.android.sdk.internal.logger.Logger;
-import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
-import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
-import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIStateCache;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIStateHelper;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 import org.dpppt.android.sdk.internal.storage.PendingKeyUploadStorage;
 import org.dpppt.android.sdk.internal.storage.models.PendingKey;
 import org.dpppt.android.sdk.models.ApplicationInfo;
@@ -125,13 +125,13 @@ public class SyncWorker extends Worker {
 
 		public void doSync() throws Exception {
 			synchronized (SyncImpl.class) {
-				GaenStateHelper.invalidateGaenAvailability(context);
-				GaenStateHelper.invalidateGaenEnabled(context);
+				PlatformAPIStateHelper.invalidatePlatformAPIAvailability(context);
+				PlatformAPIStateHelper.invalidatePlatformAPIEnabled(context);
 
 				try {
 					uploadPendingKeys(context);
 
-					if (DP3T.isTracingEnabled(context) && !Boolean.FALSE.equals(GaenStateCache.isGaenEnabled())) {
+					if (DP3T.isTracingEnabled(context) && !Boolean.FALSE.equals(PlatformAPIStateCache.isPlatformAPIEnabled())) {
 						boolean syncWasExecuted = doSyncInternal(context);
 						if (!syncWasExecuted) {
 							Logger.i(TAG, "sync skipped due to rate limit");
@@ -159,7 +159,7 @@ public class SyncWorker extends Worker {
 
 			BackendBucketRepository backendBucketRepository =
 					new BackendBucketRepository(context, appConfig.getBucketBaseUrl(), bucketSignaturePublicKey);
-			GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
+			PlatformAPIWrapper platformAPIWrapper = PlatformAPIWrapper.getInstance(context);
 
 			if (appConfigManager.getLastSynCallTime() <= currentTime - getSyncInterval()) {
 				try {
@@ -184,7 +184,7 @@ public class SyncWorker extends Worker {
 						Logger.d(TAG,
 								"provideDiagnosisKeys with size " + file.length());
 						appConfigManager.setLastSyncCallTime(currentTime);
-						googleExposureClient.provideDiagnosisKeys(fileList);
+						platformAPIWrapper.provideDiagnosisKeys(fileList);
 					} else {
 						appConfigManager.setLastSyncCallTime(currentTime);
 					}
@@ -259,7 +259,7 @@ public class SyncWorker extends Worker {
 					GaenKey gaenKey = null;
 					if (!pendingKey.isFake()) {
 						List<TemporaryExposureKey> keys =
-								GoogleExposureClient.getInstance(context).getTemporaryExposureKeyHistorySynchronous();
+								PlatformAPIWrapper.getInstance(context).getTemporaryExposureKeyHistorySynchronous();
 
 						for (TemporaryExposureKey key : keys) {
 							if (key.getRollingStartIntervalNumber() == pendingKey.getRollingStartNumber()) {

@@ -52,8 +52,8 @@ import org.dpppt.android.calibration.util.DialogUtil;
 import org.dpppt.android.calibration.util.RequirementsUtil;
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.DP3TCalibrationHelper;
-import org.dpppt.android.sdk.GaenAvailability;
 import org.dpppt.android.sdk.InfectionStatus;
+import org.dpppt.android.sdk.PlatformAPIAvailability;
 import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.export.FileUploadRepository;
@@ -222,7 +222,7 @@ public class ControlsFragment extends Fragment {
 
 		Button gaenButton = view.findViewById(R.id.home_button_gaen);
 		DP3T.checkGaenAvailability(getContext(), gaenAvailability -> {
-			boolean available = gaenAvailability == GaenAvailability.AVAILABLE;
+			boolean available = gaenAvailability == PlatformAPIAvailability.AVAILABLE;
 			gaenButton.setEnabled(!available);
 			gaenButton.setText(available ? R.string.req_gaen_availabe : R.string.req_gaen_unavailabe);
 
@@ -271,7 +271,7 @@ public class ControlsFragment extends Fragment {
 		boolean isRunning = status.isTracingEnabled();
 		buttonStartStopTracing.setSelected(isRunning);
 		buttonStartStopTracing.setText(getString(isRunning ? R.string.button_tracing_stop
-															: R.string.button_tracing_start));
+														   : R.string.button_tracing_start));
 		buttonStartStopTracing.setOnClickListener(v -> {
 			if (isRunning) {
 				DP3T.stop(v.getContext());

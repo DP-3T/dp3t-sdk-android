@@ -32,8 +32,8 @@ import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.backend.models.GaenSecondDay;
 import org.dpppt.android.sdk.internal.logger.LogLevel;
 import org.dpppt.android.sdk.internal.logger.Logger;
-import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
-import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIStateHelper;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 import org.dpppt.android.sdk.internal.nearby.TestGoogleExposureClient;
 import org.dpppt.android.sdk.internal.storage.PendingKeyUploadStorage;
 import org.dpppt.android.sdk.internal.util.Json;
@@ -71,7 +71,7 @@ public class TEKReleaseTest {
 		Logger.init(context, LogLevel.DEBUG);
 
 		ProxyConfig.DISABLE_SYSTEM_PROXY = true;
-		GaenStateHelper.SET_GAEN_AVAILABILITY_AVAILABLE_FOR_TESTS = true;
+		PlatformAPIStateHelper.SET_AVAILABILITY_AVAILABLE_FOR_TESTS = true;
 
 		server = new MockWebServer();
 		server.start();
@@ -101,7 +101,7 @@ public class TEKReleaseTest {
 			int expectedNumberOfTEKToday, boolean expectedNextDayRequestIsFake) throws Exception {
 
 		testGoogleExposureClient = new TestGoogleExposureClient(context, currentDayKeyReleased);
-		GoogleExposureClient.wrapTestClient(testGoogleExposureClient);
+		PlatformAPIWrapper.wrapTestClient(testGoogleExposureClient);
 		testGoogleExposureClient.setTime(System.currentTimeMillis());
 
 		Activity activity = startEmptyActivity();

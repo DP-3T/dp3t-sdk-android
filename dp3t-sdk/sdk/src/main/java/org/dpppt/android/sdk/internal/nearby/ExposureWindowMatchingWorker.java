@@ -28,6 +28,7 @@ import com.google.android.gms.nearby.exposurenotification.ScanInstance;
 
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 import org.dpppt.android.sdk.internal.storage.ExposureDayStorage;
 import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposureDay;
@@ -55,7 +56,7 @@ public class ExposureWindowMatchingWorker extends Worker {
 		Context context = getApplicationContext();
 		List<ExposureWindow> exposureWindows = null;
 		try {
-			exposureWindows = GoogleExposureClient.getInstance(context).getExposureWindows();
+			exposureWindows = PlatformAPIWrapper.getInstance(context).getExposureWindows();
 		} catch (Exception e) {
 			Logger.e(TAG, "error getting exposureWindows");
 			return Result.failure();

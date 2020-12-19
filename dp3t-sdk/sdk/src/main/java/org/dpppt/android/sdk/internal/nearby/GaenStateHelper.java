@@ -17,9 +17,11 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
 
-import org.dpppt.android.sdk.GaenAvailability;
+import org.dpppt.android.sdk.PlatformAPIAvailability;
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIStateCache;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 import org.dpppt.android.sdk.internal.util.PackageManagerUtil;
 
 public class GaenStateHelper {
@@ -27,17 +29,13 @@ public class GaenStateHelper {
 	private static final String TAG = "GaenStateHelper";
 	public static boolean SET_GAEN_AVAILABILITY_AVAILABLE_FOR_TESTS = false;
 
-	public static void invalidateGaenAvailability(Context context) {
-		checkGaenAvailability(context, null);
-	}
-
-	public static void checkGaenAvailability(Context context, Consumer<GaenAvailability> callback) {
+	public static void checkGaenAvailability(Context context, Consumer<PlatformAPIAvailability> callback) {
 		Intent enSettingsIntent = new Intent(ExposureNotificationClient.ACTION_EXPOSURE_NOTIFICATION_SETTINGS);
 		boolean enModuleAvailable = enSettingsIntent.resolveActivity(context.getPackageManager()) != null;
 		if (enModuleAvailable || SET_GAEN_AVAILABILITY_AVAILABLE_FOR_TESTS) {
 			Logger.d(TAG, "checkGaenAvailability: EN available");
 			updateGaenVersion(context);
-			publishGaenAvailability(context, callback, GaenAvailability.AVAILABLE);
+			publishGaenAvailability(context, callback, PlatformAPIAvailability.AVAILABLE);
 			return;
 		}
 
@@ -46,11 +44,11 @@ public class GaenStateHelper {
 				googlePlayServicesAvailable == ConnectionResult.SERVICE_DISABLED ||
 				googlePlayServicesAvailable == ConnectionResult.SERVICE_INVALID) {
 			Logger.e(TAG, "checkGaenAvailability: googlePlayServicesAvailable=" + googlePlayServicesAvailable);
-			publishGaenAvailability(context, callback, GaenAvailability.UNAVAILABLE);
+			publishGaenAvailability(context, callback, PlatformAPIAvailability.UNAVAILABLE);
 			return;
 		} else if (googlePlayServicesAvailable == ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED) {
 			Logger.w(TAG, "checkGaenAvailability: update required (isGooglePlayServicesAvailable)");
-			publishGaenAvailability(context, callback, GaenAvailability.UPDATE_REQUIRED);
+			publishGaenAvailability(context, callback, PlatformAPIAvailability.UPDATE_REQUIRED);
 			return;
 		}
 
@@ -58,15 +56,15 @@ public class GaenStateHelper {
 				PackageManagerUtil.isPackageInstalled(GoogleApiAvailability.GOOGLE_PLAY_SERVICES_PACKAGE, context);
 		if (playServicesInstalled) {
 			Logger.w(TAG, "checkGaenAvailability: update required (isPackageInstalled)");
-			publishGaenAvailability(context, callback, GaenAvailability.UPDATE_REQUIRED);
+			publishGaenAvailability(context, callback, PlatformAPIAvailability.UPDATE_REQUIRED);
 		} else {
 			Logger.w(TAG, "checkGaenAvailability: not installed");
-			publishGaenAvailability(context, callback, GaenAvailability.UNAVAILABLE);
+			publishGaenAvailability(context, callback, PlatformAPIAvailability.UNAVAILABLE);
 		}
 	}
 
 	private static void updateGaenVersion(Context context) {
-		GoogleExposureClient.getInstance(context).getVersion(
+		PlatformAPIWrapper.getInstance(context).getVersion(
 				version -> {
 					if (version != null) {
 						AppConfigManager.getInstance(context).setENModuleVersion(version);
@@ -77,37 +75,31 @@ public class GaenStateHelper {
 				});
 	}
 
-	private static void publishGaenAvailability(Context context, Consumer<GaenAvailability> callback,
-			GaenAvailability availability) {
-		GaenStateCache.setGaenAvailability(availability, context);
+	private static void publishGaenAvailability(Context context, Consumer<PlatformAPIAvailability> callback,
+			PlatformAPIAvailability availability) {
+		PlatformAPIStateCache.setPlatformAPIAvailability(availability, context);
 		if (callback != null) {
 			callback.accept(availability);
 		}
 	}
 
-	public static void invalidateGaenEnabled(Context context) {
-		checkGaenEnabled(context, null);
-	}
-
 	public static void checkGaenEnabled(Context context, Consumer<Boolean> callback) {
-		if (GaenStateCache.getGaenAvailability() == GaenAvailability.UPDATE_REQUIRED ||
-				GaenStateCache.getGaenAvailability() == GaenAvailability.UNAVAILABLE) {
+		if (PlatformAPIStateCache.getPlatformAPIAvailability() == PlatformAPIAvailability.UPDATE_REQUIRED ||
+				PlatformAPIStateCache.getPlatformAPIAvailability() == PlatformAPIAvailability.UNAVAILABLE) {
 			publishGaenEnabled(context, callback, false, null);
 			return;
 		}
-		GoogleExposureClient.getInstance(context).isEnabled()
-				.addOnSuccessListener(enabled -> {
-					Logger.d(TAG, "checkGaenEnabled: enabled=" + enabled);
-					publishGaenEnabled(context, callback, enabled, null);
-				})
-				.addOnFailureListener(e -> {
-					Logger.e(TAG, "checkGaenEnabled", e);
-					publishGaenEnabled(context, callback, false, e);
-				});
+		PlatformAPIWrapper.getInstance(context).isEnabled(enabled -> {
+			Logger.d(TAG, "checkGaenEnabled: enabled=" + enabled);
+			publishGaenEnabled(context, callback, enabled, null);
+		}, e -> {
+			Logger.e(TAG, "checkGaenEnabled", e);
+			publishGaenEnabled(context, callback, false, e);
+		});
 	}
 
 	private static void publishGaenEnabled(Context context, Consumer<Boolean> callback, boolean enabled, Exception exception) {
-		GaenStateCache.setGaenEnabled(enabled, exception, context);
+		PlatformAPIStateCache.setPlatformAPIEnabled(enabled, exception, context);
 		if (callback != null) {
 			callback.accept(enabled);
 		}

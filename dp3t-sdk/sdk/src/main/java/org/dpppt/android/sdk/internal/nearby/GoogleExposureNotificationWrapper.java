@@ -21,43 +21,25 @@ import java.util.concurrent.CountDownLatch;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.Nearby;
 import com.google.android.gms.nearby.exposurenotification.*;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 
 import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 
-public class GoogleExposureClient {
+public class GoogleExposureNotificationWrapper extends PlatformAPIWrapper {
 
 	private static final String TAG = "GoogleExposureClient";
 
 	private static final String EITHER_EXCEPTION_OR_RESULT_MUST_BE_SET = "either exception or result must be set";
 
-	private static GoogleExposureClient instance;
-
 	private final ExposureNotificationClient exposureNotificationClient;
 
-	public static synchronized GoogleExposureClient getInstance(Context context) {
-		if (instance == null) {
-			instance = new GoogleExposureClient(context.getApplicationContext());
-		}
-		return instance;
-	}
-
-	public static GoogleExposureClient wrapTestClient(ExposureNotificationClient testClient) {
-		instance = new GoogleExposureClient(testClient);
-		return instance;
-	}
-
-	private GoogleExposureClient(Context context) {
+	public GoogleExposureNotificationWrapper(Context context) {
 		exposureNotificationClient = Nearby.getExposureNotificationClient(context);
 	}
 
-	private GoogleExposureClient(ExposureNotificationClient fakeClient) {
-		exposureNotificationClient = fakeClient;
-	}
-
-	public void start(Activity activity, int resolutionRequestCode, Runnable successCallback, Consumer<Exception> errorCallback) {
+	@Override
+	public void start(Activity activity, int resolutionRequestCode, Runnable successCallback, Runnable cancelledCallback,
+			Consumer<Exception> errorCallback) {
 		exposureNotificationClient.start()
 				.addOnSuccessListener(nothing -> {
 					Logger.i(TAG, "start: started successfully");
@@ -81,22 +63,27 @@ public class GoogleExposureClient {
 				});
 	}
 
+	@Override
 	public void stop() {
 		exposureNotificationClient.stop()
 				.addOnSuccessListener(nothing -> Logger.i(TAG, "stop: stopped successfully"))
 				.addOnFailureListener(e -> Logger.e(TAG, "stop", e));
 	}
 
-	public Task<Boolean> isEnabled() {
-		return exposureNotificationClient.isEnabled();
+	@Override
+	public void isEnabled(Consumer<Boolean> successCallback, Consumer<Exception> errorCallback) {
+		exposureNotificationClient.isEnabled()
+				.addOnSuccessListener(enabled -> successCallback.accept(enabled))
+				.addOnFailureListener(e -> errorCallback.accept(e));
 	}
 
+	@Override
 	public void getTemporaryExposureKeyHistory(Activity activity, int resolutionRequestCode,
-			OnSuccessListener<List<TemporaryExposureKey>> successCallback, Consumer<Exception> errorCallback) {
+			Consumer<List<TemporaryExposureKey>> successCallback, Consumer<Exception> errorCallback) {
 		exposureNotificationClient.getTemporaryExposureKeyHistory()
 				.addOnSuccessListener(temporaryExposureKeys -> {
 					Logger.d(TAG, "getTemporaryExposureKeyHistory: success");
-					successCallback.onSuccess(temporaryExposureKeys);
+					successCallback.accept(temporaryExposureKeys);
 				})
 				.addOnFailureListener(e -> {
 					if (e instanceof ApiException) {
@@ -116,6 +103,7 @@ public class GoogleExposureClient {
 				});
 	}
 
+	@Override
 	public List<TemporaryExposureKey> getTemporaryExposureKeyHistorySynchronous() throws Exception {
 
 		CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -142,6 +130,7 @@ public class GoogleExposureClient {
 		}
 	}
 
+	@Override
 	public void provideDiagnosisKeys(List<File> keys) throws Exception {
 		if (keys == null || keys.isEmpty()) {
 			return;
@@ -169,6 +158,7 @@ public class GoogleExposureClient {
 	 * @deprecated
 	 */
 	@Deprecated
+	@Override
 	public void provideDiagnosisKeys(List<File> keys, ExposureConfiguration exposureConfiguration, String token) throws Exception {
 		if (keys == null || keys.isEmpty()) {
 			return;
@@ -200,6 +190,7 @@ public class GoogleExposureClient {
 	 * @deprecated
 	 */
 	@Deprecated
+	@Override
 	public ExposureSummary getExposureSummary(String token) throws Exception {
 		CountDownLatch countDownLatch = new CountDownLatch(1);
 		Object[] results = new Object[] { null };
@@ -225,6 +216,7 @@ public class GoogleExposureClient {
 		}
 	}
 
+	@Override
 	public List<ExposureWindow> getExposureWindows() throws Exception {
 		CountDownLatch countDownLatch = new CountDownLatch(1);
 		Object[] results = new Object[] { null };
@@ -248,13 +240,18 @@ public class GoogleExposureClient {
 		}
 	}
 
-	public void getVersion(OnSuccessListener<Long> onSuccessListener, OnFailureListener onFailureListener) {
+	@Override
+	public void getVersion(Consumer<Long> onSuccessListener, Consumer<Exception> onFailureListener) {
 		exposureNotificationClient.getVersion()
-
-				.addOnSuccessListener(onSuccessListener)
-				.addOnFailureListener(onFailureListener);
+				.addOnSuccessListener(version -> {
+					onSuccessListener.accept(version);
+				})
+				.addOnFailureListener(e -> {
+					onFailureListener.accept(e);
+				});
 	}
 
+	@Override
 	public Integer getCalibrationConfidence() throws Exception {
 		CountDownLatch countDownLatch = new CountDownLatch(1);
 		Object[] results = new Object[] { null };

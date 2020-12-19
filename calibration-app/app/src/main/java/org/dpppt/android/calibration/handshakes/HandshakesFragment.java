@@ -44,7 +44,7 @@ import org.dpppt.android.sdk.DP3TCalibrationHelper;
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.export.FileUploadRepository;
-import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 import org.dpppt.android.sdk.models.DayDate;
 
 import okhttp3.ResponseBody;
@@ -185,11 +185,11 @@ public class HandshakesFragment extends Fragment {
 			return;
 		}
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		GoogleExposureClient googleExposureClient = GoogleExposureClient.getInstance(context);
+		PlatformAPIWrapper platformAPIWrapper = PlatformAPIWrapper.getInstance(context);
 		HashMap<String, ExposureResult> resultMap = new HashMap<>();
 		List<ExposureWindow> oldExposureWindows = null;
 		try {
-			oldExposureWindows = googleExposureClient.getExposureWindows();
+			oldExposureWindows = platformAPIWrapper.getExposureWindows();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -197,10 +197,10 @@ public class HandshakesFragment extends Fragment {
 			try {
 				ArrayList<File> fileList = new ArrayList<>();
 				fileList.add(device.file);
-				googleExposureClient.provideDiagnosisKeys(fileList);
+				platformAPIWrapper.provideDiagnosisKeys(fileList);
 				String token = experiment.name + "_" + device.name + "_" + new DayDate().formatAsString();
 				//noinspection deprecation
-				googleExposureClient.provideDiagnosisKeys(fileList,
+				platformAPIWrapper.provideDiagnosisKeys(fileList,
 						new ExposureConfiguration.ExposureConfigurationBuilder()
 								.setDurationAtAttenuationThresholds(
 										appConfigManager.getAttenuationThresholdLow(),
@@ -208,7 +208,7 @@ public class HandshakesFragment extends Fragment {
 								.build(),
 						token);
 				Thread.sleep(2000);
-				List<ExposureWindow> newExposureWindows = googleExposureClient.getExposureWindows();
+				List<ExposureWindow> newExposureWindows = platformAPIWrapper.getExposureWindows();
 				Iterator<ExposureWindow> iterator = newExposureWindows.iterator();
 				while (iterator.hasNext()) {
 					if (oldExposureWindows.contains(iterator.next())) {
@@ -217,10 +217,10 @@ public class HandshakesFragment extends Fragment {
 				}
 				oldExposureWindows.addAll(newExposureWindows);
 				ExposureResult result = new ExposureResult();
-				result.deviceCalibrationConfidence = googleExposureClient.getCalibrationConfidence();
+				result.deviceCalibrationConfidence = platformAPIWrapper.getCalibrationConfidence();
 				result.exposureWindows = newExposureWindows;
 				//noinspection deprecation
-				result.exposureSummary = googleExposureClient.getExposureSummary(token);
+				result.exposureSummary = platformAPIWrapper.getExposureSummary(token);
 				resultMap.put(device.getName(), result);
 			} catch (Exception e) {
 				e.printStackTrace();

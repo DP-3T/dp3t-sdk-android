@@ -35,7 +35,7 @@ import org.dpppt.android.sdk.DP3TCalibrationHelper;
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
-import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
+import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 import org.dpppt.android.sdk.util.DateUtil;
 
 public class ParametersFragment extends Fragment {
@@ -89,7 +89,7 @@ public class ParametersFragment extends Fragment {
 		deviceIdEditText.setText(DP3TCalibrationHelper.getInstance(getContext()).getCalibrationTestDeviceName());
 		String name = "experiment_" + DP3TCalibrationHelper.getInstance(getContext()).getExperimentName() + "_" +
 				DP3TCalibrationHelper.getInstance(getContext()).getCalibrationTestDeviceName();
-		GoogleExposureClient.getInstance(getContext())
+		PlatformAPIWrapper.getInstance(getContext())
 				.getTemporaryExposureKeyHistory(getActivity(), RESOLUTION_REQUEST_CODE, temporaryExposureKeys -> {
 					ProgressDialog progressDialog = new ProgressDialog(getContext());
 					progressDialog.show();
