@@ -12,16 +12,9 @@ package org.dpppt.android.sdk.internal;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Map;
-import java.lang.IllegalArgumentException;
-
 import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
-import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.ApplicationInfo;
-import org.dpppt.android.sdk.models.DayDate;
 
 public class AppConfigManager {
 
@@ -38,41 +31,39 @@ public class AppConfigManager {
 	private static final String PREF_APPLICATION = "application";
 	private static final String PREF_TRACING_ENABLED = "tracingEnabled";
 	private static final String PREF_LAST_SYNC_DATE = "lastSyncDate";
-	private static final String PREF_LAST_SYNC_NET_SUCCESS = "lastSyncNetSuccess";
+    private static final String PREF_NUMBER_OF_SYNCS_PER_DAY = "numberOfSyncsPerDay";
+    public static final int MAX_SYNCS_PER_DAY = 6;
+    public static final int MIN_SYNCS_PER_DAY = 1;
+    private static final String PREF_LAST_SYNC_NET_SUCCESS = "lastSyncNetSuccess";
 	private static final String PREF_I_AM_INFECTED = "IAmInfected";
 	private static final String PREF_I_AM_INFECTED_IS_RESETTABLE = "IAmInfectedIsResettable";
-	private static final String PREF_CALIBRATION_TEST_DEVICE_NAME = "calibrationTestDeviceName";
-	private static final String PREF_LAST_LOADED_TIMES = "lastLoadedTimes";
-	private static final String PREF_LAST_SYNC_CALL_TIMES = "lastExposureClientCalls";
-	private static final String PREF_LAST_SUCCESSFUL_SYNC_TIMES = "lastSuccessfulSyncTimes";
+	private static final String PREF_LAST_SYNC_CALL_TIME = "lastSyncCallTime";
+	private static final String PREF_LAST_KEY_BUNDLE_TAG = "lastKeyBundleTag";
 	private static final String PREF_DEV_HISTORY = "devHistory";
+	private static final String PREF_EN_MODULE_VERSION = "enModuleVersion";
+	private static final String PREF_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE = "numberOfDaysToConsiderForExposure";
+	private static final String PREF_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS = "numberOfDaysToKeepExposedDays";
 
 	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
 	private static final String PREF_ATTENUATION_THRESHOLD_MEDIUM = "attenuationThresholdMedium";
 	private static final String PREF_ATTENUATION_FACTOR_LOW = "attenuationFactorLow";
 	private static final String PREF_ATTENUATION_FACTOR_MEDIUM = "attenuationFactorMedium";
-	private static final int DEFAULT_ATTENUATION_THRESHOLD_LOW = 50;
-	private static final int DEFAULT_ATTENUATION_THRESHOLD_MEDIUM = 60;
+	private static final int DEFAULT_ATTENUATION_THRESHOLD_LOW = 55;
+	private static final int DEFAULT_ATTENUATION_THRESHOLD_MEDIUM = 63;
 	private static final float DEFAULT_ATTENUATION_FACTOR_LOW = 1.0f;
 	private static final float DEFAULT_ATTENUATION_FACTOR_MEDIUM = 0.5f;
 	private static final int DEFAULT_MIN_DURATION_FOR_EXPOSURE = 15;
 	private static final String PREF_MIN_DURATION_FOR_EXPOSURE = "minDurationForExposure";
+	public static final int DEFAULT_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE = 10;
+	public static final int DEFAULT_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS = 14;
 
-	private String appId;
 	private SharedPreferences sharedPrefs;
-	private PlatformAPIWrapper platformAPIWrapper;
 
 	private AppConfigManager(Context context) {
 		sharedPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-		platformAPIWrapper = PlatformAPIWrapper.getInstance(context);
-	}
-
-	public void setAppId(String appId) {
-		this.appId = appId;
 	}
 
 	public void setManualApplicationInfo(ApplicationInfo applicationInfo) {
-		setAppId(applicationInfo.getAppId());
 		sharedPrefs.edit().putString(PREF_APPLICATION, Json.toJson(applicationInfo)).apply();
 	}
 
@@ -96,6 +87,18 @@ public class AppConfigManager {
 		return sharedPrefs.getLong(PREF_LAST_SYNC_DATE, 0);
 	}
 
+    public void setSyncsPerDay(int syncsPerDay) {
+	    if (syncsPerDay > MAX_SYNCS_PER_DAY) {
+            syncsPerDay = MAX_SYNCS_PER_DAY;
+        } else if (syncsPerDay < MIN_SYNCS_PER_DAY) {
+            syncsPerDay = MIN_SYNCS_PER_DAY;
+        }
+        sharedPrefs.edit().putInt(PREF_NUMBER_OF_SYNCS_PER_DAY, syncsPerDay).apply();
+    }
+
+    public int getSyncsPerDay() {
+        return sharedPrefs.getInt(PREF_NUMBER_OF_SYNCS_PER_DAY, MAX_SYNCS_PER_DAY);
+    }
 	public void setLastSyncNetworkSuccess(boolean success) {
 		sharedPrefs.edit().putBoolean(PREF_LAST_SYNC_NET_SUCCESS, success).apply();
 	}
@@ -125,14 +128,6 @@ public class AppConfigManager {
 		return new BackendReportRepository(context, appConfig.getReportBaseUrl());
 	}
 
-	public void setCalibrationTestDeviceName(String name) {
-		sharedPrefs.edit().putString(PREF_CALIBRATION_TEST_DEVICE_NAME, name).apply();
-	}
-
-	public String getCalibrationTestDeviceName() {
-		return sharedPrefs.getString(PREF_CALIBRATION_TEST_DEVICE_NAME, null);
-	}
-
 	public void clearPreferences() {
 		sharedPrefs.edit().clear().apply();
 	}
@@ -159,7 +154,6 @@ public class AppConfigManager {
 		}
 		sharedPrefs.edit().putInt(PREF_ATTENUATION_THRESHOLD_LOW, thresholdLow).apply();
 		sharedPrefs.edit().putInt(PREF_ATTENUATION_THRESHOLD_MEDIUM, thresholdMedium).apply();
-		platformAPIWrapper.setParams(thresholdLow, thresholdMedium);
 	}
 
 	public float getAttenuationFactorLow() {
@@ -178,28 +172,36 @@ public class AppConfigManager {
 		sharedPrefs.edit().putFloat(PREF_ATTENUATION_FACTOR_MEDIUM, factor).apply();
 	}
 
-	public HashMap<DayDate, Long> getLastLoadedTimes() {
-		return convertToDateMap(Json.fromJson(sharedPrefs.getString(PREF_LAST_LOADED_TIMES, "{}"), StringLongMap.class));
+	public int getNumberOfDaysToConsiderForExposure() {
+		return sharedPrefs.getInt(PREF_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE, DEFAULT_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE);
 	}
 
-	public HashMap<DayDate, Long> getLastSyncCallTimes() {
-		return convertToDateMap(Json.fromJson(sharedPrefs.getString(PREF_LAST_SYNC_CALL_TIMES, "{}"), StringLongMap.class));
+	public void setNumberOfDaysToConsiderForExposure(int days) {
+		sharedPrefs.edit().putInt(PREF_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE, days).apply();
 	}
 
-	public HashMap<DayDate, Long> getLastSuccessfulSyncTimes() {
-		return convertToDateMap(Json.fromJson(sharedPrefs.getString(PREF_LAST_SUCCESSFUL_SYNC_TIMES, "{}"), StringLongMap.class));
+	public int getNumberOfDaysToKeepExposedDays() {
+		return sharedPrefs.getInt(PREF_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS, DEFAULT_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS);
 	}
 
-	public void setLastLoadedTimes(HashMap<DayDate, Long> lastLoadedTimes) {
-		sharedPrefs.edit().putString(PREF_LAST_LOADED_TIMES, Json.toJson(convertFromDateMap(lastLoadedTimes))).apply();
+	public void setNumberOfDaysToKeepExposedDays(int days) {
+		sharedPrefs.edit().putInt(PREF_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS, days).apply();
 	}
 
-	public void setLastSyncCallTimes(HashMap<DayDate, Long> lastExposureClientCalls) {
-		sharedPrefs.edit().putString(PREF_LAST_SYNC_CALL_TIMES, Json.toJson(convertFromDateMap(lastExposureClientCalls))).apply();
+	public long getLastSynCallTime() {
+		return sharedPrefs.getLong(PREF_LAST_SYNC_CALL_TIME, 0);
 	}
 
-	public void setLastSuccessfulSyncTimes(HashMap<DayDate, Long> lastSuccessfulSyncTimes) {
-		sharedPrefs.edit().putString(PREF_LAST_SUCCESSFUL_SYNC_TIMES, Json.toJson(convertFromDateMap(lastSuccessfulSyncTimes))).apply();
+	public void setLastSyncCallTime(long time) {
+		sharedPrefs.edit().putLong(PREF_LAST_SYNC_CALL_TIME, time).apply();
+	}
+
+	public String getLastKeyBundleTag() {
+		return sharedPrefs.getString(PREF_LAST_KEY_BUNDLE_TAG, null);
+	}
+
+	public void setLastKeyBundleTag(String tag) {
+		sharedPrefs.edit().putString(PREF_LAST_KEY_BUNDLE_TAG, tag).apply();
 	}
 
 	public void setDevHistory(boolean devHistory) {
@@ -210,26 +212,12 @@ public class AppConfigManager {
 		return sharedPrefs.getBoolean(PREF_DEV_HISTORY, false);
 	}
 
-	private HashMap<DayDate, Long> convertToDateMap(HashMap<String, Long> map) {
-		HashMap<DayDate, Long> result = new HashMap<>();
-		for (Map.Entry<String, Long> stringLongEntry : map.entrySet()) {
-			try {
-				result.put(new DayDate(stringLongEntry.getKey()), stringLongEntry.getValue());
-			} catch (ParseException e) {
-				e.printStackTrace();
-			}
-		}
-		return result;
+	public void setENModuleVersion(long version) {
+		sharedPrefs.edit().putLong(PREF_EN_MODULE_VERSION, version).apply();
 	}
 
-	private HashMap<String, Long> convertFromDateMap(HashMap<DayDate, Long> map) {
-		HashMap<String, Long> result = new HashMap<>();
-		for (Map.Entry<DayDate, Long> stringLongEntry : map.entrySet()) {
-			result.put(stringLongEntry.getKey().formatAsString(), stringLongEntry.getValue());
-		}
-		return result;
+	public long getENModuleVersion() {
+		return sharedPrefs.getLong(PREF_EN_MODULE_VERSION, 0);
 	}
-
-	private static class StringLongMap extends HashMap<String, Long> { }
 
 }

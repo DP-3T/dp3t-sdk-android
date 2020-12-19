@@ -18,6 +18,7 @@ import java.util.List;
 
 import com.google.android.gms.nearby.exposurenotification.ExposureConfiguration;
 import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
+import com.google.android.gms.nearby.exposurenotification.ExposureWindow;
 import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureNotificationWrapper;
@@ -25,8 +26,6 @@ import org.dpppt.android.sdk.internal.nearby.GoogleExposureNotificationWrapper;
 public abstract class PlatformAPIWrapper {
 
 	private static PlatformAPIWrapper instance;
-
-	protected ExposureConfiguration exposureConfiguration;
 
 	public static synchronized PlatformAPIWrapper getInstance(Context context) {
 		if (instance == null) {
@@ -52,25 +51,25 @@ public abstract class PlatformAPIWrapper {
 
 	public abstract List<TemporaryExposureKey> getTemporaryExposureKeyHistorySynchronous() throws Exception;
 
-	public abstract void provideDiagnosisKeys(List<File> keys, String token) throws Exception;
+	public abstract void provideDiagnosisKeys(List<File> keys) throws Exception;
 
-	public abstract void getExposureSummary(String token, Consumer<ExposureSummary> successCallback,
-			Consumer<Exception> errorCallback);
+	/**
+	 * @deprecated
+	 */
+	@Deprecated
+	public abstract void provideDiagnosisKeys(List<File> keys, ExposureConfiguration exposureConfiguration, String token)
+			throws Exception;
 
-	public void setParams(int attenuationThresholdLow, int attenuationThresholdMedium) {
-		exposureConfiguration = new ExposureConfiguration.ExposureConfigurationBuilder()
-				.setMinimumRiskScore(1)
-				.setAttenuationScores(new int[] { 1, 1, 1, 1, 1, 1, 1, 1 })
-				.setAttenuationWeight(100)
-				.setDaysSinceLastExposureWeight(0)
-				.setDurationWeight(0)
-				.setTransmissionRiskWeight(0)
-				.setDurationAtAttenuationThresholds(new int[] { attenuationThresholdLow, attenuationThresholdMedium })
-				.build();
-	}
+	/**
+	 * @deprecated
+	 */
+	@Deprecated
+	public abstract ExposureSummary getExposureSummary(String token) throws Exception;
 
-	public ExposureConfiguration getExposureConfiguration() {
-		return exposureConfiguration;
-	}
+	public abstract List<ExposureWindow> getExposureWindows() throws Exception;
+
+	public abstract void getVersion(Consumer<Long> onSuccessListener, Consumer<Exception> onFailureListener);
+
+	public abstract Integer getCalibrationConfidence() throws Exception;
 
 }

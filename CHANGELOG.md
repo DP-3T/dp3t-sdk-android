@@ -1,5 +1,22 @@
 # Changelog for DP3T-SDK Android
 
+## version 2.0.1 (unreleased)
+
+- updated all dependencies
+- updated to play-services-nearby-exposurenotification-1.7.2-eap.aar, make sure to update this in your project as well!
+
+## version 2.0.0 (28.10.2020)
+
+- updated to play-services-nearby-exposurenotification-1.7.1-eap.aar, make sure to update this in your project as well!
+- use exposureWindows to compute attenuationDurations
+- exposureDays now returns all exposure days, not only the last one as in previous versions
+- updated defaults for attenuationBucketThresholds, new values are 55 and 63
+- add Experiment-Mode to calibration app to simplify experiments with multiple devices and the new ExposureWindows-API (see CALIBRATION_APP_USAGE.md for details)
+- expose EN-Module version, this can be used to extend the userAgent to be able to handle potential bugs in future EN versions from the backend
+- Version 2.0.0 of the SDK will require EN module version >= 1.6, if run on older versions a notification will be generated asking the user to update Google Play Services
+- add config option DP3T.setNumberOfDaysToConsiderForExposure() to define how many days after the exposure an exposure should be considered
+- add config option DP3T.setNumberOfDaysToKeepExposedDays() to define how many days after an exposure is reported, this should be kept
+
 ## version 1.0.5 (24.9.2020)
 
 - support location less scanning on Android 11

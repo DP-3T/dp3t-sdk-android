@@ -10,15 +10,14 @@
 package org.dpppt.android.sdk.internal.backend;
 
 import android.content.Context;
-
-import org.dpppt.android.sdk.backend.SignatureException;
-import org.dpppt.android.sdk.backend.SignatureVerificationInterceptor;
-import org.dpppt.android.sdk.models.DayDate;
+import androidx.annotation.NonNull;
 
 import java.io.IOException;
 import java.security.PublicKey;
 
-import androidx.annotation.NonNull;
+import org.dpppt.android.sdk.backend.SignatureException;
+import org.dpppt.android.sdk.backend.SignatureVerificationInterceptor;
+
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
@@ -44,10 +43,10 @@ public class BackendBucketRepository implements Repository {
 		bucketService = bucketRetrofit.create(BucketService.class);
 	}
 
-	public Response<ResponseBody> getGaenExposees(DayDate keyDate, Long lastLoadedTime)
+	public Response<ResponseBody> getGaenExposees(String lastKeyBundleTag)
 			throws IOException, StatusCodeException, ServerTimeOffsetException, SignatureException {
 		Response<ResponseBody> response;
-		response = bucketService.getGaenExposees(keyDate.getStartOfDayTimestamp(), lastLoadedTime).execute();
+		response = bucketService.getGaenExposees(lastKeyBundleTag).execute();
 		if (response.isSuccessful()) {
 			return response;
 		} else {

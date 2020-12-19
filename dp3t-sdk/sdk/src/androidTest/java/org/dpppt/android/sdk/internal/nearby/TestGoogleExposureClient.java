@@ -22,9 +22,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
-import com.google.android.gms.nearby.exposurenotification.ExposureSummary;
-import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
+import com.google.android.gms.nearby.exposurenotification.*;
 
 import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
 import org.dpppt.android.sdk.internal.util.Json;
@@ -37,6 +35,7 @@ public class TestGoogleExposureClient extends PlatformAPIWrapper {
 	private int provideDiagnosisKeysCounter = 0;
 	private boolean currentDayKeyReleased = false;
 	private long time = System.currentTimeMillis();
+	private ExposureTestParameters params;
 
 	public TestGoogleExposureClient(Context context) {
 		this.context = context;
@@ -89,22 +88,28 @@ public class TestGoogleExposureClient extends PlatformAPIWrapper {
 		return temporaryExposureKeys;
 	}
 
+
 	@Override
-	public void provideDiagnosisKeys(List<File> keys, String token) throws Exception {
+	public void provideDiagnosisKeys(List<File> list, ExposureConfiguration exposureConfiguration, String token) {
+		provideDiagnosisKeys(new DiagnosisKeyFileProvider(list));
+	}
+
+	@Override
+	public void provideDiagnosisKeys(List<File> list) {
+		provideDiagnosisKeys(list, null, null);
+	}
+
+	public void provideDiagnosisKeys(DiagnosisKeyFileProvider diagnosisKeyFileProvider) {
 		provideDiagnosisKeysCounter++;
-		for (File file : keys) {
+
+		while (diagnosisKeyFileProvider.zza()) {
+			File file = diagnosisKeyFileProvider.zzb();
 			try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
 				String fileContent = reader.readLine();
 				if (fileContent.startsWith("{")) {
-					ExposureTestParameters params = Json.fromJson(fileContent, ExposureTestParameters.class);
+					params = Json.fromJson(fileContent, ExposureTestParameters.class);
 					Intent intent = new Intent(ExposureNotificationClient.ACTION_EXPOSURE_STATE_UPDATED);
-					intent.putExtra(ExposureNotificationClient.EXTRA_EXPOSURE_SUMMARY,
-							new ExposureSummary.ExposureSummaryBuilder()
-									.setAttenuationDurations(params.attenuationDurations)
-									.setMatchedKeyCount(params.matchedKeyCount)
-									.setDaysSinceLastExposure(params.daysSinceLastExposure)
-									.build());
-					intent.putExtra(ExposureNotificationClient.EXTRA_TOKEN, token);
+					intent.putExtra(ExposureNotificationClient.EXTRA_TOKEN, ExposureNotificationClient.TOKEN_A);
 					new ExposureNotificationBroadcastReceiver().onReceive(context, intent);
 				}
 			} catch (IOException e) {
@@ -114,8 +119,23 @@ public class TestGoogleExposureClient extends PlatformAPIWrapper {
 	}
 
 	@Override
-	public void getExposureSummary(String token, Consumer<ExposureSummary> successCallback, Consumer<Exception> errorCallback) {
-		successCallback.accept(new ExposureSummary.ExposureSummaryBuilder().build());
+	public List<ExposureWindow> getExposureWindows() {
+		return params == null ? new ArrayList<>() : params.exposureWindows;
+	}
+
+	@Override
+	public ExposureSummary getExposureSummary(String s) {
+		return new ExposureSummary.ExposureSummaryBuilder().build();
+	}
+
+	@Override
+	public void getVersion(Consumer<Long> onSuccessListener, Consumer<Exception> onFailureListener) {
+		onSuccessListener.accept(17203704005L);
+	}
+
+	@Override
+	public Integer getCalibrationConfidence() throws Exception {
+		return null;
 	}
 
 	public int getProvideDiagnosisKeysCounter() {
@@ -127,9 +147,8 @@ public class TestGoogleExposureClient extends PlatformAPIWrapper {
 	}
 
 	public static class ExposureTestParameters {
-		public int[] attenuationDurations;
-		public int matchedKeyCount;
-		public int daysSinceLastExposure;
+
+		public List<ExposureWindow> exposureWindows;
 
 	}
 

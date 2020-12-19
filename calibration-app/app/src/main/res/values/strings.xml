@@ -24,14 +24,14 @@
 	<string name="button_sync">force backend sync</string>
 	<string name="button_export_db">export database</string>
 	<string name="button_upload_db">upload database</string>
-	<string name="button_tracking_start">start tracking</string>
-	<string name="button_tracking_stop">stop tracking</string>
+	<string name="button_tracing_start">start tracing</string>
+	<string name="button_tracing_stop">stop tracing</string>
 	<string name="button_advertising_start">start advertising</string>
 	<string name="button_receiving_start">start receiving</string>
 	<string name="button_report_infected">report infected</string>
 	<string name="button_clear_data">clear data</string>
-	<string name="status_tracking_active">TRACKING</string>
-	<string name="status_tracking_inactive">STOPPED</string>
+	<string name="status_tracing_active">TRACING</string>
+	<string name="status_tracing_inactive">STOPPED</string>
 	<string name="status_advertising">advertising: %1$b</string>
 	<string name="status_receiving">receiving: %1$b</string>
 	<string name="status_last_synced">last synced: %1$s</string>
@@ -58,7 +58,7 @@
 	<string name="tab_logs">logs</string>
 	<string name="raw_handshakes">raw handshakes</string>
 	<string name="merged_handshakes">merged handshakes</string>
-	<string name="deanonymization_test_mode">Upload keys for debugging</string>
+	<string name="deanonymization_test_mode">Upload keys for experiment</string>
 	<string name="parameter_scan_interval_title">Scan interval</string>
 	<string name="parameter_scan_duration_title">Scan duration</string>
 	<string name="parameter_info_unit_seconds">in seconds</string>
@@ -72,4 +72,5 @@
 	<string name="button_report_fake">report fake</string>
 	<string name="req_gaen_unavailabe">EN not available</string>
 	<string name="req_gaen_availabe">EN available</string>
+	<string name="experiment_config">Experiment Config</string>
 </resources>

@@ -22,7 +22,6 @@ import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.internal.logger.LogLevel;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.util.Base64Util;
-import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.util.SignatureUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,7 +83,7 @@ public class SignatureVerificationInterceptorTest {
 						.addHeader(SignatureUtil.HTTP_HEADER_JWS, getJwtForContent(responseString));
 			}
 		});
-		String response = bucketRepository.getGaenExposees(new DayDate(), null).body().string();
+		String response = bucketRepository.getGaenExposees(null).body().string();
 		assertEquals(responseString, response);
 	}
 
@@ -101,7 +100,7 @@ public class SignatureVerificationInterceptorTest {
 			}
 		});
 		try {
-			bucketRepository.getGaenExposees(new DayDate(), null).body().string();
+			bucketRepository.getGaenExposees(null).body().string();
 			fail();
 		} catch (SignatureException e) {
 			assertEquals("Signature mismatch", e.getMessage());
@@ -126,7 +125,7 @@ public class SignatureVerificationInterceptorTest {
 			}
 		});
 		try {
-			bucketRepository.getGaenExposees(new DayDate(), null).body().string();
+			bucketRepository.getGaenExposees(null).body().string();
 			fail();
 		} catch (SignatureException e) {
 			assertEquals("JWT signature does not match locally computed signature. " +

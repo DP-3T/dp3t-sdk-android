@@ -53,11 +53,11 @@
 		<item name="android:textColor">@color/selector_requirements_text_color</item>
 	</style>
 
-	<style name="Sample.Button.Tracking">
-		<item name="backgroundTint">@color/selector_tracking_button_color</item>
+	<style name="Sample.Button.Tracing">
+		<item name="backgroundTint">@color/selector_tracing_button_color</item>
 		<item name="strokeColor">@color/red</item>
 		<item name="strokeWidth">@dimen/button_outline_stroke</item>
-		<item name="android:textColor">@color/selector_tracking_text_color</item>
+		<item name="android:textColor">@color/selector_tracing_text_color</item>
 	</style>
 
 	<style name="Sample.BottomNavigationView" parent="Widget.MaterialComponents.BottomNavigationView">

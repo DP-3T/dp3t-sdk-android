@@ -18,6 +18,7 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.nearby.exposurenotification.ExposureNotificationClient;
 
 import org.dpppt.android.sdk.PlatformAPIAvailability;
+import org.dpppt.android.sdk.internal.AppConfigManager;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.platformapi.PlatformAPIStateCache;
 import org.dpppt.android.sdk.internal.platformapi.PlatformAPIWrapper;
@@ -33,6 +34,7 @@ public class GaenStateHelper {
 		boolean enModuleAvailable = enSettingsIntent.resolveActivity(context.getPackageManager()) != null;
 		if (enModuleAvailable || SET_GAEN_AVAILABILITY_AVAILABLE_FOR_TESTS) {
 			Logger.d(TAG, "checkGaenAvailability: EN available");
+			updateGaenVersion(context);
 			publishGaenAvailability(context, callback, PlatformAPIAvailability.AVAILABLE);
 			return;
 		}
@@ -61,6 +63,18 @@ public class GaenStateHelper {
 		}
 	}
 
+	private static void updateGaenVersion(Context context) {
+		PlatformAPIWrapper.getInstance(context).getVersion(
+				version -> {
+					if (version != null) {
+						AppConfigManager.getInstance(context).setENModuleVersion(version);
+					}
+				},
+				exception -> {
+					//ignore exception, if getVersion call is not yet supported we just assume default module version 0.
+				});
+	}
+
 	private static void publishGaenAvailability(Context context, Consumer<PlatformAPIAvailability> callback,
 			PlatformAPIAvailability availability) {
 		PlatformAPIStateCache.setPlatformAPIAvailability(availability, context);
@@ -76,12 +90,12 @@ public class GaenStateHelper {
 			return;
 		}
 		PlatformAPIWrapper.getInstance(context).isEnabled(enabled -> {
-					Logger.d(TAG, "checkGaenEnabled: enabled=" + enabled);
-					publishGaenEnabled(context, callback, enabled, null);
-				}, e -> {
-					Logger.e(TAG, "checkGaenEnabled", e);
-					publishGaenEnabled(context, callback, false, e);
-				});
+			Logger.d(TAG, "checkGaenEnabled: enabled=" + enabled);
+			publishGaenEnabled(context, callback, enabled, null);
+		}, e -> {
+			Logger.e(TAG, "checkGaenEnabled", e);
+			publishGaenEnabled(context, callback, false, e);
+		});
 	}
 
 	private static void publishGaenEnabled(Context context, Consumer<Boolean> callback, boolean enabled, Exception exception) {

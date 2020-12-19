@@ -76,11 +76,11 @@ public class TEKReleaseTest {
 		server = new MockWebServer();
 		server.start();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		DP3T.init(context, new ApplicationInfo("test", server.url("/bucket/").toString(), server.url("/report/").toString()),
+		DP3T.init(context, new ApplicationInfo(server.url("/bucket/").toString(), server.url("/report/").toString()),
 				null);
 		appConfigManager.setTracingEnabled(false);
 		DP3T.clearData(context);
-		DP3T.init(context, new ApplicationInfo("test", server.url("/bucket/").toString(), server.url("/report/").toString()),
+		DP3T.init(context, new ApplicationInfo(server.url("/bucket/").toString(), server.url("/report/").toString()),
 				null);
 		appConfigManager.setTracingEnabled(true);
 		PendingKeyUploadStorage.getInstance(context).clear();
