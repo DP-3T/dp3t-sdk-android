@@ -9,7 +9,7 @@
 
 ## version 2.0.0 (28.10.2020)
 
-IMPORTANT: Make sure to update dp3t-sdk-backend to 2.0.0 or higher as this version of the dp3t-sdk-ios requires new API endpoints.
+IMPORTANT: Make sure to update dp3t-sdk-backend to 2.0.0 or higher as this version of the dp3t-sdk-android requires new API endpoints.
 
 - updated to play-services-nearby-exposurenotification-1.7.1-eap.aar, make sure to update this in your project as well!
 - use exposureWindows to compute attenuationDurations
