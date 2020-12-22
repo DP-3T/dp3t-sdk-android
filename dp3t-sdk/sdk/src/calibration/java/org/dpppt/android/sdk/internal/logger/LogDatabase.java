@@ -36,7 +36,7 @@ public class LogDatabase {
 
 	protected static void insert(SQLiteDatabase db, String level, String tag, String message, long time) {
 		ContentValues values = new ContentValues();
-		values.put(LogSpec.COLUMN_NAME_VERSION, BuildConfig.VERSION_CODE);
+		values.put(LogSpec.COLUMN_NAME_VERSION, BuildConfig.LIBRARY_VERSION_CODE);
 		values.put(LogSpec.COLUMN_NAME_BUILD_TIME, BuildConfig.BUILD_TIME);
 		values.put(LogSpec.COLUMN_NAME_LEVEL, level);
 		values.put(LogSpec.COLUMN_NAME_TAG, tag);

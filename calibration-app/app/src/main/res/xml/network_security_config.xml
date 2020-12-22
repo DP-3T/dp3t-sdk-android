@@ -11,4 +11,12 @@
 
 <network-security-config>
 	<!-- use default system config -->
+
+	<base-config>
+		<trust-anchors>
+			<certificates src="system" />
+			<!-- Trust user added CAs, this is only here for the calibration app to be easier to analyze network traffic and should not be used in a production app! -->
+			<certificates src="user" />
+		</trust-anchors>
+	</base-config>
 </network-security-config>

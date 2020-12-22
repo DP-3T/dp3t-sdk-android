@@ -114,7 +114,6 @@ public class DP3T {
 
 		if (appConfigManager.isTracingEnabled()) {
 			SyncWorker.startSyncWorker(context);
-			DummyWorker.startDummyWorker(context);
 			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 		}
 	}
@@ -428,6 +427,16 @@ public class DP3T {
 		appConfigManager.setAttenuationFactorLow(attenuationFactorLow);
 		appConfigManager.setAttenuationFactorMedium(attenuationFactorMedium);
 		appConfigManager.setMinDurationForExposure(minDurationForExposure);
+	}
+
+	/**
+	 * Sets the number of syncs per day with max valid value {@link AppConfigManager#MAX_SYNCS_PER_DAY} and
+	 * min valid value {@link AppConfigManager#MIN_SYNCS_PER_DAY}
+	 * @param context
+	 * @param syncsPerDay
+	 */
+	public static void setSyncsPerDay(Context context, int syncsPerDay) {
+		AppConfigManager.getInstance(context).setSyncsPerDay(syncsPerDay);
 	}
 
 	/**
