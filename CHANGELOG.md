@@ -3,7 +3,7 @@
 
 ## version 2.0.2 (22.01.2021)
 
-- make sure GoogleExposureClient does not block thread forever, but times out after 5min. This to prevent Workers to be stuck, if an EN method does not call the success or error callback, due to an error or missconfiguration in the EN framework.
+- make sure GoogleExposureClient does not block thread forever, but times out after 5min. This to prevent Workers to be stuck, if an EN method does not call the success or error callback, due to an error or misconfiguration in the EN framework.
 
 ## version 2.0.1 (22.12.2020)
 
