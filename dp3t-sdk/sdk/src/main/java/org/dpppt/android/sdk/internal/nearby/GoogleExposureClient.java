@@ -34,7 +34,7 @@ public class GoogleExposureClient {
 
 	private static final String EITHER_EXCEPTION_OR_RESULT_MUST_BE_SET = "either exception or result must be set";
 
-	private static final long TIMEOUT_EXPOSURE_CLIENT_CALL_MS = 5 * 60 * 1000;//5min
+	private static final long TIMEOUT_EXPOSURE_CLIENT_CALL_MS = 5 * 60 * 1000L;//5min
 
 	private static GoogleExposureClient instance;
 
