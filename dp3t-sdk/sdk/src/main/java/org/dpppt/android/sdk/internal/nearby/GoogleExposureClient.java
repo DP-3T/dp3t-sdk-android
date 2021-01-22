@@ -17,6 +17,7 @@ import androidx.core.util.Consumer;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.nearby.Nearby;
@@ -32,6 +33,8 @@ public class GoogleExposureClient {
 	private static final String TAG = "GoogleExposureClient";
 
 	private static final String EITHER_EXCEPTION_OR_RESULT_MUST_BE_SET = "either exception or result must be set";
+
+	private static final long TIMEOUT_EXPOSURE_CLIENT_CALL_MS = 5 * 60 * 1000L;//5min
 
 	private static GoogleExposureClient instance;
 
@@ -131,7 +134,10 @@ public class GoogleExposureClient {
 					countDownLatch.countDown();
 				});
 
-		countDownLatch.await();
+		boolean noTimeout = countDownLatch.await(TIMEOUT_EXPOSURE_CLIENT_CALL_MS, TimeUnit.MILLISECONDS);
+		if (!noTimeout) {
+			throw new IllegalStateException("getTemporaryExposureKeyHistory() did not result in success or failure in time.");
+		}
 
 		if (results[0] instanceof Exception) {
 			throw (Exception) results[0];
@@ -159,7 +165,12 @@ public class GoogleExposureClient {
 					exceptions[0] = e;
 					countDownLatch.countDown();
 				});
-		countDownLatch.await();
+
+		boolean noTimeout = countDownLatch.await(TIMEOUT_EXPOSURE_CLIENT_CALL_MS, TimeUnit.MILLISECONDS);
+		if (!noTimeout) {
+			throw new IllegalStateException("provideDiagnosisKeys() did not result in success or failure in time.");
+		}
+
 		if (exceptions[0] != null) {
 			throw exceptions[0];
 		}
@@ -189,7 +200,11 @@ public class GoogleExposureClient {
 					exceptions[0] = e;
 					countDownLatch.countDown();
 				});
-		countDownLatch.await();
+
+		boolean noTimeout = countDownLatch.await(TIMEOUT_EXPOSURE_CLIENT_CALL_MS, TimeUnit.MILLISECONDS);
+		if (!noTimeout) {
+			throw new IllegalStateException("provideDiagnosisKeys() did not result in success or failure in time.");
+		}
 
 		if (exceptions[0] != null) {
 			throw exceptions[0];
@@ -214,7 +229,10 @@ public class GoogleExposureClient {
 					countDownLatch.countDown();
 				});
 
-		countDownLatch.await();
+		boolean noTimeout = countDownLatch.await(TIMEOUT_EXPOSURE_CLIENT_CALL_MS, TimeUnit.MILLISECONDS);
+		if (!noTimeout) {
+			throw new IllegalStateException("getExposureSummary() did not result in success or failure in time.");
+		}
 
 		if (results[0] instanceof Exception) {
 			throw (Exception) results[0];
@@ -238,7 +256,12 @@ public class GoogleExposureClient {
 					results[0] = e;
 					countDownLatch.countDown();
 				});
-		countDownLatch.await();
+
+		boolean noTimeout = countDownLatch.await(TIMEOUT_EXPOSURE_CLIENT_CALL_MS, TimeUnit.MILLISECONDS);
+		if (!noTimeout) {
+			throw new IllegalStateException("getExposureWindows() did not result in success or failure in time.");
+		}
+
 		if (results[0] instanceof Exception) {
 			throw (Exception) results[0];
 		} else if (results[0] instanceof List) {
@@ -268,7 +291,12 @@ public class GoogleExposureClient {
 					results[0] = e;
 					countDownLatch.countDown();
 				});
-		countDownLatch.await();
+
+		boolean noTimeout = countDownLatch.await(TIMEOUT_EXPOSURE_CLIENT_CALL_MS, TimeUnit.MILLISECONDS);
+		if (!noTimeout) {
+			throw new IllegalStateException("getCalibrationConfidence() did not result in success or failure in time.");
+		}
+		
 		if (results[0] instanceof Exception) {
 			throw (Exception) results[0];
 		} else if (results[0] instanceof Integer) {
