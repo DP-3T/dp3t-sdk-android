@@ -189,7 +189,7 @@ public class SyncWorker extends Worker {
 					appConfigManager.setLastSyncDate(currentTime);
 					addHistoryEntry(false, false);
 				} catch (Exception e) {
-					if (AppConfigManager.getInstance(context).getDevHistory()) {
+					if (appConfigManager.getDevHistory()) {
 						StringWriter sw = new StringWriter();
 						PrintWriter pw = new PrintWriter(sw);
 						e.printStackTrace(pw);
