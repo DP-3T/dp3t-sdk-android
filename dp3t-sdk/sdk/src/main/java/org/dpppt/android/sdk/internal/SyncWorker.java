@@ -13,10 +13,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.work.*;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -192,6 +189,13 @@ public class SyncWorker extends Worker {
 					appConfigManager.setLastSyncDate(currentTime);
 					addHistoryEntry(false, false);
 				} catch (Exception e) {
+					if (appConfigManager.getDevHistory()) {
+						StringWriter sw = new StringWriter();
+						PrintWriter pw = new PrintWriter(sw);
+						e.printStackTrace(pw);
+						HistoryDatabase.getInstance(context)
+								.addEntry(new HistoryEntry(HistoryEntryType.SYNC, sw.toString(), false, currentTime));
+					}
 					Logger.e(TAG, "error while syncing new keys", e);
 					long lastSuccessfulSyncTime = appConfigManager.getLastSyncDate();
 					boolean isDelayWithinGracePeriod =
@@ -213,7 +217,7 @@ public class SyncWorker extends Worker {
 		}
 
 		private long getSyncInterval() {
-			if(BuildConfig.FLAVOR.equals("calibration")) {
+			if (BuildConfig.FLAVOR.equals("calibration")) {
 				return 5 * 60 * 1000L;
 			} else {
 				int syncsPerDay = AppConfigManager.getInstance(context).getSyncsPerDay();
