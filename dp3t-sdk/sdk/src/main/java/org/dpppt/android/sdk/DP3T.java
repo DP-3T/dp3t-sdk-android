@@ -265,10 +265,12 @@ public class DP3T {
 							GaenRequest exposeeListRequest = new GaenRequest(filteredKeys, delayedKeyDate);
 
 							AppConfigManager appConfigManager = AppConfigManager.getInstance(activity);
+							Boolean withFederationGateway = appConfigManager.getWithFederationGateway();
 							try {
 								boolean finalDelayedKeyAlreadyPresent = delayedKeyAlreadyPresent;
 								appConfigManager.getBackendReportRepository(activity)
 										.addGaenExposee(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
+												withFederationGateway,
 												new ResponseCallback<String>() {
 													@Override
 													public void onSuccess(String authToken) {
@@ -318,10 +320,11 @@ public class DP3T {
 		exposeeListRequest.setFake(1);
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		Boolean withFederationGateway = appConfigManager.getWithFederationGateway();
 		boolean devHistory = appConfigManager.getDevHistory();
 		try {
 			appConfigManager.getBackendReportRepository(context)
-					.addGaenExposee(exposeeListRequest, exposeeAuthMethod,
+					.addGaenExposee(exposeeListRequest, exposeeAuthMethod, withFederationGateway,
 							new ResponseCallback<String>() {
 								@Override
 								public void onSuccess(String authToken) {
@@ -476,6 +479,10 @@ public class DP3T {
 
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		appConfigManager.setNumberOfDaysToKeepExposedDays(days);
+	}
+
+	public static void setWithFederationGateway(Context context, @Nullable Boolean withFederationGateway) {
+		AppConfigManager.getInstance(context).setWithFederationGateway(withFederationGateway);
 	}
 
 	public static void clearData(Context context) {

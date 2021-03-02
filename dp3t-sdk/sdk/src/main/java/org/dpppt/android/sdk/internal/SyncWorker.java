@@ -161,8 +161,9 @@ public class SyncWorker extends Worker {
 			if (appConfigManager.getLastSynCallTime() <= currentTime - getSyncInterval()) {
 				try {
 					Logger.d(TAG, "loading exposees");
+					Boolean withFederationGateway = appConfigManager.getWithFederationGateway();
 					Response<ResponseBody> result =
-							backendBucketRepository.getGaenExposees(appConfigManager.getLastKeyBundleTag());
+							backendBucketRepository.getGaenExposees(appConfigManager.getLastKeyBundleTag(), withFederationGateway);
 
 					if (result.code() != 204) {
 						File file = new File(context.getCacheDir(),
@@ -290,7 +291,9 @@ public class SyncWorker extends Worker {
 								0,
 								1);
 					}
-					appConfigManager.getBackendReportRepository(context).addPendingGaenKey(gaenKey, pendingKey.getToken());
+					Boolean withFederationGateway = appConfigManager.getWithFederationGateway();
+					appConfigManager.getBackendReportRepository(context)
+							.addPendingGaenKey(gaenKey, pendingKey.getToken(), withFederationGateway);
 					if (!pendingKey.isFake()) {
 						DP3T.stop(context);
 						appConfigManager.setIAmInfectedIsResettable(true);

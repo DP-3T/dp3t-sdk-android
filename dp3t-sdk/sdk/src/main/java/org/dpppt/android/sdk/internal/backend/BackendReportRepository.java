@@ -11,6 +11,7 @@ package org.dpppt.android.sdk.internal.backend;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.IOException;
 
@@ -29,7 +30,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class BackendReportRepository implements Repository {
 
-	private ReportService reportService;
+	private final ReportService reportService;
 
 	public BackendReportRepository(@NonNull Context context, String reportBaseUrl) {
 		Retrofit reportRetrofit = new Retrofit.Builder()
@@ -41,12 +42,16 @@ public class BackendReportRepository implements Repository {
 		reportService = reportRetrofit.create(ReportService.class);
 	}
 
-	public void addGaenExposee(@NonNull GaenRequest exposeeRequest, ExposeeAuthMethod exposeeAuthMethod,
-			@NonNull ResponseCallback<String> responseCallback) {
+	public void addGaenExposee(
+			@NonNull GaenRequest exposeeRequest,
+			ExposeeAuthMethod exposeeAuthMethod,
+			@Nullable Boolean withFederationGateway,
+			@NonNull ResponseCallback<String> responseCallback
+	) {
 		String authorizationHeader = exposeeAuthMethod instanceof ExposeeAuthMethodAuthorization
 									 ? ((ExposeeAuthMethodAuthorization) exposeeAuthMethod).getAuthorization()
 									 : null;
-		reportService.addGaenExposee(exposeeRequest, authorizationHeader).enqueue(new Callback<Void>() {
+		reportService.addGaenExposee(exposeeRequest, authorizationHeader, withFederationGateway).enqueue(new Callback<Void>() {
 			@Override
 			public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
 				if (response.isSuccessful()) {
@@ -63,8 +68,13 @@ public class BackendReportRepository implements Repository {
 		});
 	}
 
-	public void addPendingGaenKey(GaenKey gaenKey, String token) throws IOException, StatusCodeException {
-		Response<Void> response = reportService.addPendingGaenKey(new GaenSecondDay(gaenKey), token).execute();
+	public void addPendingGaenKey(
+			GaenKey gaenKey,
+			String token,
+			@Nullable Boolean withFederationGateway
+	) throws IOException, StatusCodeException {
+		Response<Void> response =
+				reportService.addPendingGaenKey(new GaenSecondDay(gaenKey), token, withFederationGateway).execute();
 		if (!response.isSuccessful()) {
 			throw new StatusCodeException(response.raw(), response.errorBody());
 		}
