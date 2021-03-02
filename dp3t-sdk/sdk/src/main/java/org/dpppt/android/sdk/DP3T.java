@@ -41,6 +41,7 @@ import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.storage.ErrorNotificationStorage;
 import org.dpppt.android.sdk.internal.storage.ExposureDayStorage;
+import org.dpppt.android.sdk.internal.util.PackageManagerUtil;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposeeAuthMethod;
@@ -86,6 +87,13 @@ public class DP3T {
 	private static void executeInit(Context context, AppConfigManager appConfigManager) {
 		if (initialized) {
 			return;
+		}
+
+		int appVersionCode = PackageManagerUtil.getAppVersionCode(context);
+		if (appConfigManager.getLastKnownAppVersionCode() != appVersionCode) {
+			appConfigManager.setLastKnownAppVersionCode(appVersionCode);
+			// cancel any active sync workers (will be restarted below if needed)
+			SyncWorker.stopSyncWorker(context);
 		}
 
 		context.registerReceiver(
