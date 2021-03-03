@@ -83,7 +83,7 @@ public class SignatureVerificationInterceptorTest {
 						.addHeader(SignatureUtil.HTTP_HEADER_JWS, getJwtForContent(responseString));
 			}
 		});
-		String response = bucketRepository.getGaenExposees(null).body().string();
+		String response = bucketRepository.getGaenExposees(null, null).body().string();
 		assertEquals(responseString, response);
 	}
 
@@ -100,7 +100,7 @@ public class SignatureVerificationInterceptorTest {
 			}
 		});
 		try {
-			bucketRepository.getGaenExposees(null).body().string();
+			bucketRepository.getGaenExposees(null, null).body().string();
 			fail();
 		} catch (SignatureException e) {
 			assertEquals("Signature mismatch", e.getMessage());
@@ -125,7 +125,7 @@ public class SignatureVerificationInterceptorTest {
 			}
 		});
 		try {
-			bucketRepository.getGaenExposees(null).body().string();
+			bucketRepository.getGaenExposees(null, null).body().string();
 			fail();
 		} catch (SignatureException e) {
 			assertEquals("JWT signature does not match locally computed signature. " +
