@@ -20,13 +20,13 @@ import org.dpppt.android.sdk.util.DateUtil;
 import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
 public class GaenRequest {
-	List<GaenKey> gaenKeys;
 
-	int delayedKeyDate;
+	private List<GaenKey> gaenKeys;
+	private int delayedKeyDate;
+	private int fake;
+	private Boolean withFederationGateway;
 
-	int fake;
-
-	public GaenRequest(List<TemporaryExposureKey> temporaryExposureKeys, int delayedKeyDate) {
+	public GaenRequest(List<TemporaryExposureKey> temporaryExposureKeys, int delayedKeyDate, Boolean withFederationGateway) {
 		ArrayList<GaenKey> keys = new ArrayList<>();
 		int rollingStartNumber = DateUtil.getCurrentRollingStartNumber();
 		for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
@@ -51,6 +51,7 @@ public class GaenRequest {
 		this.gaenKeys = keys;
 		this.delayedKeyDate = delayedKeyDate;
 		this.fake = 0;
+		this.withFederationGateway = withFederationGateway;
 	}
 
 	public List<GaenKey> getGaenKeys() {

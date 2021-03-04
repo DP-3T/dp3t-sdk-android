@@ -293,7 +293,7 @@ public class SyncWorker extends Worker {
 					}
 					Boolean withFederationGateway = appConfigManager.getWithFederationGateway();
 					appConfigManager.getBackendReportRepository(context)
-							.addPendingGaenKey(gaenKey, pendingKey.getToken(), withFederationGateway);
+							.addPendingGaenKey(gaenKey, pendingKey.getToken());
 					if (!pendingKey.isFake()) {
 						DP3T.stop(context);
 						appConfigManager.setIAmInfectedIsResettable(true);

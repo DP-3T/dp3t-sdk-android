@@ -262,15 +262,15 @@ public class DP3T {
 									}
 								}
 							}
-							GaenRequest exposeeListRequest = new GaenRequest(filteredKeys, delayedKeyDate);
-
 							AppConfigManager appConfigManager = AppConfigManager.getInstance(activity);
 							Boolean withFederationGateway = appConfigManager.getWithFederationGateway();
+
+							GaenRequest exposeeListRequest = new GaenRequest(filteredKeys, delayedKeyDate, withFederationGateway);
+
 							try {
 								boolean finalDelayedKeyAlreadyPresent = delayedKeyAlreadyPresent;
 								appConfigManager.getBackendReportRepository(activity)
 										.addGaenExposee(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
-												withFederationGateway,
 												new ResponseCallback<String>() {
 													@Override
 													public void onSuccess(String authToken) {
@@ -315,16 +315,17 @@ public class DP3T {
 			Runnable errorCallback) {
 		checkInit();
 
-		int delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
-		GaenRequest exposeeListRequest = new GaenRequest(new ArrayList<>(), delayedKeyDate);
-		exposeeListRequest.setFake(1);
-
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
 		Boolean withFederationGateway = appConfigManager.getWithFederationGateway();
+
+		int delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
+		GaenRequest exposeeListRequest = new GaenRequest(new ArrayList<>(), delayedKeyDate, withFederationGateway);
+		exposeeListRequest.setFake(1);
+
 		boolean devHistory = appConfigManager.getDevHistory();
 		try {
 			appConfigManager.getBackendReportRepository(context)
-					.addGaenExposee(exposeeListRequest, exposeeAuthMethod, withFederationGateway,
+					.addGaenExposee(exposeeListRequest, exposeeAuthMethod,
 							new ResponseCallback<String>() {
 								@Override
 								public void onSuccess(String authToken) {
