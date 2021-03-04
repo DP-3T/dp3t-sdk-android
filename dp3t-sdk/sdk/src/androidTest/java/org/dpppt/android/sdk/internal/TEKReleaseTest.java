@@ -29,13 +29,11 @@ import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.backend.ProxyConfig;
 import org.dpppt.android.sdk.internal.backend.models.GaenKey;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
-import org.dpppt.android.sdk.internal.backend.models.GaenSecondDay;
 import org.dpppt.android.sdk.internal.logger.LogLevel;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.nearby.TestGoogleExposureClient;
-import org.dpppt.android.sdk.internal.storage.PendingKeyUploadStorage;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
@@ -83,7 +81,6 @@ public class TEKReleaseTest {
 		DP3T.init(context, new ApplicationInfo(server.url("/bucket/").toString(), server.url("/report/").toString()),
 				null);
 		appConfigManager.setTracingEnabled(true);
-		PendingKeyUploadStorage.getInstance(context).clear();
 	}
 
 
@@ -111,7 +108,6 @@ public class TEKReleaseTest {
 		AtomicInteger exposednextdayFakeRequestCounter = new AtomicInteger(0);
 		AtomicInteger exposednextdayRequestCounter = new AtomicInteger(0);
 		ArrayList<Integer> sentRollingStartNumbers = new ArrayList<>();
-		ArrayList<Integer> nextdaySentRollingStartNumbers = new ArrayList<>();
 
 		//Onset Date is 4 days ago
 		long onsetDate = System.currentTimeMillis() - 1000 * 60 * 60 * 96;
@@ -120,7 +116,7 @@ public class TEKReleaseTest {
 			@Override
 			public MockResponse dispatch(RecordedRequest request) {
 				String body = new String(request.getBody().readByteArray());
-				if (request.getPath().equals("/bucket/v1/gaen/exposed")) {
+				if (request.getPath().equals("/bucket/v2/gaen/exposed")) {
 					GaenRequest gaenRequest = Json.fromJson(body, GaenRequest.class);
 					int fake = gaenRequest.isFake();
 					if (fake == 1) exposedFakeRequestCounter.getAndIncrement();
@@ -131,15 +127,6 @@ public class TEKReleaseTest {
 							}
 						}
 						exposedRequestCounter.getAndIncrement();
-					}
-				}
-				if (request.getPath().equals("/bucket/v1/gaen/exposednextday")) {
-					GaenSecondDay gaenSecondDayRequest = Json.fromJson(body, GaenSecondDay.class);
-					int fake = gaenSecondDayRequest.isFake();
-					if (fake == 1) exposednextdayFakeRequestCounter.getAndIncrement();
-					else {
-						exposednextdayRequestCounter.getAndIncrement();
-						nextdaySentRollingStartNumbers.add(gaenSecondDayRequest.getDelayedKey().getRollingStartNumber());
 					}
 				}
 				return new MockResponse().setResponseCode(200);
@@ -205,10 +192,6 @@ public class TEKReleaseTest {
 		}
 		assertFalse(DP3T.isTracingEnabled(context));
 		assertEquals(InfectionStatus.INFECTED, DP3T.getStatus(context).getInfectionStatus());
-		for (int k : nextdaySentRollingStartNumbers) {
-			//the rolling start number that is sent tomorrow must be equals to today's rolling start number
-			assertEquals(k, DateUtil.getRollingStartNumberForDate(today.get()));
-		}
 	}
 
 

@@ -12,12 +12,8 @@ package org.dpppt.android.sdk.internal.backend;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
-import java.io.IOException;
-
 import org.dpppt.android.sdk.backend.ResponseCallback;
-import org.dpppt.android.sdk.internal.backend.models.GaenKey;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
-import org.dpppt.android.sdk.internal.backend.models.GaenSecondDay;
 import org.dpppt.android.sdk.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodAuthorization;
 
@@ -64,17 +60,6 @@ public class BackendReportRepository implements Repository {
 				responseCallback.onError(throwable);
 			}
 		});
-	}
-
-	public void addPendingGaenKey(
-			GaenKey gaenKey,
-			String token
-	) throws IOException, StatusCodeException {
-		Response<Void> response =
-				reportService.addPendingGaenKey(new GaenSecondDay(gaenKey), token).execute();
-		if (!response.isSuccessful()) {
-			throw new StatusCodeException(response.raw(), response.errorBody());
-		}
 	}
 
 }
