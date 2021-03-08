@@ -94,7 +94,7 @@ public class ParametersFragment extends Fragment {
 					ProgressDialog progressDialog = new ProgressDialog(getContext());
 					progressDialog.show();
 					GaenRequest exposeeListRequest =
-							new GaenRequest(temporaryExposureKeys, DateUtil.getCurrentRollingStartNumber());
+							new GaenRequest(temporaryExposureKeys, DateUtil.getCurrentRollingStartNumber(), null);
 					new BackendCalibrationReportRepository(requireContext())
 							.addGaenExposee(exposeeListRequest, name,
 									new ResponseCallback<Void>() {

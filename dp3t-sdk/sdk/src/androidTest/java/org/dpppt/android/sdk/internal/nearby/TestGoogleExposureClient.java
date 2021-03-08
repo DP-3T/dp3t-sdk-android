@@ -34,17 +34,11 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 
 	private Context context;
 	private int provideDiagnosisKeysCounter = 0;
-	private boolean currentDayKeyReleased = false;
 	private long time = System.currentTimeMillis();
 	private ExposureTestParameters params;
 
 	public TestGoogleExposureClient(Context context) {
 		this.context = context;
-	}
-
-	public TestGoogleExposureClient(Context context, boolean currentDayKeyReleased) {
-		this.context = context;
-		this.currentDayKeyReleased = currentDayKeyReleased;
 	}
 
 	@Override
@@ -70,11 +64,9 @@ public class TestGoogleExposureClient implements ExposureNotificationClient {
 					.setRollingStartIntervalNumber(DateUtil.getRollingStartNumberForDate(new DayDate(time).subtractDays(i)))
 					.build());
 		}
-		if (currentDayKeyReleased) {
-			temporaryExposureKeys.add(new TemporaryExposureKey.TemporaryExposureKeyBuilder()
-					.setRollingStartIntervalNumber(DateUtil.getRollingStartNumberForDate(new DayDate(time)))
-					.build());
-		}
+		temporaryExposureKeys.add(new TemporaryExposureKey.TemporaryExposureKeyBuilder()
+				.setRollingStartIntervalNumber(DateUtil.getRollingStartNumberForDate(new DayDate(time)))
+				.build());
 		return new DummyTask<>(temporaryExposureKeys);
 	}
 

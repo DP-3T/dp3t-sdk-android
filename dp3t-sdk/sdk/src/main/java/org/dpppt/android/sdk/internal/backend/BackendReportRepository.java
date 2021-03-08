@@ -12,12 +12,8 @@ package org.dpppt.android.sdk.internal.backend;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
-import java.io.IOException;
-
 import org.dpppt.android.sdk.backend.ResponseCallback;
-import org.dpppt.android.sdk.internal.backend.models.GaenKey;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
-import org.dpppt.android.sdk.internal.backend.models.GaenSecondDay;
 import org.dpppt.android.sdk.models.ExposeeAuthMethod;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodAuthorization;
 
@@ -29,7 +25,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class BackendReportRepository implements Repository {
 
-	private ReportService reportService;
+	private final ReportService reportService;
 
 	public BackendReportRepository(@NonNull Context context, String reportBaseUrl) {
 		Retrofit reportRetrofit = new Retrofit.Builder()
@@ -41,8 +37,11 @@ public class BackendReportRepository implements Repository {
 		reportService = reportRetrofit.create(ReportService.class);
 	}
 
-	public void addGaenExposee(@NonNull GaenRequest exposeeRequest, ExposeeAuthMethod exposeeAuthMethod,
-			@NonNull ResponseCallback<String> responseCallback) {
+	public void addGaenExposee(
+			@NonNull GaenRequest exposeeRequest,
+			ExposeeAuthMethod exposeeAuthMethod,
+			@NonNull ResponseCallback<String> responseCallback
+	) {
 		String authorizationHeader = exposeeAuthMethod instanceof ExposeeAuthMethodAuthorization
 									 ? ((ExposeeAuthMethodAuthorization) exposeeAuthMethod).getAuthorization()
 									 : null;
@@ -61,13 +60,6 @@ public class BackendReportRepository implements Repository {
 				responseCallback.onError(throwable);
 			}
 		});
-	}
-
-	public void addPendingGaenKey(GaenKey gaenKey, String token) throws IOException, StatusCodeException {
-		Response<Void> response = reportService.addPendingGaenKey(new GaenSecondDay(gaenKey), token).execute();
-		if (!response.isSuccessful()) {
-			throw new StatusCodeException(response.raw(), response.errorBody());
-		}
 	}
 
 }

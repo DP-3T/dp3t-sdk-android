@@ -12,6 +12,8 @@ package org.dpppt.android.sdk.internal;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import androidx.annotation.Nullable;
+
 import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.ApplicationInfo;
@@ -43,6 +45,7 @@ public class AppConfigManager {
 	private static final String PREF_EN_MODULE_VERSION = "enModuleVersion";
 	private static final String PREF_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE = "numberOfDaysToConsiderForExposure";
 	private static final String PREF_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS = "numberOfDaysToKeepExposedDays";
+	private static final String PREF_WITH_FEDERATION_GATEWAY = "withFederationGateway";
 
 	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
 	private static final String PREF_ATTENUATION_THRESHOLD_MEDIUM = "attenuationThresholdMedium";
@@ -218,6 +221,20 @@ public class AppConfigManager {
 
 	public long getENModuleVersion() {
 		return sharedPrefs.getLong(PREF_EN_MODULE_VERSION, 0);
+	}
+
+	public void setWithFederationGateway(@Nullable Boolean withFederationGateway) {
+		if (withFederationGateway == null) {
+			sharedPrefs.edit().remove(PREF_WITH_FEDERATION_GATEWAY).apply();
+		} else {
+			sharedPrefs.edit().putBoolean(PREF_WITH_FEDERATION_GATEWAY, withFederationGateway).apply();
+		}
+	}
+
+	public Boolean getWithFederationGateway() {
+		return sharedPrefs.contains(PREF_WITH_FEDERATION_GATEWAY)
+			   ? sharedPrefs.getBoolean(PREF_WITH_FEDERATION_GATEWAY, false)
+			   : null;
 	}
 
 }

@@ -11,6 +11,7 @@ package org.dpppt.android.sdk.internal.backend;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.IOException;
 import java.security.PublicKey;
@@ -28,7 +29,6 @@ public class BackendBucketRepository implements Repository {
 	private BucketService bucketService;
 
 	public BackendBucketRepository(@NonNull Context context, @NonNull String bucketBaseUrl, @NonNull PublicKey publicKey) {
-
 		OkHttpClient.Builder clientBuilder = getClientBuilder(context)
 				.addInterceptor(new TimingVerificationInterceptor());
 		if (publicKey != null) {
@@ -43,10 +43,12 @@ public class BackendBucketRepository implements Repository {
 		bucketService = bucketRetrofit.create(BucketService.class);
 	}
 
-	public Response<ResponseBody> getGaenExposees(String lastKeyBundleTag)
-			throws IOException, StatusCodeException, ServerTimeOffsetException, SignatureException {
+	public Response<ResponseBody> getGaenExposees(
+			String lastKeyBundleTag,
+			@Nullable Boolean withFederationGateway
+	) throws IOException, StatusCodeException, ServerTimeOffsetException, SignatureException {
 		Response<ResponseBody> response;
-		response = bucketService.getGaenExposees(lastKeyBundleTag).execute();
+		response = bucketService.getGaenExposees(lastKeyBundleTag, withFederationGateway).execute();
 		if (response.isSuccessful()) {
 			return response;
 		} else {
