@@ -83,21 +83,9 @@ public class TEKReleaseTest {
 		appConfigManager.setTracingEnabled(true);
 	}
 
-
 	@Test
-	public void testIAmInfectedTodayKeyAlreadyReleased() throws Exception {
-		testIAmInfected(true, false, 5, true);
-	}
-
-	@Test
-	public void testIAmInfectedTodayKeyNotReleased() throws Exception {
-		testIAmInfected(false, true, 4, false);
-	}
-
-	private void testIAmInfected(boolean currentDayKeyReleased, boolean expectedTracingEnabledDirectlyAfterSendingInfection,
-			int expectedNumberOfTEKToday, boolean expectedNextDayRequestIsFake) throws Exception {
-
-		testGoogleExposureClient = new TestGoogleExposureClient(context, currentDayKeyReleased);
+	public void testIAmInfected() throws Exception {
+		testGoogleExposureClient = new TestGoogleExposureClient(context);
 		GoogleExposureClient.wrapTestClient(testGoogleExposureClient);
 		testGoogleExposureClient.setTime(System.currentTimeMillis());
 
@@ -105,12 +93,11 @@ public class TEKReleaseTest {
 
 		AtomicInteger exposedFakeRequestCounter = new AtomicInteger(0);
 		AtomicInteger exposedRequestCounter = new AtomicInteger(0);
-		AtomicInteger exposednextdayFakeRequestCounter = new AtomicInteger(0);
-		AtomicInteger exposednextdayRequestCounter = new AtomicInteger(0);
 		ArrayList<Integer> sentRollingStartNumbers = new ArrayList<>();
 
 		//Onset Date is 4 days ago
 		long onsetDate = System.currentTimeMillis() - 1000 * 60 * 60 * 96;
+		int expectedNumberOfTEKToday = 5;
 
 		server.setDispatcher(new Dispatcher() {
 			@Override
@@ -119,8 +106,9 @@ public class TEKReleaseTest {
 				if (request.getPath().equals("/bucket/v2/gaen/exposed")) {
 					GaenRequest gaenRequest = Json.fromJson(body, GaenRequest.class);
 					int fake = gaenRequest.isFake();
-					if (fake == 1) exposedFakeRequestCounter.getAndIncrement();
-					else {
+					if (fake == 1) {
+						exposedFakeRequestCounter.getAndIncrement();
+					} else {
 						for (GaenKey k : gaenRequest.getGaenKeys()) {
 							if (!k.isFake()) {
 								sentRollingStartNumbers.add(k.getRollingStartNumber());
@@ -156,18 +144,12 @@ public class TEKReleaseTest {
 
 		assertEquals(1, exposedRequestCounter.get());
 		assertEquals(0, exposedFakeRequestCounter.get());
-		assertEquals(0, exposednextdayFakeRequestCounter.get());
-		assertEquals(0, exposednextdayRequestCounter.get());
-		assertEquals(expectedTracingEnabledDirectlyAfterSendingInfection, DP3T.isTracingEnabled(context));
+		assertFalse(DP3T.isTracingEnabled(context));
 		assertEquals(InfectionStatus.INFECTED, DP3T.getStatus(context).getInfectionStatus());
 		assertEquals(expectedNumberOfTEKToday, sentRollingStartNumbers.size());
 		for (int k : sentRollingStartNumbers) {
 			assertTrue(k >= DateUtil.getRollingStartNumberForDate(onsetDate));
-			if (currentDayKeyReleased) {
-				assertTrue(k <= DateUtil.getRollingStartNumberForDate(today.get()));
-			} else {
-				assertTrue(k < DateUtil.getRollingStartNumberForDate(today.get()));
-			}
+			assertTrue(k <= DateUtil.getRollingStartNumberForDate(today.get()));
 		}
 
 		AtomicLong tomorrow = new AtomicLong(today.get() + 1000 * 60 * 60 * 24);
@@ -183,13 +165,6 @@ public class TEKReleaseTest {
 
 		assertEquals(1, exposedRequestCounter.get());
 		assertEquals(0, exposedFakeRequestCounter.get());
-		if (expectedNextDayRequestIsFake) {
-			assertEquals(1, exposednextdayFakeRequestCounter.get());
-			assertEquals(0, exposednextdayRequestCounter.get());
-		} else {
-			assertEquals(0, exposednextdayFakeRequestCounter.get());
-			assertEquals(1, exposednextdayRequestCounter.get());
-		}
 		assertFalse(DP3T.isTracingEnabled(context));
 		assertEquals(InfectionStatus.INFECTED, DP3T.getStatus(context).getInfectionStatus());
 	}
