@@ -10,7 +10,6 @@
 package org.dpppt.android.sdk.internal.backend;
 
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
-import org.dpppt.android.sdk.internal.backend.models.GaenSecondDay;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -24,14 +23,6 @@ interface ReportService {
 	@POST("v2/gaen/exposed")
 	Call<Void> addGaenExposee(
 			@Body GaenRequest exposeeRequest,
-			@Header("Authorization") String authorizationHeader
-	);
-
-	@Headers("Accept: application/json")
-	@POST("v1/gaen/exposednextday")
-	@Deprecated
-	Call<Void> addPendingGaenKey(
-			@Body GaenSecondDay delayedKey,
 			@Header("Authorization") String authorizationHeader
 	);
 

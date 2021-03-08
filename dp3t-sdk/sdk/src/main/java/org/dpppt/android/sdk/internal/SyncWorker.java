@@ -15,20 +15,14 @@ import androidx.work.*;
 
 import java.io.*;
 import java.security.PublicKey;
-import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import com.google.android.gms.nearby.exposurenotification.TemporaryExposureKey;
 
 import org.dpppt.android.sdk.BuildConfig;
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
 import org.dpppt.android.sdk.internal.backend.BackendBucketRepository;
-import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
-import org.dpppt.android.sdk.internal.backend.models.GaenKey;
 import org.dpppt.android.sdk.internal.history.HistoryDatabase;
 import org.dpppt.android.sdk.internal.history.HistoryEntry;
 import org.dpppt.android.sdk.internal.history.HistoryEntryType;
@@ -36,16 +30,10 @@ import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
 import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
-import org.dpppt.android.sdk.internal.storage.PendingKeyUploadStorage;
-import org.dpppt.android.sdk.internal.storage.models.PendingKey;
 import org.dpppt.android.sdk.models.ApplicationInfo;
-import org.dpppt.android.sdk.models.DayDate;
-import org.dpppt.android.sdk.util.DateUtil;
 
 import okhttp3.ResponseBody;
 import retrofit2.Response;
-
-import static org.dpppt.android.sdk.internal.util.Base64Util.toBase64;
 
 public class SyncWorker extends Worker {
 
@@ -126,8 +114,6 @@ public class SyncWorker extends Worker {
 				GaenStateHelper.invalidateGaenEnabled(context);
 
 				try {
-					uploadPendingKeys(context);
-
 					if (DP3T.isTracingEnabled(context) && !Boolean.FALSE.equals(GaenStateCache.isGaenEnabled())) {
 						boolean syncWasExecuted = doSyncInternal(context);
 						if (!syncWasExecuted) {
@@ -241,88 +227,6 @@ public class SyncWorker extends Worker {
 				if (file.getName().startsWith(KEYFILE_PREFIX)) {
 					if (!file.delete()) {
 						Logger.w(TAG, "Unable to delete file " + file.getName());
-					}
-				}
-			}
-		}
-
-		private void uploadPendingKeys(Context context) {
-			AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-			PendingKeyUploadStorage pendingKeyUploadStorage = PendingKeyUploadStorage.getInstance(context);
-			PendingKey pendingKey = null;
-			try {
-				int numPendingUploaded = 0;
-				int numFakePendingUploaded = 0;
-				while (pendingKeyUploadStorage.peekRollingStartNumber() <
-						DateUtil.getRollingStartNumberForDate(new DayDate(currentTime))) {
-					pendingKey = pendingKeyUploadStorage.popNextPendingKey();
-					if (pendingKey.getRollingStartNumber() <
-							DateUtil.getRollingStartNumberForDate(new DayDate(currentTime).subtractDays(1))) {
-						//ignore pendingKeys older than one day, upload token will be invalid
-						continue;
-					}
-					GaenKey gaenKey = null;
-					if (!pendingKey.isFake()) {
-						List<TemporaryExposureKey> keys =
-								GoogleExposureClient.getInstance(context).getTemporaryExposureKeyHistorySynchronous();
-
-						for (TemporaryExposureKey key : keys) {
-							if (key.getRollingStartIntervalNumber() == pendingKey.getRollingStartNumber()) {
-								gaenKey = new GaenKey(toBase64(key.getKeyData()),
-										key.getRollingStartIntervalNumber(),
-										key.getRollingPeriod(),
-										key.getTransmissionRiskLevel());
-								break;
-							}
-						}
-						if (gaenKey == null) {
-							//key for specified rollingStartNumber was not found, user must have cleared data
-							DP3T.stop(context);
-							appConfigManager.setIAmInfectedIsResettable(true);
-							continue;
-						}
-					} else {
-						SecureRandom random = new SecureRandom();
-						byte[] bytes = new byte[16];
-						random.nextBytes(bytes);
-						gaenKey = new GaenKey(toBase64(bytes),
-								pendingKey.getRollingStartNumber(),
-								144,
-								0,
-								1);
-					}
-					Boolean withFederationGateway = appConfigManager.getWithFederationGateway();
-					appConfigManager.getBackendReportRepository(context)
-							.addPendingGaenKey(gaenKey, pendingKey.getToken());
-					if (!pendingKey.isFake()) {
-						DP3T.stop(context);
-						appConfigManager.setIAmInfectedIsResettable(true);
-					}
-					if (pendingKey.isFake()) {
-						numFakePendingUploaded++;
-					} else {
-						numPendingUploaded++;
-					}
-				}
-				if (appConfigManager.getDevHistory() && (numFakePendingUploaded > 0 || numPendingUploaded > 0)) {
-					HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
-					int base = 'A';
-					String status =
-							String.valueOf((char) (base + numPendingUploaded)) + (char) (base + numFakePendingUploaded);
-					historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.NEXT_DAY_KEY_UPLOAD_REQUEST, status, true,
-							System.currentTimeMillis()));
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-				if (pendingKey != null) {
-					pendingKeyUploadStorage.addPendingKey(pendingKey);
-					if (appConfigManager.getDevHistory()) {
-						HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
-						String status = e instanceof StatusCodeException ?
-										String.valueOf(((StatusCodeException) e).getCode()) :
-										"NETW";
-						historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.NEXT_DAY_KEY_UPLOAD_REQUEST, status, false,
-								System.currentTimeMillis()));
 					}
 				}
 			}

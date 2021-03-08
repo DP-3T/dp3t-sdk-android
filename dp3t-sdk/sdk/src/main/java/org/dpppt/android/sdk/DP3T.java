@@ -41,8 +41,6 @@ import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.storage.ErrorNotificationStorage;
 import org.dpppt.android.sdk.internal.storage.ExposureDayStorage;
-import org.dpppt.android.sdk.internal.storage.PendingKeyUploadStorage;
-import org.dpppt.android.sdk.internal.storage.models.PendingKey;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposeeAuthMethod;
@@ -252,14 +250,10 @@ public class DP3T {
 						temporaryExposureKeys -> {
 							List<TemporaryExposureKey> filteredKeys = new ArrayList<>();
 							int delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
-							boolean delayedKeyAlreadyPresent = false;
 							for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
 								if (temporaryExposureKey.getRollingStartIntervalNumber() >=
 										DateUtil.getRollingStartNumberForDate(onsetDate)) {
 									filteredKeys.add(temporaryExposureKey);
-									if (temporaryExposureKey.getRollingStartIntervalNumber() == delayedKeyDate) {
-										delayedKeyAlreadyPresent = true;
-									}
 								}
 							}
 							AppConfigManager appConfigManager = AppConfigManager.getInstance(activity);
@@ -268,23 +262,14 @@ public class DP3T {
 							GaenRequest exposeeListRequest = new GaenRequest(filteredKeys, delayedKeyDate, withFederationGateway);
 
 							try {
-								boolean finalDelayedKeyAlreadyPresent = delayedKeyAlreadyPresent;
 								appConfigManager.getBackendReportRepository(activity)
 										.addGaenExposee(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
 												new ResponseCallback<String>() {
 													@Override
 													public void onSuccess(String authToken) {
-														//if the currentDay key was already released (because of same day TEK
-														// release) we do a fake request the next day, otherwise we upload todays
-														// key tomorrow
-														PendingKey delayedKey = new PendingKey(delayedKeyDate, authToken,
-																finalDelayedKeyAlreadyPresent ? 1 : 0);
-														PendingKeyUploadStorage.getInstance(activity).addPendingKey(delayedKey);
 														appConfigManager.setIAmInfected(true);
-														if (finalDelayedKeyAlreadyPresent) {
-															DP3T.stop(activity);
-															appConfigManager.setIAmInfectedIsResettable(true);
-														}
+														appConfigManager.setIAmInfectedIsResettable(true);
+														DP3T.stop(activity);
 														pendingIAmInfectedRequest.callback.onSuccess(null);
 														pendingIAmInfectedRequest = null;
 													}
@@ -329,8 +314,6 @@ public class DP3T {
 							new ResponseCallback<String>() {
 								@Override
 								public void onSuccess(String authToken) {
-									PendingKey delayedKey = new PendingKey(delayedKeyDate, authToken, 1);
-									PendingKeyUploadStorage.getInstance(context).addPendingKey(delayedKey);
 									Logger.d(TAG, "successfully sent fake request");
 									if (devHistory) {
 										HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
@@ -495,7 +478,6 @@ public class DP3T {
 
 		appConfigManager.clearPreferences();
 		ExposureDayStorage.getInstance(context).clear();
-		PendingKeyUploadStorage.getInstance(context).clear();
 		ErrorNotificationStorage.getInstance(context).clear();
 		Logger.clear();
 	}
