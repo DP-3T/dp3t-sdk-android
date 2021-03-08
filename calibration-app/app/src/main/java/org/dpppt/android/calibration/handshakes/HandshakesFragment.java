@@ -189,7 +189,7 @@ public class HandshakesFragment extends Fragment {
 		HashMap<String, ExposureResult> resultMap = new HashMap<>();
 		List<ExposureWindow> oldExposureWindows = null;
 		try {
-			oldExposureWindows = googleExposureClient.getExposureWindows();
+			oldExposureWindows = googleExposureClient.getExposureWindowsBlocking();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -197,10 +197,10 @@ public class HandshakesFragment extends Fragment {
 			try {
 				ArrayList<File> fileList = new ArrayList<>();
 				fileList.add(device.file);
-				googleExposureClient.provideDiagnosisKeys(fileList);
+				googleExposureClient.provideDiagnosisKeysBlocking(fileList);
 				String token = experiment.name + "_" + device.name + "_" + new DayDate().formatAsString();
 				//noinspection deprecation
-				googleExposureClient.provideDiagnosisKeys(fileList,
+				googleExposureClient.provideDiagnosisKeysBlocking(fileList,
 						new ExposureConfiguration.ExposureConfigurationBuilder()
 								.setDurationAtAttenuationThresholds(
 										appConfigManager.getAttenuationThresholdLow(),
@@ -208,7 +208,7 @@ public class HandshakesFragment extends Fragment {
 								.build(),
 						token);
 				Thread.sleep(2000);
-				List<ExposureWindow> newExposureWindows = googleExposureClient.getExposureWindows();
+				List<ExposureWindow> newExposureWindows = googleExposureClient.getExposureWindowsBlocking();
 				Iterator<ExposureWindow> iterator = newExposureWindows.iterator();
 				while (iterator.hasNext()) {
 					if (oldExposureWindows.contains(iterator.next())) {
@@ -217,10 +217,10 @@ public class HandshakesFragment extends Fragment {
 				}
 				oldExposureWindows.addAll(newExposureWindows);
 				ExposureResult result = new ExposureResult();
-				result.deviceCalibrationConfidence = googleExposureClient.getCalibrationConfidence();
+				result.deviceCalibrationConfidence = googleExposureClient.getCalibrationConfidenceBlocking();
 				result.exposureWindows = newExposureWindows;
 				//noinspection deprecation
-				result.exposureSummary = googleExposureClient.getExposureSummary(token);
+				result.exposureSummary = googleExposureClient.getExposureSummaryBlocking(token);
 				resultMap.put(device.getName(), result);
 			} catch (Exception e) {
 				e.printStackTrace();

@@ -137,7 +137,7 @@ public class TEKReleaseTest {
 
 		AtomicLong today = new AtomicLong(System.currentTimeMillis());
 		try {
-			new SyncWorker.SyncImpl(context, today.get()).doSync();
+			new SyncWorker.SyncImpl(context, today.get()).doSyncBlocking();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -156,7 +156,7 @@ public class TEKReleaseTest {
 		testGoogleExposureClient.setTime(tomorrow.get());
 
 		try {
-			new SyncWorker.SyncImpl(context, tomorrow.get()).doSync();
+			new SyncWorker.SyncImpl(context, tomorrow.get()).doSyncBlocking();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
