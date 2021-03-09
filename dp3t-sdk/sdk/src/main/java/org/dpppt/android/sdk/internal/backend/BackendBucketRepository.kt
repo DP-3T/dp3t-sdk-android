@@ -50,11 +50,7 @@ class BackendBucketRepository(context: Context, bucketBaseUrl: String, publicKey
 		lastKeyBundleTag: String?,
 		withFederationGateway: Boolean?
 	) = runBlocking {
-		try {
-			getGaenExposees(lastKeyBundleTag, withFederationGateway)
-		} catch (e: SignatureException) {
-			throw e
-		}
+		getGaenExposees(lastKeyBundleTag, withFederationGateway)
 	}
 
 	@Throws(IOException::class, StatusCodeException::class, ServerTimeOffsetException::class, SignatureException::class)
