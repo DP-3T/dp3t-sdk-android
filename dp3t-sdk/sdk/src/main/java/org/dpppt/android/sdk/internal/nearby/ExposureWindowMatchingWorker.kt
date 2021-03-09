@@ -17,7 +17,6 @@ import androidx.work.WorkerParameters
 import com.google.android.gms.nearby.exposurenotification.ExposureWindow
 import org.dpppt.android.sdk.internal.AppConfigManager
 import org.dpppt.android.sdk.internal.logger.Logger
-import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient.Companion.getInstance
 import org.dpppt.android.sdk.internal.storage.ExposureDayStorage
 import org.dpppt.android.sdk.models.DayDate
 import org.dpppt.android.sdk.models.ExposureDay
@@ -114,7 +113,7 @@ class ExposureWindowMatchingWorker(context: Context, workerParams: WorkerParamet
 	override suspend fun doWork(): Result {
 		val context = applicationContext
 		val exposureWindows: List<ExposureWindow> = try {
-			getInstance(context).getExposureWindows()
+			GoogleExposureClient.getInstance(context).getExposureWindows()
 		} catch (e: Exception) {
 			Logger.e(TAG, "error getting exposureWindows")
 			return Result.failure()

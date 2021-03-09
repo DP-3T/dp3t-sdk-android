@@ -79,7 +79,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 			SyncImpl(context).doSync()
 		} catch (e: Exception) {
 			Logger.d(TAG, "SyncWorker finished with exception " + e.message)
-			return Result.retry()
+			return Result.failure()
 		}
 		Logger.d(TAG, "SyncWorker finished with success")
 		return Result.success()
