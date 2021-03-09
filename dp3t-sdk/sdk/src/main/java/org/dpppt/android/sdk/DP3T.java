@@ -200,7 +200,7 @@ public class DP3T {
 	public static void sync(Context context) {
 		checkInit();
 		try {
-			new SyncWorker.SyncImpl(context).doSync();
+			new SyncWorker.SyncImpl(context).doSyncBlocking();
 		} catch (Exception ignored) {
 			// has been handled upstream
 		}

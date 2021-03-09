@@ -28,7 +28,7 @@ public class BackendBucketRepository implements Repository {
 
 	private BucketService bucketService;
 
-	public BackendBucketRepository(@NonNull Context context, @NonNull String bucketBaseUrl, @NonNull PublicKey publicKey) {
+	public BackendBucketRepository(@NonNull Context context, @NonNull String bucketBaseUrl, PublicKey publicKey) {
 		OkHttpClient.Builder clientBuilder = getClientBuilder(context)
 				.addInterceptor(new TimingVerificationInterceptor());
 		if (publicKey != null) {

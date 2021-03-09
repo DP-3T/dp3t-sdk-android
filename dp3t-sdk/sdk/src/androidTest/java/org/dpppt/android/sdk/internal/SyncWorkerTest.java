@@ -118,7 +118,7 @@ public class SyncWorkerTest {
 
 		for (int i = 0; i < 21 + 24; i++) {
 			try {
-				new SyncWorker.SyncImpl(context, time.get()).doSync();
+				new SyncWorker.SyncImpl(context, time.get()).doSyncBlocking();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -146,7 +146,7 @@ public class SyncWorkerTest {
 		});
 
 		for (int i = 0; i < 480; i++) {
-			new SyncWorker.SyncImpl(context, time.get()).doSync();
+			new SyncWorker.SyncImpl(context, time.get()).doSyncBlocking();
 			time.set(time.get() + 1 * 60 * 60 * 1000l);
 		}
 
@@ -171,19 +171,19 @@ public class SyncWorkerTest {
 		});
 
 		//8am
-		new SyncWorker.SyncImpl(context, time.get()).doSync();
+		new SyncWorker.SyncImpl(context, time.get()).doSyncBlocking();
 
 		//3am +1
 		time.set(time.get() + 19 * 60 * 60 * 1000l);
-		new SyncWorker.SyncImpl(context, time.get()).doSync();
+		new SyncWorker.SyncImpl(context, time.get()).doSyncBlocking();
 
 		//7am +1
 		time.set(time.get() + 4 * 60 * 60 * 1000l);
-		new SyncWorker.SyncImpl(context, time.get()).doSync();
+		new SyncWorker.SyncImpl(context, time.get()).doSyncBlocking();
 
 		//7pm +1
 		time.set(time.get() + 12 * 60 * 60 * 1000l);
-		new SyncWorker.SyncImpl(context, time.get()).doSync();
+		new SyncWorker.SyncImpl(context, time.get()).doSyncBlocking();
 
 		assertEquals(4, testGoogleExposureClient.getProvideDiagnosisKeysCounter());
 	}
@@ -198,7 +198,7 @@ public class SyncWorkerTest {
 			}
 		});
 
-		new SyncWorker.SyncImpl(context, time.get()).doSync();
+		new SyncWorker.SyncImpl(context, time.get()).doSyncBlocking();
 		assertEquals(0, testGoogleExposureClient.getProvideDiagnosisKeysCounter());
 	}
 
@@ -349,7 +349,7 @@ public class SyncWorkerTest {
 		});
 
 		try {
-			new SyncWorker.SyncImpl(context, time.get()).doSync();
+			new SyncWorker.SyncImpl(context, time.get()).doSyncBlocking();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
