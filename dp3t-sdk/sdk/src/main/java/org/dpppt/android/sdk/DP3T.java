@@ -128,7 +128,7 @@ public class DP3T {
 		return initialized;
 	}
 
-	private static void checkInit() throws IllegalStateException {
+	protected static void checkInit() throws IllegalStateException {
 		if (!initialized) {
 			throw new IllegalStateException("You have to call DP3T.init() in your Application.onCreate()");
 		}
@@ -271,7 +271,7 @@ public class DP3T {
 
 							try {
 								appConfigManager.getBackendReportRepository(activity)
-										.addGaenExposee(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
+										.addGaenExposeBlocking(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
 												new ResponseCallback<String>() {
 													@Override
 													public void onSuccess(String authToken) {
@@ -290,9 +290,7 @@ public class DP3T {
 							} catch (IllegalStateException e) {
 								reportFailedIAmInfected(e);
 							}
-						}, e -> {
-							reportFailedIAmInfected(e);
-						});
+						}, DP3T::reportFailedIAmInfected);
 	}
 
 	private static void reportFailedIAmInfected(Throwable e) {
@@ -318,7 +316,7 @@ public class DP3T {
 		boolean devHistory = appConfigManager.getDevHistory();
 		try {
 			appConfigManager.getBackendReportRepository(context)
-					.addGaenExposee(exposeeListRequest, exposeeAuthMethod,
+					.addGaenExposeBlocking(exposeeListRequest, exposeeAuthMethod,
 							new ResponseCallback<String>() {
 								@Override
 								public void onSuccess(String authToken) {

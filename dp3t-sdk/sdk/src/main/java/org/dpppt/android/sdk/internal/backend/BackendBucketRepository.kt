@@ -10,9 +10,16 @@
 package org.dpppt.android.sdk.internal.backend
 
 import android.content.Context
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
+import org.dpppt.android.sdk.backend.ResponseCallback
 import org.dpppt.android.sdk.backend.SignatureException
 import org.dpppt.android.sdk.backend.SignatureVerificationInterceptor
+import org.dpppt.android.sdk.internal.backend.models.GaenRequest
+import org.dpppt.android.sdk.models.ExposeeAuthMethod
 import retrofit2.Response
 import retrofit2.Retrofit
 import java.io.IOException
@@ -38,11 +45,19 @@ class BackendBucketRepository(context: Context, bucketBaseUrl: String, publicKey
 	}
 
 	@Throws(IOException::class, StatusCodeException::class, ServerTimeOffsetException::class, SignatureException::class)
+	fun getGaenExposeesBlocking(
+		lastKeyBundleTag: String?,
+		withFederationGateway: Boolean?
+	) = runBlocking {
+		getGaenExposees(lastKeyBundleTag, withFederationGateway)
+	}
+
+	@Throws(IOException::class, StatusCodeException::class, ServerTimeOffsetException::class, SignatureException::class)
 	suspend fun getGaenExposees(
 		lastKeyBundleTag: String?,
 		withFederationGateway: Boolean?
 	): Response<ResponseBody> {
-		val response = bucketService.getGaenExposees(lastKeyBundleTag!!, withFederationGateway)
+		val response = bucketService.getGaenExposees(lastKeyBundleTag, withFederationGateway)
 		return if (response.isSuccessful) {
 			response
 		} else {
