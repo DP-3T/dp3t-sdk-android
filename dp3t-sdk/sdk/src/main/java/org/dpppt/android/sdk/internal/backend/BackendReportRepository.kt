@@ -10,7 +10,10 @@
 package org.dpppt.android.sdk.internal.backend
 
 import android.content.Context
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import org.dpppt.android.sdk.backend.ResponseCallback
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest
 import org.dpppt.android.sdk.models.ExposeeAuthMethod
@@ -33,16 +36,22 @@ class BackendReportRepository(context: Context, reportBaseUrl: String) : Reposit
 		reportService = reportRetrofit.create(ReportService::class.java)
 	}
 
-	fun addGaenExposeeBlocking(
+	fun addGaenExposeeAsync(
 		exposeeRequest: GaenRequest,
 		exposeeAuthMethod: ExposeeAuthMethod?,
 		responseCallback: ResponseCallback<String?>
-	) = runBlocking {
-		try {
-			val response = addGaenExposee(exposeeRequest, exposeeAuthMethod)
-			responseCallback.onSuccess(response)
-		} catch (throwable: Throwable) {
-			responseCallback.onError(throwable)
+	) {
+		GlobalScope.async {
+			try {
+				val response = addGaenExposee(exposeeRequest, exposeeAuthMethod)
+				withContext(Dispatchers.Main) {
+					responseCallback.onSuccess(response)
+				}
+			} catch (throwable: Throwable) {
+				withContext(Dispatchers.Main) {
+					responseCallback.onError(throwable)
+				}
+			}
 		}
 	}
 
@@ -50,12 +59,12 @@ class BackendReportRepository(context: Context, reportBaseUrl: String) : Reposit
 	suspend fun addGaenExposee(
 		exposeeRequest: GaenRequest,
 		exposeeAuthMethod: ExposeeAuthMethod?
-	): String? {
+	): String? = withContext(Dispatchers.IO) {
 		val authorizationHeader = if (exposeeAuthMethod is ExposeeAuthMethodAuthorization) exposeeAuthMethod.authorization else null
 
 		val response = reportService.addGaenExposee(exposeeRequest, authorizationHeader)
 		if (response.isSuccessful) {
-			return response.headers()["Authorization"]
+			return@withContext response.headers()["Authorization"]
 		} else {
 			throw StatusCodeException(response.raw(), response.errorBody())
 		}

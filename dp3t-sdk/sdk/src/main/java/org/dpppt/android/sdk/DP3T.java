@@ -270,7 +270,7 @@ public class DP3T {
 
 							try {
 								appConfigManager.getBackendReportRepository(activity)
-										.addGaenExposeeBlocking(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
+										.addGaenExposeeAsync(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
 												new ResponseCallback<String>() {
 													@Override
 													public void onSuccess(String authToken) {
