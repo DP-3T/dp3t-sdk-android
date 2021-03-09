@@ -1,9 +1,7 @@
 package org.dpppt.android.sdk
 
 import android.content.Context
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import org.dpppt.android.sdk.backend.ResponseCallback
+import kotlinx.coroutines.*
 import org.dpppt.android.sdk.internal.AppConfigManager
 import org.dpppt.android.sdk.internal.backend.StatusCodeException
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest
@@ -20,11 +18,33 @@ object DP3TKotlin : DP3T() {
 
 	private const val TAG = "DP3TKotlin Interface"
 
-	suspend fun sendFakeInfectedRequestAsync(
+	@JvmStatic
+	fun sendFakeInfectedRequestAsync(
 		context: Context,
-		exposeeAuthMethod: ExposeeAuthMethod,
+		exposeeAuthMethod: ExposeeAuthMethod?,
 		successCallback: Runnable?,
 		errorCallback: Runnable?
+	) {
+		checkInit()
+
+		GlobalScope.async {
+			try {
+				sendFakeInfectedRequest(context, exposeeAuthMethod)
+				withContext(Dispatchers.Main) {
+					successCallback?.run()
+				}
+			} catch (e: Exception) {
+				withContext(Dispatchers.Main) {
+					errorCallback?.run()
+				}
+			}
+		}
+	}
+
+	@Throws(Exception::class)
+	suspend fun sendFakeInfectedRequest(
+		context: Context,
+		exposeeAuthMethod: ExposeeAuthMethod?
 	) = withContext(Dispatchers.IO) {
 		checkInit()
 
@@ -48,10 +68,6 @@ object DP3TKotlin : DP3T() {
 					)
 				)
 			}
-
-			withContext(Dispatchers.Main) {
-				successCallback?.run()
-			}
 		} catch (e: Exception) {
 			Logger.d(TAG, "failed to send fake request: " + e.localizedMessage)
 			if (devHistory) {
@@ -64,9 +80,8 @@ object DP3TKotlin : DP3T() {
 				historyDatabase.addEntry(HistoryEntry(HistoryEntryType.FAKE_REQUEST, status, false, System.currentTimeMillis()))
 			}
 
-			withContext(Dispatchers.Main) {
-				errorCallback?.run()
-			}
+			//rethrow exception to be handled upstream
+			throw e
 		}
 	}
 
