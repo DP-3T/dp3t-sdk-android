@@ -36,7 +36,8 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 	companion object {
 
 		private const val TAG = "SyncWorker"
-		private const val WORK_NAME = "org.dpppt.android.sdk.internal.SyncWorker"
+		const val WORK_NAME = "org.dpppt.android.sdk.internal.SyncWorker"
+		const val WORK_TAG = WORK_NAME
 		private const val KEYFILE_PREFIX = "keyfile_"
 
 		const val KEY_BUNDLE_TAG_HEADER = "x-key-bundle-tag"
@@ -52,6 +53,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 				.build()
 			val periodicWorkRequest = PeriodicWorkRequest.Builder(SyncWorker::class.java, 120, TimeUnit.MINUTES)
 				.setConstraints(constraints)
+				.addTag(WORK_TAG)
 				.build()
 			val workManager = WorkManager.getInstance(context)
 			workManager.enqueueUniquePeriodicWork(WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest)

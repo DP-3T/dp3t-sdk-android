@@ -27,12 +27,13 @@ class ExposureWindowMatchingWorker(context: Context, workerParams: WorkerParamet
 
 	companion object {
 
+		const val WORK_TAG = "org.dpppt.android.sdk.internal.nearby.ExposureWindowMatchingWorker"
 		private const val TAG = "MatchingWorker"
 
 		@JvmStatic
 		fun startMatchingWorker(context: Context) {
 			val workManager = WorkManager.getInstance(context)
-			workManager.enqueue(OneTimeWorkRequest.from(ExposureWindowMatchingWorker::class.java))
+			workManager.enqueue(OneTimeWorkRequest.Builder(ExposureWindowMatchingWorker::class.java).addTag(WORK_TAG).build())
 			Logger.d(TAG, "scheduled MatchingWorker")
 		}
 
