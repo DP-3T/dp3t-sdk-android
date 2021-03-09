@@ -38,7 +38,7 @@ class ExposureWindowMatchingWorker(context: Context, workerParams: WorkerParamet
 
 		private fun addDaysWhereExposureLimitIsReached(context: Context, exposureWindows: List<ExposureWindow>) {
 			val appConfigManager = AppConfigManager.getInstance(context)
-			val attenuationDurationsInSecondsForDate = HashMap<DayDate, IntArray>()
+			val attenuationDurationsInSecondsForDate = mutableMapOf<DayDate, IntArray>()
 			for (exposureWindow in exposureWindows) {
 				val windowDate = DayDate(exposureWindow.dateMillisSinceEpoch)
 				Logger.d(TAG, "Received ExposureWindow for " + windowDate.formatAsString() + ": " + exposureWindow.toString())
@@ -64,7 +64,7 @@ class ExposureWindowMatchingWorker(context: Context, workerParams: WorkerParamet
 
 		private fun getExposureDaysFromAttenuationDurations(
 			context: Context,
-			attenuationDurationsInSecondsForDate: HashMap<DayDate, IntArray>
+			attenuationDurationsInSecondsForDate: Map<DayDate, IntArray>
 		): List<ExposureDay> {
 			val exposureDays: MutableList<ExposureDay> = ArrayList()
 			val maxAgeForExposure = DayDate().subtractDays(AppConfigManager.getInstance(context).numberOfDaysToConsiderForExposure)

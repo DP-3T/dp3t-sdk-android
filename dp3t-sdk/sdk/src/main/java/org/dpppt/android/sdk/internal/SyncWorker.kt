@@ -11,7 +11,9 @@ package org.dpppt.android.sdk.internal
 
 import android.content.Context
 import androidx.work.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.dpppt.android.sdk.BuildConfig
 import org.dpppt.android.sdk.DP3T
 import org.dpppt.android.sdk.internal.backend.BackendBucketRepository
@@ -44,21 +46,21 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 		private var isSyncInProgress = AtomicBoolean(false)
 
 		@JvmStatic
-		fun startSyncWorker(context: Context?) {
+		fun startSyncWorker(context: Context) {
 			val constraints = Constraints.Builder()
 				.setRequiredNetworkType(NetworkType.CONNECTED)
 				.build()
 			val periodicWorkRequest = PeriodicWorkRequest.Builder(SyncWorker::class.java, 120, TimeUnit.MINUTES)
 				.setConstraints(constraints)
 				.build()
-			val workManager = WorkManager.getInstance(context!!)
+			val workManager = WorkManager.getInstance(context)
 			workManager.enqueueUniquePeriodicWork(WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest)
 			Logger.d(TAG, "scheduled SyncWorker")
 		}
 
 		@JvmStatic
-		fun stopSyncWorker(context: Context?) {
-			val workManager = WorkManager.getInstance(context!!)
+		fun stopSyncWorker(context: Context) {
+			val workManager = WorkManager.getInstance(context)
 			workManager.cancelUniqueWork(WORK_NAME)
 		}
 
@@ -131,7 +133,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 		}
 
 		@Throws(Exception::class)
-		private suspend fun doSyncInternal(context: Context): Boolean {
+		private suspend fun doSyncInternal(context: Context): Boolean = withContext(Dispatchers.IO) {
 			val appConfigManager = AppConfigManager.getInstance(context)
 			val appConfig = appConfigManager.appConfig
 			val backendBucketRepository = BackendBucketRepository(context, appConfig.bucketBaseUrl, bucketSignaturePublicKey)
@@ -139,22 +141,24 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 			if (appConfigManager.lastSynCallTime <= currentTime - syncInterval) {
 				try {
 					Logger.d(TAG, "loading exposees")
-					val withFederationGateway = appConfigManager.withFederationGateway
-					val result = backendBucketRepository.getGaenExposees(appConfigManager.lastKeyBundleTag, withFederationGateway)
-					if (result.code() != 204) {
-						val file = File(context.cacheDir, KEYFILE_PREFIX + appConfigManager.lastKeyBundleTag + ".zip")
-						result.body()!!.byteStream().copyTo(file.outputStream())
-						val fileList = ArrayList<File>()
-						fileList.add(file)
-						Logger.d(TAG, "provideDiagnosisKeys with size " + file.length())
-						appConfigManager.setLastSyncCallTime(currentTime)
-						googleExposureClient.provideDiagnosisKeys(fileList)
-					} else {
-						appConfigManager.setLastSyncCallTime(currentTime)
+					withContext(Dispatchers.IO) {
+						val withFederationGateway = appConfigManager.withFederationGateway
+						val result =
+							backendBucketRepository.getGaenExposees(appConfigManager.lastKeyBundleTag, withFederationGateway)
+						if (result.code() != 204) {
+							val file = File(context.cacheDir, KEYFILE_PREFIX + appConfigManager.lastKeyBundleTag + ".zip")
+							result.body()!!.byteStream().copyTo(file.outputStream())
+							val fileList = listOf(file)
+							Logger.d(TAG, "provideDiagnosisKeys with size " + file.length())
+							appConfigManager.setLastSyncCallTime(currentTime)
+							googleExposureClient.provideDiagnosisKeys(fileList)
+						} else {
+							appConfigManager.setLastSyncCallTime(currentTime)
+						}
+						appConfigManager.lastKeyBundleTag = result.headers()[KEY_BUNDLE_TAG_HEADER]
+						appConfigManager.lastSyncDate = currentTime
+						addHistoryEntry(false, false)
 					}
-					appConfigManager.lastKeyBundleTag = result.headers()[KEY_BUNDLE_TAG_HEADER]
-					appConfigManager.lastSyncDate = currentTime
-					addHistoryEntry(false, false)
 				} catch (e: Exception) {
 					if (appConfigManager.devHistory) {
 						HistoryDatabase.getInstance(context)
@@ -172,9 +176,9 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 					}
 				}
 				cleanupOldKeyFiles(context)
-				return true
+				return@withContext true
 			} else {
-				return false
+				return@withContext false
 			}
 		}
 
@@ -201,7 +205,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 		}
 
 		private fun cleanupOldKeyFiles(context: Context) {
-			for (file in context.cacheDir.listFiles() ?: return) {
+			context.cacheDir.listFiles()?.forEach { file ->
 				if (file.name.startsWith(KEYFILE_PREFIX)) {
 					if (!file.delete()) {
 						Logger.w(TAG, "Unable to delete file " + file.name)
