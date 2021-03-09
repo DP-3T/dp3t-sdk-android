@@ -271,7 +271,7 @@ public class DP3T {
 
 							try {
 								appConfigManager.getBackendReportRepository(activity)
-										.addGaenExposeBlocking(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
+										.addGaenExposeeBlocking(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
 												new ResponseCallback<String>() {
 													@Override
 													public void onSuccess(String authToken) {
@@ -316,7 +316,7 @@ public class DP3T {
 		boolean devHistory = appConfigManager.getDevHistory();
 		try {
 			appConfigManager.getBackendReportRepository(context)
-					.addGaenExposeBlocking(exposeeListRequest, exposeeAuthMethod,
+					.addGaenExposeeBlocking(exposeeListRequest, exposeeAuthMethod,
 							new ResponseCallback<String>() {
 								@Override
 								public void onSuccess(String authToken) {

@@ -33,7 +33,7 @@ class BackendReportRepository(context: Context, reportBaseUrl: String) : Reposit
 		reportService = reportRetrofit.create(ReportService::class.java)
 	}
 
-	fun addGaenExposeBlocking(
+	fun addGaenExposeeBlocking(
 		exposeeRequest: GaenRequest,
 		exposeeAuthMethod: ExposeeAuthMethod?,
 		responseCallback: ResponseCallback<String?>

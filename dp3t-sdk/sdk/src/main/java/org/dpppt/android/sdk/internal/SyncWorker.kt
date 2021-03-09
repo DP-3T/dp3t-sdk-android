@@ -141,24 +141,22 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 			if (appConfigManager.lastSynCallTime <= currentTime - syncInterval) {
 				try {
 					Logger.d(TAG, "loading exposees")
-					withContext(Dispatchers.IO) {
-						val withFederationGateway = appConfigManager.withFederationGateway
-						val result =
-							backendBucketRepository.getGaenExposees(appConfigManager.lastKeyBundleTag, withFederationGateway)
-						if (result.code() != 204) {
-							val file = File(context.cacheDir, KEYFILE_PREFIX + appConfigManager.lastKeyBundleTag + ".zip")
-							result.body()!!.byteStream().copyTo(file.outputStream())
-							val fileList = listOf(file)
-							Logger.d(TAG, "provideDiagnosisKeys with size " + file.length())
-							appConfigManager.setLastSyncCallTime(currentTime)
-							googleExposureClient.provideDiagnosisKeys(fileList)
-						} else {
-							appConfigManager.setLastSyncCallTime(currentTime)
-						}
-						appConfigManager.lastKeyBundleTag = result.headers()[KEY_BUNDLE_TAG_HEADER]
-						appConfigManager.lastSyncDate = currentTime
-						addHistoryEntry(false, false)
+					val withFederationGateway = appConfigManager.withFederationGateway
+					val result =
+						backendBucketRepository.getGaenExposees(appConfigManager.lastKeyBundleTag, withFederationGateway)
+					if (result.code() != 204) {
+						val file = File(context.cacheDir, KEYFILE_PREFIX + appConfigManager.lastKeyBundleTag + ".zip")
+						result.body()!!.byteStream().copyTo(file.outputStream())
+						val fileList = listOf(file)
+						Logger.d(TAG, "provideDiagnosisKeys with size " + file.length())
+						appConfigManager.setLastSyncCallTime(currentTime)
+						googleExposureClient.provideDiagnosisKeys(fileList)
+					} else {
+						appConfigManager.setLastSyncCallTime(currentTime)
 					}
+					appConfigManager.lastKeyBundleTag = result.headers()[KEY_BUNDLE_TAG_HEADER]
+					appConfigManager.lastSyncDate = currentTime
+					addHistoryEntry(false, false)
 				} catch (e: Exception) {
 					if (appConfigManager.devHistory) {
 						HistoryDatabase.getInstance(context)
