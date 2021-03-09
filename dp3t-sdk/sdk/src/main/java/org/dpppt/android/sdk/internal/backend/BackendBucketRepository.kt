@@ -10,6 +10,7 @@
 package org.dpppt.android.sdk.internal.backend
 
 import android.content.Context
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -49,7 +50,11 @@ class BackendBucketRepository(context: Context, bucketBaseUrl: String, publicKey
 		lastKeyBundleTag: String?,
 		withFederationGateway: Boolean?
 	) = runBlocking {
-		getGaenExposees(lastKeyBundleTag, withFederationGateway)
+		try {
+			getGaenExposees(lastKeyBundleTag, withFederationGateway)
+		} catch (e: SignatureException) {
+			throw e
+		}
 	}
 
 	@Throws(IOException::class, StatusCodeException::class, ServerTimeOffsetException::class, SignatureException::class)
@@ -57,11 +62,11 @@ class BackendBucketRepository(context: Context, bucketBaseUrl: String, publicKey
 		lastKeyBundleTag: String?,
 		withFederationGateway: Boolean?
 	): Response<ResponseBody> {
-		val response = bucketService.getGaenExposees(lastKeyBundleTag, withFederationGateway)
-		return if (response.isSuccessful) {
-			response
-		} else {
-			throw StatusCodeException(response.raw(), response.errorBody())
-		}
+			val response = bucketService.getGaenExposees(lastKeyBundleTag, withFederationGateway)
+			return if (response.isSuccessful) {
+				response
+			} else {
+				throw StatusCodeException(response.raw(), response.errorBody())
+			}
 	}
 }

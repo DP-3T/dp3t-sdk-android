@@ -10,7 +10,9 @@
 
 package org.dpppt.android.sdk.backend;
 
-public class SignatureException extends RuntimeException {
+import java.io.IOException;
+
+public class SignatureException extends IOException {
 
 	public SignatureException(String message) {
 		super(message);
