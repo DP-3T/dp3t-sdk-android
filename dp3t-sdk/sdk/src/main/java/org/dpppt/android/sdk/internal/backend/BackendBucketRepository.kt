@@ -59,8 +59,8 @@ class BackendBucketRepository(context: Context, bucketBaseUrl: String, publicKey
 		withFederationGateway: Boolean?
 	): Response<ResponseBody> {
 			val response = bucketService.getGaenExposees(lastKeyBundleTag, withFederationGateway)
-			return if (response.isSuccessful) {
-				response
+			if (response.isSuccessful) {
+				return response
 			} else {
 				throw StatusCodeException(response.raw(), response.errorBody())
 			}
