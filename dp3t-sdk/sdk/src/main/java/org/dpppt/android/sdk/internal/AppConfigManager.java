@@ -46,6 +46,7 @@ public class AppConfigManager {
 	private static final String PREF_NUMBER_OF_DAYS_TO_CONSIDER_FOR_EXPOSURE = "numberOfDaysToConsiderForExposure";
 	private static final String PREF_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS = "numberOfDaysToKeepExposedDays";
 	private static final String PREF_WITH_FEDERATION_GATEWAY = "withFederationGateway";
+	private static final String PREF_APP_VERSION_CODE = "appVersionCode";
 
 	private static final String PREF_ATTENUATION_THRESHOLD_LOW = "attenuationThresholdLow";
 	private static final String PREF_ATTENUATION_THRESHOLD_MEDIUM = "attenuationThresholdMedium";
@@ -235,6 +236,14 @@ public class AppConfigManager {
 		return sharedPrefs.contains(PREF_WITH_FEDERATION_GATEWAY)
 			   ? sharedPrefs.getBoolean(PREF_WITH_FEDERATION_GATEWAY, false)
 			   : null;
+	}
+
+	public void setLastKnownAppVersionCode(int versionCode) {
+		sharedPrefs.edit().putInt(PREF_APP_VERSION_CODE, versionCode).apply();
+	}
+
+	public int getLastKnownAppVersionCode() {
+		return sharedPrefs.getInt(PREF_APP_VERSION_CODE, -1);
 	}
 
 }

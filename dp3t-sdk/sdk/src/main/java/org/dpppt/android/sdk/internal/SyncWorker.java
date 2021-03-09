@@ -38,7 +38,7 @@ import retrofit2.Response;
 public class SyncWorker extends Worker {
 
 	private static final String TAG = "SyncWorker";
-	private static final String WORK_TAG = "org.dpppt.android.sdk.internal.SyncWorker";
+	private static final String WORK_NAME = "org.dpppt.android.sdk.internal.SyncWorker";
 	private static final String KEYFILE_PREFIX = "keyfile_";
 
 	protected static final String KEY_BUNDLE_TAG_HEADER = "x-key-bundle-tag";
@@ -55,14 +55,14 @@ public class SyncWorker extends Worker {
 				.build();
 
 		WorkManager workManager = WorkManager.getInstance(context);
-		workManager.enqueueUniquePeriodicWork(WORK_TAG, ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest);
+		workManager.enqueueUniquePeriodicWork(WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest);
 
 		Logger.d(TAG, "scheduled SyncWorker");
 	}
 
 	public static void stopSyncWorker(Context context) {
 		WorkManager workManager = WorkManager.getInstance(context);
-		workManager.cancelAllWorkByTag(WORK_TAG);
+		workManager.cancelUniqueWork(WORK_NAME);
 	}
 
 	public SyncWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
