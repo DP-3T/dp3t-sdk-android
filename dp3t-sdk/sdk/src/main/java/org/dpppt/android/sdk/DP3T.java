@@ -29,7 +29,6 @@ import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.backend.UserAgentInterceptor;
 import org.dpppt.android.sdk.internal.*;
 import org.dpppt.android.sdk.internal.backend.CertificatePinning;
-import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.history.HistoryDatabase;
@@ -128,7 +127,7 @@ public class DP3T {
 		return initialized;
 	}
 
-	private static void checkInit() throws IllegalStateException {
+	protected static void checkInit() throws IllegalStateException {
 		if (!initialized) {
 			throw new IllegalStateException("You have to call DP3T.init() in your Application.onCreate()");
 		}
@@ -271,7 +270,7 @@ public class DP3T {
 
 							try {
 								appConfigManager.getBackendReportRepository(activity)
-										.addGaenExposee(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
+										.addGaenExposeeAsync(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
 												new ResponseCallback<String>() {
 													@Override
 													public void onSuccess(String authToken) {
@@ -290,9 +289,7 @@ public class DP3T {
 							} catch (IllegalStateException e) {
 								reportFailedIAmInfected(e);
 							}
-						}, e -> {
-							reportFailedIAmInfected(e);
-						});
+						}, DP3T::reportFailedIAmInfected);
 	}
 
 	private static void reportFailedIAmInfected(Throwable e) {
@@ -306,53 +303,7 @@ public class DP3T {
 
 	public static void sendFakeInfectedRequest(Context context, ExposeeAuthMethod exposeeAuthMethod, Runnable successCallback,
 			Runnable errorCallback) {
-		checkInit();
-
-		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		Boolean withFederationGateway = appConfigManager.getWithFederationGateway();
-
-		int delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
-		GaenRequest exposeeListRequest = new GaenRequest(new ArrayList<>(), delayedKeyDate, withFederationGateway);
-		exposeeListRequest.setFake(1);
-
-		boolean devHistory = appConfigManager.getDevHistory();
-		try {
-			appConfigManager.getBackendReportRepository(context)
-					.addGaenExposee(exposeeListRequest, exposeeAuthMethod,
-							new ResponseCallback<String>() {
-								@Override
-								public void onSuccess(String authToken) {
-									Logger.d(TAG, "successfully sent fake request");
-									if (devHistory) {
-										HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
-										historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.FAKE_REQUEST, null, true,
-												System.currentTimeMillis()));
-									}
-									if (successCallback != null) successCallback.run();
-								}
-
-								@Override
-								public void onError(Throwable throwable) {
-									Logger.d(TAG, "failed to send fake request");
-									if (devHistory) {
-										HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
-										String status = throwable instanceof StatusCodeException ?
-														String.valueOf(((StatusCodeException) throwable).getCode()) : "NETW";
-										historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.FAKE_REQUEST, status, false,
-												System.currentTimeMillis()));
-									}
-									if (errorCallback != null) errorCallback.run();
-								}
-							});
-		} catch (IllegalStateException e) {
-			Logger.d(TAG, "failed to send fake request: " + e.getLocalizedMessage());
-			if (devHistory) {
-				HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
-				historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.FAKE_REQUEST, "SYST", false,
-						System.currentTimeMillis()));
-			}
-			if (errorCallback != null) errorCallback.run();
-		}
+		DP3TKotlin.sendFakeInfectedRequestAsync(context, exposeeAuthMethod, successCallback, errorCallback);
 	}
 
 	public static void stop(Context context) {

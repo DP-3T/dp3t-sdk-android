@@ -271,7 +271,7 @@ public class ControlsFragment extends Fragment {
 		boolean isRunning = status.isTracingEnabled();
 		buttonStartStopTracing.setSelected(isRunning);
 		buttonStartStopTracing.setText(getString(isRunning ? R.string.button_tracing_stop
-															: R.string.button_tracing_start));
+														   : R.string.button_tracing_start));
 		buttonStartStopTracing.setOnClickListener(v -> {
 			if (isRunning) {
 				DP3T.stop(v.getContext());
@@ -308,7 +308,9 @@ public class ControlsFragment extends Fragment {
 		Button buttonReportFake = view.findViewById(R.id.home_button_report_fake);
 		buttonReportFake.setOnClickListener(
 				v -> {
-					DP3T.sendFakeInfectedRequest(getContext(), null, null, null);
+					DP3T.sendFakeInfectedRequest(getContext(), null,
+							() -> Toast.makeText(context, "Fake request sent successfully!", Toast.LENGTH_LONG).show(),
+							() -> Toast.makeText(context, "Sending fake request failed!", Toast.LENGTH_LONG).show());
 				});
 	}
 

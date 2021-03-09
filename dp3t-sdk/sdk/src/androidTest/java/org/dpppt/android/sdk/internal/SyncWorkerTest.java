@@ -14,6 +14,8 @@ import android.util.Log;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.work.Configuration;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 import androidx.work.impl.utils.SynchronousExecutor;
 import androidx.work.testing.WorkManagerTestInitHelper;
 
@@ -22,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.android.gms.nearby.exposurenotification.ExposureWindow;
@@ -34,6 +37,7 @@ import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.internal.backend.ProxyConfig;
 import org.dpppt.android.sdk.internal.logger.LogLevel;
 import org.dpppt.android.sdk.internal.logger.Logger;
+import org.dpppt.android.sdk.internal.nearby.ExposureWindowMatchingWorker;
 import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.nearby.TestGoogleExposureClient;
@@ -203,7 +207,7 @@ public class SyncWorkerTest {
 	}
 
 	@Test
-	public void testExposure() {
+	public void testExposure() throws ExecutionException, InterruptedException {
 		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
 		params.exposureWindows = new ArrayList<>();
 		ArrayList<ScanInstance> scanInstances = new ArrayList<>();
@@ -227,7 +231,7 @@ public class SyncWorkerTest {
 	}
 
 	@Test
-	public void testExposureNotLongEnough() {
+	public void testExposureNotLongEnough() throws ExecutionException, InterruptedException {
 		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
 		params.exposureWindows = new ArrayList<>();
 		ArrayList<ScanInstance> scanInstances = new ArrayList<>();
@@ -258,7 +262,7 @@ public class SyncWorkerTest {
 	}
 
 	@Test
-	public void testExposureTooLongAgo() {
+	public void testExposureTooLongAgo() throws ExecutionException, InterruptedException {
 		TestGoogleExposureClient.ExposureTestParameters params = new TestGoogleExposureClient.ExposureTestParameters();
 		params.exposureWindows = new ArrayList<>();
 		ArrayList<ScanInstance> scanInstances = new ArrayList<>();
@@ -282,7 +286,7 @@ public class SyncWorkerTest {
 	}
 
 	@Test
-	public void testExposureTooLongAgoWithChangedPeriod() {
+	public void testExposureTooLongAgoWithChangedPeriod() throws ExecutionException, InterruptedException {
 
 		DP3T.setNumberOfDaysToConsiderForExposure(context, 12);
 
@@ -309,7 +313,7 @@ public class SyncWorkerTest {
 	}
 
 	@Test
-	public void testExposureLongAgoWithChangedPeriod() {
+	public void testExposureLongAgoWithChangedPeriod() throws ExecutionException, InterruptedException {
 
 		DP3T.setNumberOfDaysToConsiderForExposure(context, 14);
 
@@ -335,7 +339,8 @@ public class SyncWorkerTest {
 		assertEquals(InfectionStatus.EXPOSED, status.getInfectionStatus());
 	}
 
-	private void testExposure(TestGoogleExposureClient.ExposureTestParameters params) {
+	private void testExposure(TestGoogleExposureClient.ExposureTestParameters params)
+			throws ExecutionException, InterruptedException {
 		AtomicLong time = new AtomicLong(yesterdayAt8am());
 		server.setDispatcher(new Dispatcher() {
 			@Override
@@ -353,6 +358,8 @@ public class SyncWorkerTest {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		waitForAllRunningWorkersToStop();
 	}
 
 	private long yesterdayAt3am() {
@@ -380,6 +387,28 @@ public class SyncWorkerTest {
 		cal.set(Calendar.HOUR_OF_DAY, 20);
 		cal.set(Calendar.MINUTE, 0);
 		return cal.getTimeInMillis();
+	}
+
+
+	private void waitForAllRunningWorkersToStop() throws ExecutionException, InterruptedException {
+		boolean hasRunningWork;
+		do {
+			hasRunningWork = false;
+			for (WorkInfo workInfo : WorkManager.getInstance(context).getWorkInfosByTag(SyncWorker.WORK_TAG).get()) {
+				if (workInfo.getState() == WorkInfo.State.RUNNING) {
+					hasRunningWork = true;
+				}
+			}
+			for (WorkInfo workInfo : WorkManager.getInstance(context).getWorkInfosByTag(ExposureWindowMatchingWorker.WORK_TAG)
+					.get()) {
+				if (workInfo.getState() == WorkInfo.State.RUNNING) {
+					hasRunningWork = true;
+				}
+			}
+			if (hasRunningWork) {
+				Thread.sleep(500);
+			}
+		} while (hasRunningWork);
 	}
 
 }

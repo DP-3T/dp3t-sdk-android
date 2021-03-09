@@ -27,18 +27,19 @@ class ExposureWindowMatchingWorker(context: Context, workerParams: WorkerParamet
 
 	companion object {
 
+		const val WORK_TAG = "org.dpppt.android.sdk.internal.nearby.ExposureWindowMatchingWorker"
 		private const val TAG = "MatchingWorker"
 
 		@JvmStatic
 		fun startMatchingWorker(context: Context) {
 			val workManager = WorkManager.getInstance(context)
-			workManager.enqueue(OneTimeWorkRequest.from(ExposureWindowMatchingWorker::class.java))
+			workManager.enqueue(OneTimeWorkRequest.Builder(ExposureWindowMatchingWorker::class.java).addTag(WORK_TAG).build())
 			Logger.d(TAG, "scheduled MatchingWorker")
 		}
 
 		private fun addDaysWhereExposureLimitIsReached(context: Context, exposureWindows: List<ExposureWindow>) {
 			val appConfigManager = AppConfigManager.getInstance(context)
-			val attenuationDurationsInSecondsForDate = HashMap<DayDate, IntArray>()
+			val attenuationDurationsInSecondsForDate = mutableMapOf<DayDate, IntArray>()
 			for (exposureWindow in exposureWindows) {
 				val windowDate = DayDate(exposureWindow.dateMillisSinceEpoch)
 				Logger.d(TAG, "Received ExposureWindow for " + windowDate.formatAsString() + ": " + exposureWindow.toString())
@@ -64,7 +65,7 @@ class ExposureWindowMatchingWorker(context: Context, workerParams: WorkerParamet
 
 		private fun getExposureDaysFromAttenuationDurations(
 			context: Context,
-			attenuationDurationsInSecondsForDate: HashMap<DayDate, IntArray>
+			attenuationDurationsInSecondsForDate: Map<DayDate, IntArray>
 		): List<ExposureDay> {
 			val exposureDays: MutableList<ExposureDay> = ArrayList()
 			val maxAgeForExposure = DayDate().subtractDays(AppConfigManager.getInstance(context).numberOfDaysToConsiderForExposure)

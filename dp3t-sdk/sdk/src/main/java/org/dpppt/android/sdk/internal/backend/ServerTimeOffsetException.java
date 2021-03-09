@@ -10,4 +10,6 @@
 
 package org.dpppt.android.sdk.internal.backend;
 
-public class ServerTimeOffsetException extends RuntimeException { }
+import java.io.IOException;
+
+public class ServerTimeOffsetException extends IOException { }
