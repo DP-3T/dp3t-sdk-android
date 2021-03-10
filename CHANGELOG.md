@@ -1,8 +1,12 @@
 # Changelog for DP3T-SDK Android
 
-## unreleased
+## version 2.1.0 (10.03.2021)
 
 - Removed logic for next-day-upload for the TEK of the reporting day. With this change, you must **make sure that Google configured EN for your country/app to always release the last TEK directly with a shortened rolling period**.
+- Refactored Workers to Kotlin CoroutineWorkers for better handling of blocking EN API calls
+- Added DP3TKotlin class with suspend function to send fake infected request
+- Added flag to enable **federation gateway** sync: by default flag is not set, can be configured to be explicitly true or false
+- SignatureException is now a subclass of IOException
 
 ## version 2.0.2 (22.01.2021)
 
