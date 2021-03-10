@@ -21,6 +21,7 @@ import org.dpppt.android.sdk.internal.storage.ExposureDayStorage
 import org.dpppt.android.sdk.models.DayDate
 import org.dpppt.android.sdk.models.ExposureDay
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.ceil
 
 class ExposureWindowMatchingWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
@@ -29,6 +30,7 @@ class ExposureWindowMatchingWorker(context: Context, workerParams: WorkerParamet
 
 		const val WORK_TAG = "org.dpppt.android.sdk.internal.nearby.ExposureWindowMatchingWorker"
 		private const val TAG = "MatchingWorker"
+		private var isWorkInProgress = AtomicBoolean(false)
 
 		@JvmStatic
 		fun startMatchingWorker(context: Context) {
@@ -38,28 +40,36 @@ class ExposureWindowMatchingWorker(context: Context, workerParams: WorkerParamet
 		}
 
 		private fun addDaysWhereExposureLimitIsReached(context: Context, exposureWindows: List<ExposureWindow>) {
-			val appConfigManager = AppConfigManager.getInstance(context)
-			val attenuationDurationsInSecondsForDate = mutableMapOf<DayDate, IntArray>()
-			for (exposureWindow in exposureWindows) {
-				val windowDate = DayDate(exposureWindow.dateMillisSinceEpoch)
-				Logger.d(TAG, "Received ExposureWindow for " + windowDate.formatAsString() + ": " + exposureWindow.toString())
-				if (!attenuationDurationsInSecondsForDate.containsKey(windowDate)) {
-					attenuationDurationsInSecondsForDate[windowDate] = intArrayOf(0, 0, 0)
-				}
-				val attenuationDurationsInSeconds = attenuationDurationsInSecondsForDate[windowDate] ?: continue
-				for (scanInstance in exposureWindow.scanInstances) {
-					if (scanInstance.typicalAttenuationDb < appConfigManager.attenuationThresholdLow) {
-						attenuationDurationsInSeconds[0] += scanInstance.secondsSinceLastScan
-					} else if (scanInstance.typicalAttenuationDb < appConfigManager.attenuationThresholdMedium) {
-						attenuationDurationsInSeconds[1] += scanInstance.secondsSinceLastScan
-					} else {
-						attenuationDurationsInSeconds[2] += scanInstance.secondsSinceLastScan
+			if (!isWorkInProgress.compareAndSet(false, true)) {
+				return
+			}
+
+			try {
+				val appConfigManager = AppConfigManager.getInstance(context)
+				val attenuationDurationsInSecondsForDate = mutableMapOf<DayDate, IntArray>()
+				for (exposureWindow in exposureWindows) {
+					val windowDate = DayDate(exposureWindow.dateMillisSinceEpoch)
+					Logger.d(TAG, "Received ExposureWindow for " + windowDate.formatAsString() + ": " + exposureWindow.toString())
+					if (!attenuationDurationsInSecondsForDate.containsKey(windowDate)) {
+						attenuationDurationsInSecondsForDate[windowDate] = intArrayOf(0, 0, 0)
+					}
+					val attenuationDurationsInSeconds = attenuationDurationsInSecondsForDate[windowDate] ?: continue
+					for (scanInstance in exposureWindow.scanInstances) {
+						if (scanInstance.typicalAttenuationDb < appConfigManager.attenuationThresholdLow) {
+							attenuationDurationsInSeconds[0] += scanInstance.secondsSinceLastScan
+						} else if (scanInstance.typicalAttenuationDb < appConfigManager.attenuationThresholdMedium) {
+							attenuationDurationsInSeconds[1] += scanInstance.secondsSinceLastScan
+						} else {
+							attenuationDurationsInSeconds[2] += scanInstance.secondsSinceLastScan
+						}
 					}
 				}
-			}
-			val exposureDays = getExposureDaysFromAttenuationDurations(context, attenuationDurationsInSecondsForDate)
-			if (exposureDays.isNotEmpty()) {
-				ExposureDayStorage.getInstance(context).addExposureDays(context, exposureDays)
+				val exposureDays = getExposureDaysFromAttenuationDurations(context, attenuationDurationsInSecondsForDate)
+				if (exposureDays.isNotEmpty()) {
+					ExposureDayStorage.getInstance(context).addExposureDays(context, exposureDays)
+				}
+			} finally {
+				isWorkInProgress.set(false)
 			}
 		}
 
