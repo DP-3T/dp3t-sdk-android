@@ -12,7 +12,7 @@ package org.dpppt.android.sdk.internal.backend
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.dpppt.android.sdk.backend.ResponseCallback
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest
@@ -41,7 +41,7 @@ class BackendReportRepository(context: Context, reportBaseUrl: String) : Reposit
 		exposeeAuthMethod: ExposeeAuthMethod?,
 		responseCallback: ResponseCallback<String?>
 	) {
-		GlobalScope.async {
+		GlobalScope.launch {
 			try {
 				val response = addGaenExposee(exposeeRequest, exposeeAuthMethod)
 				withContext(Dispatchers.Main) {
