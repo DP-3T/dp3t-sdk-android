@@ -30,7 +30,7 @@ class ExposureWindowMatchingWorker(context: Context, workerParams: WorkerParamet
 
 		const val WORK_TAG = "org.dpppt.android.sdk.internal.nearby.ExposureWindowMatchingWorker"
 		private const val TAG = "MatchingWorker"
-		private var isWorkInProgress = AtomicBoolean(false)
+		private val isWorkInProgress = AtomicBoolean(false)
 
 		@JvmStatic
 		fun startMatchingWorker(context: Context) {

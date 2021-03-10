@@ -44,7 +44,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 
 		private var bucketSignaturePublicKey: PublicKey? = null
 
-		private var isSyncInProgress = AtomicBoolean(false)
+		private val isSyncInProgress = AtomicBoolean(false)
 
 		@JvmStatic
 		fun startSyncWorker(context: Context) {
