@@ -1,6 +1,6 @@
 # Changelog for DP3T-SDK Android
 
-## version 2.1.0 (10.03.2021)
+## version 2.1.0 (11.03.2021)
 
 - Removed logic for next-day-upload for the TEK of the reporting day. With this change, you must **make sure that Google configured EN for your country/app to always release the last TEK directly with a shortened rolling period**.
 - Refactored Workers to Kotlin CoroutineWorkers for better handling of blocking EN API calls
