@@ -29,7 +29,6 @@ import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.backend.UserAgentInterceptor;
 import org.dpppt.android.sdk.internal.*;
 import org.dpppt.android.sdk.internal.backend.CertificatePinning;
-import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.history.HistoryDatabase;
@@ -41,8 +40,7 @@ import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.storage.ErrorNotificationStorage;
 import org.dpppt.android.sdk.internal.storage.ExposureDayStorage;
-import org.dpppt.android.sdk.internal.storage.PendingKeyUploadStorage;
-import org.dpppt.android.sdk.internal.storage.models.PendingKey;
+import org.dpppt.android.sdk.internal.util.PackageManagerUtil;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposeeAuthMethod;
@@ -90,6 +88,13 @@ public class DP3T {
 			return;
 		}
 
+		int appVersionCode = PackageManagerUtil.getAppVersionCode(context);
+		if (appConfigManager.getLastKnownAppVersionCode() != appVersionCode) {
+			appConfigManager.setLastKnownAppVersionCode(appVersionCode);
+			// cancel any active sync workers (will be restarted below if needed)
+			SyncWorker.stopSyncWorker(context);
+		}
+
 		context.registerReceiver(
 				new BluetoothStateBroadcastReceiver(),
 				new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
@@ -122,7 +127,7 @@ public class DP3T {
 		return initialized;
 	}
 
-	private static void checkInit() throws IllegalStateException {
+	protected static void checkInit() throws IllegalStateException {
 		if (!initialized) {
 			throw new IllegalStateException("You have to call DP3T.init() in your Application.onCreate()");
 		}
@@ -194,7 +199,7 @@ public class DP3T {
 	public static void sync(Context context) {
 		checkInit();
 		try {
-			new SyncWorker.SyncImpl(context).doSync();
+			new SyncWorker.SyncImpl(context).doSyncBlocking();
 		} catch (Exception ignored) {
 			// has been handled upstream
 		}
@@ -252,37 +257,26 @@ public class DP3T {
 						temporaryExposureKeys -> {
 							List<TemporaryExposureKey> filteredKeys = new ArrayList<>();
 							int delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
-							boolean delayedKeyAlreadyPresent = false;
 							for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
 								if (temporaryExposureKey.getRollingStartIntervalNumber() >=
 										DateUtil.getRollingStartNumberForDate(onsetDate)) {
 									filteredKeys.add(temporaryExposureKey);
-									if (temporaryExposureKey.getRollingStartIntervalNumber() == delayedKeyDate) {
-										delayedKeyAlreadyPresent = true;
-									}
 								}
 							}
-							GaenRequest exposeeListRequest = new GaenRequest(filteredKeys, delayedKeyDate);
-
 							AppConfigManager appConfigManager = AppConfigManager.getInstance(activity);
+							Boolean withFederationGateway = appConfigManager.getWithFederationGateway();
+
+							GaenRequest exposeeListRequest = new GaenRequest(filteredKeys, delayedKeyDate, withFederationGateway);
+
 							try {
-								boolean finalDelayedKeyAlreadyPresent = delayedKeyAlreadyPresent;
 								appConfigManager.getBackendReportRepository(activity)
-										.addGaenExposee(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
+										.addGaenExposeeAsync(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
 												new ResponseCallback<String>() {
 													@Override
 													public void onSuccess(String authToken) {
-														//if the currentDay key was already released (because of same day TEK
-														// release) we do a fake request the next day, otherwise we upload todays
-														// key tomorrow
-														PendingKey delayedKey = new PendingKey(delayedKeyDate, authToken,
-																finalDelayedKeyAlreadyPresent ? 1 : 0);
-														PendingKeyUploadStorage.getInstance(activity).addPendingKey(delayedKey);
 														appConfigManager.setIAmInfected(true);
-														if (finalDelayedKeyAlreadyPresent) {
-															DP3T.stop(activity);
-															appConfigManager.setIAmInfectedIsResettable(true);
-														}
+														appConfigManager.setIAmInfectedIsResettable(true);
+														DP3T.stop(activity);
 														pendingIAmInfectedRequest.callback.onSuccess(null);
 														pendingIAmInfectedRequest = null;
 													}
@@ -295,9 +289,7 @@ public class DP3T {
 							} catch (IllegalStateException e) {
 								reportFailedIAmInfected(e);
 							}
-						}, e -> {
-							reportFailedIAmInfected(e);
-						});
+						}, DP3T::reportFailedIAmInfected);
 	}
 
 	private static void reportFailedIAmInfected(Throwable e) {
@@ -311,53 +303,7 @@ public class DP3T {
 
 	public static void sendFakeInfectedRequest(Context context, ExposeeAuthMethod exposeeAuthMethod, Runnable successCallback,
 			Runnable errorCallback) {
-		checkInit();
-
-		int delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
-		GaenRequest exposeeListRequest = new GaenRequest(new ArrayList<>(), delayedKeyDate);
-		exposeeListRequest.setFake(1);
-
-		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
-		boolean devHistory = appConfigManager.getDevHistory();
-		try {
-			appConfigManager.getBackendReportRepository(context)
-					.addGaenExposee(exposeeListRequest, exposeeAuthMethod,
-							new ResponseCallback<String>() {
-								@Override
-								public void onSuccess(String authToken) {
-									PendingKey delayedKey = new PendingKey(delayedKeyDate, authToken, 1);
-									PendingKeyUploadStorage.getInstance(context).addPendingKey(delayedKey);
-									Logger.d(TAG, "successfully sent fake request");
-									if (devHistory) {
-										HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
-										historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.FAKE_REQUEST, null, true,
-												System.currentTimeMillis()));
-									}
-									if (successCallback != null) successCallback.run();
-								}
-
-								@Override
-								public void onError(Throwable throwable) {
-									Logger.d(TAG, "failed to send fake request");
-									if (devHistory) {
-										HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
-										String status = throwable instanceof StatusCodeException ?
-														String.valueOf(((StatusCodeException) throwable).getCode()) : "NETW";
-										historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.FAKE_REQUEST, status, false,
-												System.currentTimeMillis()));
-									}
-									if (errorCallback != null) errorCallback.run();
-								}
-							});
-		} catch (IllegalStateException e) {
-			Logger.d(TAG, "failed to send fake request: " + e.getLocalizedMessage());
-			if (devHistory) {
-				HistoryDatabase historyDatabase = HistoryDatabase.getInstance(context);
-				historyDatabase.addEntry(new HistoryEntry(HistoryEntryType.FAKE_REQUEST, "SYST", false,
-						System.currentTimeMillis()));
-			}
-			if (errorCallback != null) errorCallback.run();
-		}
+		DP3TKotlin.sendFakeInfectedRequestAsync(context, exposeeAuthMethod, successCallback, errorCallback);
 	}
 
 	public static void stop(Context context) {
@@ -478,6 +424,10 @@ public class DP3T {
 		appConfigManager.setNumberOfDaysToKeepExposedDays(days);
 	}
 
+	public static void setWithFederationGateway(Context context, @Nullable Boolean withFederationGateway) {
+		AppConfigManager.getInstance(context).setWithFederationGateway(withFederationGateway);
+	}
+
 	public static void clearData(Context context) {
 		checkInit();
 		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
@@ -487,7 +437,6 @@ public class DP3T {
 
 		appConfigManager.clearPreferences();
 		ExposureDayStorage.getInstance(context).clear();
-		PendingKeyUploadStorage.getInstance(context).clear();
 		ErrorNotificationStorage.getInstance(context).clear();
 		Logger.clear();
 	}

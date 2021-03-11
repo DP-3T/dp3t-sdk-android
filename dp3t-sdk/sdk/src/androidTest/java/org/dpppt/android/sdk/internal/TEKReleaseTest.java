@@ -29,13 +29,11 @@ import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.backend.ProxyConfig;
 import org.dpppt.android.sdk.internal.backend.models.GaenKey;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
-import org.dpppt.android.sdk.internal.backend.models.GaenSecondDay;
 import org.dpppt.android.sdk.internal.logger.LogLevel;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.GaenStateHelper;
 import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.nearby.TestGoogleExposureClient;
-import org.dpppt.android.sdk.internal.storage.PendingKeyUploadStorage;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.ApplicationInfo;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
@@ -83,24 +81,11 @@ public class TEKReleaseTest {
 		DP3T.init(context, new ApplicationInfo(server.url("/bucket/").toString(), server.url("/report/").toString()),
 				null);
 		appConfigManager.setTracingEnabled(true);
-		PendingKeyUploadStorage.getInstance(context).clear();
-	}
-
-
-	@Test
-	public void testIAmInfectedTodayKeyAlreadyReleased() throws Exception {
-		testIAmInfected(true, false, 5, true);
 	}
 
 	@Test
-	public void testIAmInfectedTodayKeyNotReleased() throws Exception {
-		testIAmInfected(false, true, 4, false);
-	}
-
-	private void testIAmInfected(boolean currentDayKeyReleased, boolean expectedTracingEnabledDirectlyAfterSendingInfection,
-			int expectedNumberOfTEKToday, boolean expectedNextDayRequestIsFake) throws Exception {
-
-		testGoogleExposureClient = new TestGoogleExposureClient(context, currentDayKeyReleased);
+	public void testIAmInfected() throws Exception {
+		testGoogleExposureClient = new TestGoogleExposureClient(context);
 		GoogleExposureClient.wrapTestClient(testGoogleExposureClient);
 		testGoogleExposureClient.setTime(System.currentTimeMillis());
 
@@ -108,38 +93,28 @@ public class TEKReleaseTest {
 
 		AtomicInteger exposedFakeRequestCounter = new AtomicInteger(0);
 		AtomicInteger exposedRequestCounter = new AtomicInteger(0);
-		AtomicInteger exposednextdayFakeRequestCounter = new AtomicInteger(0);
-		AtomicInteger exposednextdayRequestCounter = new AtomicInteger(0);
 		ArrayList<Integer> sentRollingStartNumbers = new ArrayList<>();
-		ArrayList<Integer> nextdaySentRollingStartNumbers = new ArrayList<>();
 
 		//Onset Date is 4 days ago
 		long onsetDate = System.currentTimeMillis() - 1000 * 60 * 60 * 96;
+		int expectedNumberOfTEKToday = 5;
 
 		server.setDispatcher(new Dispatcher() {
 			@Override
 			public MockResponse dispatch(RecordedRequest request) {
 				String body = new String(request.getBody().readByteArray());
-				if (request.getPath().equals("/bucket/v1/gaen/exposed")) {
+				if (request.getPath().equals("/bucket/v2/gaen/exposed")) {
 					GaenRequest gaenRequest = Json.fromJson(body, GaenRequest.class);
 					int fake = gaenRequest.isFake();
-					if (fake == 1) exposedFakeRequestCounter.getAndIncrement();
-					else {
+					if (fake == 1) {
+						exposedFakeRequestCounter.getAndIncrement();
+					} else {
 						for (GaenKey k : gaenRequest.getGaenKeys()) {
 							if (!k.isFake()) {
 								sentRollingStartNumbers.add(k.getRollingStartNumber());
 							}
 						}
 						exposedRequestCounter.getAndIncrement();
-					}
-				}
-				if (request.getPath().equals("/bucket/v1/gaen/exposednextday")) {
-					GaenSecondDay gaenSecondDayRequest = Json.fromJson(body, GaenSecondDay.class);
-					int fake = gaenSecondDayRequest.isFake();
-					if (fake == 1) exposednextdayFakeRequestCounter.getAndIncrement();
-					else {
-						exposednextdayRequestCounter.getAndIncrement();
-						nextdaySentRollingStartNumbers.add(gaenSecondDayRequest.getDelayedKey().getRollingStartNumber());
 					}
 				}
 				return new MockResponse().setResponseCode(200);
@@ -162,32 +137,26 @@ public class TEKReleaseTest {
 
 		AtomicLong today = new AtomicLong(System.currentTimeMillis());
 		try {
-			new SyncWorker.SyncImpl(context, today.get()).doSync();
+			new SyncWorker.SyncImpl(context, today.get()).doSyncBlocking();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 		assertEquals(1, exposedRequestCounter.get());
 		assertEquals(0, exposedFakeRequestCounter.get());
-		assertEquals(0, exposednextdayFakeRequestCounter.get());
-		assertEquals(0, exposednextdayRequestCounter.get());
-		assertEquals(expectedTracingEnabledDirectlyAfterSendingInfection, DP3T.isTracingEnabled(context));
+		assertFalse(DP3T.isTracingEnabled(context));
 		assertEquals(InfectionStatus.INFECTED, DP3T.getStatus(context).getInfectionStatus());
 		assertEquals(expectedNumberOfTEKToday, sentRollingStartNumbers.size());
 		for (int k : sentRollingStartNumbers) {
 			assertTrue(k >= DateUtil.getRollingStartNumberForDate(onsetDate));
-			if (currentDayKeyReleased) {
-				assertTrue(k <= DateUtil.getRollingStartNumberForDate(today.get()));
-			} else {
-				assertTrue(k < DateUtil.getRollingStartNumberForDate(today.get()));
-			}
+			assertTrue(k <= DateUtil.getRollingStartNumberForDate(today.get()));
 		}
 
 		AtomicLong tomorrow = new AtomicLong(today.get() + 1000 * 60 * 60 * 24);
 		testGoogleExposureClient.setTime(tomorrow.get());
 
 		try {
-			new SyncWorker.SyncImpl(context, tomorrow.get()).doSync();
+			new SyncWorker.SyncImpl(context, tomorrow.get()).doSyncBlocking();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -196,19 +165,8 @@ public class TEKReleaseTest {
 
 		assertEquals(1, exposedRequestCounter.get());
 		assertEquals(0, exposedFakeRequestCounter.get());
-		if (expectedNextDayRequestIsFake) {
-			assertEquals(1, exposednextdayFakeRequestCounter.get());
-			assertEquals(0, exposednextdayRequestCounter.get());
-		} else {
-			assertEquals(0, exposednextdayFakeRequestCounter.get());
-			assertEquals(1, exposednextdayRequestCounter.get());
-		}
 		assertFalse(DP3T.isTracingEnabled(context));
 		assertEquals(InfectionStatus.INFECTED, DP3T.getStatus(context).getInfectionStatus());
-		for (int k : nextdaySentRollingStartNumbers) {
-			//the rolling start number that is sent tomorrow must be equals to today's rolling start number
-			assertEquals(k, DateUtil.getRollingStartNumberForDate(today.get()));
-		}
 	}
 
 
