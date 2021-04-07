@@ -1,0 +1,46 @@
+name: Upload AAR to Sonatype Nexus
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: "Upload AAR to Sonatype Nexus"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Upload artifacts
+        env:
+          SIGNING_KEY_ARMOR: ${{secrets.MAVEN_SIGNING_KEY_ARMOR_BASE64}}
+          SIGNING_KEY_ID: ${{secrets.MAVEN_SIGNING_KEY_ID}}
+          SIGNING_KEY_PASSWORD: ${{secrets.MAVEN_SIGNING_KEY_PASSPHRASE}}
+          SONATYPE_NEXUS_USERNAME: ${{secrets.SONATYPE_NEXUS_USERNAME}}
+          SONATYPE_NEXUS_PASSWORD: ${{secrets.SONATYPE_NEXUS_PASSWORD}}
+        run: |
+          echo "Create .gpg key from secret"
+          echo $SIGNING_KEY_ARMOR | base64 --decode > ./signingkey.asc
+          gpg --quiet --output $GITHUB_WORKSPACE/signingkey.gpg --dearmor ./signingkey.asc
+
+          cd dp3t-sdk
+
+          ./gradlew uploadArchives -Psigning.secretKeyRingFile=$GITHUB_WORKSPACE/signingkey.gpg -Psigning.password=$SIGNING_KEY_PASSWORD -Psigning.keyId=$SIGNING_KEY_ID
+
+          echo "Appending calibration version suffix"
+          sed -i "/^VERSION_NAME=/s/$/-calibration/" gradle.properties
+
+          echo "Set calibration publish variant"
+          sed -i "s/\(PUBLISH_VARIANT=\).*/\1calibrationRelease/" gradle.properties
+
+          ./gradlew uploadArchives -Psigning.secretKeyRingFile=$GITHUB_WORKSPACE/signingkey.gpg -Psigning.password=$SIGNING_KEY_PASSWORD -Psigning.keyId=$SIGNING_KEY_ID
+      - name: Close and release Sonatype repository
+        if: ${{ success() }}
+        env:
+          SONATYPE_NEXUS_USERNAME: ${{secrets.SONATYPE_NEXUS_USERNAME}}
+          SONATYPE_NEXUS_PASSWORD: ${{secrets.SONATYPE_NEXUS_PASSWORD}}
+        run: cd dp3t-sdk; ./gradlew closeAndReleaseRepository
