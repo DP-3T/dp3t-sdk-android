@@ -11,9 +11,9 @@ package org.dpppt.android.sdk.internal;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-
 import androidx.annotation.Nullable;
 
+import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.internal.backend.BackendReportRepository;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.ApplicationInfo;
@@ -36,7 +36,7 @@ public class AppConfigManager {
     private static final String PREF_NUMBER_OF_SYNCS_PER_DAY = "numberOfSyncsPerDay";
     public static final int MAX_SYNCS_PER_DAY = 6;
     public static final int MIN_SYNCS_PER_DAY = 1;
-    private static final String PREF_LAST_SYNC_NET_SUCCESS = "lastSyncNetSuccess";
+    private static final String PREF_LAST_SYNC_ERROR = "lastSyncError";
 	private static final String PREF_I_AM_INFECTED = "IAmInfected";
 	private static final String PREF_I_AM_INFECTED_IS_RESETTABLE = "IAmInfectedIsResettable";
 	private static final String PREF_LAST_SYNC_CALL_TIME = "lastSyncCallTime";
@@ -103,12 +103,25 @@ public class AppConfigManager {
     public int getSyncsPerDay() {
         return sharedPrefs.getInt(PREF_NUMBER_OF_SYNCS_PER_DAY, MAX_SYNCS_PER_DAY);
     }
-	public void setLastSyncNetworkSuccess(boolean success) {
-		sharedPrefs.edit().putBoolean(PREF_LAST_SYNC_NET_SUCCESS, success).apply();
+
+	public void setLastSyncNetworkError(@Nullable TracingStatus.ErrorState errorState) {
+		String serialized = errorState == null ? null : (errorState.name() + ":" + errorState.getErrorCode());
+		sharedPrefs.edit().putString(PREF_LAST_SYNC_ERROR, serialized).apply();
 	}
 
-	public boolean getLastSyncNetworkSuccess() {
-		return sharedPrefs.getBoolean(PREF_LAST_SYNC_NET_SUCCESS, true);
+	@Nullable
+	public TracingStatus.ErrorState getLastSyncNetworkError() {
+		String serialized = sharedPrefs.getString(PREF_LAST_SYNC_ERROR, null);
+		if (serialized == null) {
+			return null;
+		} else {
+			String[] parts = serialized.split(":", 2);
+			TracingStatus.ErrorState errorState = TracingStatus.ErrorState.tryValueOf(parts[0]);
+			if (errorState != null && parts.length >= 2) {
+				errorState.setErrorCode(parts[1]);
+			}
+			return errorState;
+		}
 	}
 
 	public boolean getIAmInfected() {

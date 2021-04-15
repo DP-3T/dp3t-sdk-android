@@ -33,7 +33,6 @@ import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
-import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.ApiExceptionUtil;
 import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
 import org.dpppt.android.sdk.internal.util.LocationServiceUtil;
@@ -73,14 +72,8 @@ public class ErrorHelper {
 			errors.add(ErrorState.BATTERY_OPTIMIZER_ENABLED);
 		}
 
-		if (!AppConfigManager.getInstance(context).getLastSyncNetworkSuccess()) {
-			SyncErrorState syncErrorState = SyncErrorState.getInstance();
-			ErrorState syncError = syncErrorState.getSyncError();
-			if (syncError == null) {
-				Logger.w(TAG, "lost sync error state");
-				syncError = ErrorState.SYNC_ERROR_NETWORK;
-				syncError.setErrorCode("LOST");
-			}
+		ErrorState syncError = SyncErrorState.getInstance().getSyncError(context);
+		if (syncError != null) {
 			errors.add(syncError);
 		}
 

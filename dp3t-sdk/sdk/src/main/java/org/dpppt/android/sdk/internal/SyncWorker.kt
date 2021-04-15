@@ -117,15 +117,13 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 							return
 						}
 						Logger.i(TAG, "synced")
-						AppConfigManager.getInstance(context).lastSyncNetworkSuccess = true
 					}
-					SyncErrorState.getInstance().syncError = null
+					SyncErrorState.getInstance().setSyncError(context, null)
 					BroadcastHelper.sendUpdateAndErrorBroadcast(context)
 				} catch (e: Exception) {
 					Logger.e(TAG, "sync", e)
-					AppConfigManager.getInstance(context).lastSyncNetworkSuccess = false
 					val syncError = ErrorHelper.getSyncErrorFromException(e, true)
-					SyncErrorState.getInstance().syncError = syncError
+					SyncErrorState.getInstance().setSyncError(context, syncError)
 					BroadcastHelper.sendUpdateAndErrorBroadcast(context)
 					throw e
 				}
