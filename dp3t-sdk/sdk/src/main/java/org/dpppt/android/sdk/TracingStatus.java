@@ -71,7 +71,7 @@ public class TracingStatus {
 		SYNC_ERROR_SIGNATURE(R.string.dp3t_sdk_service_notification_error_sync_signature),
 		SYNC_ERROR_API_EXCEPTION(R.string.dp3t_sdk_service_notification_error_sync_api);
 
-		@StringRes private int errorString;
+		@StringRes private final int errorString;
 		private String errorCode;
 
 		ErrorState(@StringRes int errorString) {
