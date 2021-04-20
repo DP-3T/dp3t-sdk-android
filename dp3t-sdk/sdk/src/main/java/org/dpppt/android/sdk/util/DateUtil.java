@@ -25,4 +25,8 @@ public class DateUtil {
 		return getRollingStartNumberForDate(onsetDate.getStartOfDayTimestamp());
 	}
 
+	public static DayDate getDayDateForRollingStartNumber(int rollingStartNumber) {
+		return new DayDate(rollingStartNumber / 24 / 6 * 1000L * 60 * 60 * 24);
+	}
+
 }

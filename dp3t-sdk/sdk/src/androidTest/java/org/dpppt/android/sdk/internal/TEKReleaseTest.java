@@ -36,6 +36,7 @@ import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient;
 import org.dpppt.android.sdk.internal.nearby.TestGoogleExposureClient;
 import org.dpppt.android.sdk.internal.util.Json;
 import org.dpppt.android.sdk.models.ApplicationInfo;
+import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
 import org.dpppt.android.sdk.util.DateUtil;
 import org.junit.Before;
@@ -122,10 +123,12 @@ public class TEKReleaseTest {
 		});
 
 		CountDownLatch countDownLatch = new CountDownLatch(1);
-		DP3T.sendIAmInfected(activity, new Date(onsetDate), new ExposeeAuthMethodJson(""), new ResponseCallback<Void>() {
+		DP3T.sendIAmInfected(activity, new Date(onsetDate), new ExposeeAuthMethodJson(""), new ResponseCallback<DayDate>() {
 			@Override
-			public void onSuccess(Void response) {
+			public void onSuccess(DayDate response) {
 				countDownLatch.countDown();
+				assertTrue(response.isBeforeOrEquals(new DayDate()));
+				assertTrue(new DayDate(onsetDate).isBeforeOrEquals(response));
 			}
 
 			@Override

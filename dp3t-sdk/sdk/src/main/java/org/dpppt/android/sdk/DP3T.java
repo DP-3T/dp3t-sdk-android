@@ -238,7 +238,7 @@ public class DP3T {
 	}
 
 	public static void sendIAmInfected(Activity activity, Date onset, ExposeeAuthMethod exposeeAuthMethod,
-			ResponseCallback<Void> callback) {
+			ResponseCallback<DayDate> callback) {
 		checkInit();
 
 		pendingIAmInfectedRequest = new PendingIAmInfectedRequest(onset, exposeeAuthMethod, callback);
@@ -255,14 +255,19 @@ public class DP3T {
 		GoogleExposureClient.getInstance(activity)
 				.getTemporaryExposureKeyHistory(activity, REQUEST_CODE_EXPORT_KEYS,
 						temporaryExposureKeys -> {
+							int oldestRollingStartNumber = DateUtil.getCurrentRollingStartNumber();
 							List<TemporaryExposureKey> filteredKeys = new ArrayList<>();
 							int delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
 							for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
 								if (temporaryExposureKey.getRollingStartIntervalNumber() >=
 										DateUtil.getRollingStartNumberForDate(onsetDate)) {
 									filteredKeys.add(temporaryExposureKey);
+									if (temporaryExposureKey.getRollingStartIntervalNumber() < oldestRollingStartNumber) {
+										oldestRollingStartNumber = temporaryExposureKey.getRollingStartIntervalNumber();
+									}
 								}
 							}
+							final DayDate oldestKeyDate = DateUtil.getDayDateForRollingStartNumber(oldestRollingStartNumber);
 							AppConfigManager appConfigManager = AppConfigManager.getInstance(activity);
 							Boolean withFederationGateway = appConfigManager.getWithFederationGateway();
 
@@ -277,7 +282,7 @@ public class DP3T {
 														appConfigManager.setIAmInfected(true);
 														appConfigManager.setIAmInfectedIsResettable(true);
 														DP3T.stop(activity);
-														pendingIAmInfectedRequest.callback.onSuccess(null);
+														pendingIAmInfectedRequest.callback.onSuccess(oldestKeyDate);
 														pendingIAmInfectedRequest = null;
 													}
 
@@ -479,9 +484,9 @@ public class DP3T {
 	private static class PendingIAmInfectedRequest {
 		private Date onset;
 		private ExposeeAuthMethod exposeeAuthMethod;
-		private ResponseCallback<Void> callback;
+		private ResponseCallback<DayDate> callback;
 
-		private PendingIAmInfectedRequest(Date onset, ExposeeAuthMethod exposeeAuthMethod, ResponseCallback<Void> callback) {
+		private PendingIAmInfectedRequest(Date onset, ExposeeAuthMethod exposeeAuthMethod, ResponseCallback<DayDate> callback) {
 			this.onset = onset;
 			this.exposeeAuthMethod = exposeeAuthMethod;
 			this.callback = callback;
