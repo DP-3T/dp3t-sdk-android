@@ -118,7 +118,7 @@ public class AppConfigManager {
 			String[] parts = serialized.split(":", 2);
 			TracingStatus.ErrorState errorState = TracingStatus.ErrorState.tryValueOf(parts[0]);
 			if (errorState != null && parts.length >= 2) {
-				errorState.setErrorCode(parts[1]);
+				errorState.setErrorCode(parts[1].isEmpty() ? null : parts[1]);
 			}
 			return errorState;
 		}
@@ -205,7 +205,7 @@ public class AppConfigManager {
 		sharedPrefs.edit().putInt(PREF_NUMBER_OF_DAYS_TO_KEEP_EXPOSED_DAYS, days).apply();
 	}
 
-	public long getLastSynCallTime() {
+	public long getLastSyncCallTime() {
 		return sharedPrefs.getLong(PREF_LAST_SYNC_CALL_TIME, 0);
 	}
 

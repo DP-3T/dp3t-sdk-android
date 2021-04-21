@@ -110,6 +110,13 @@ public class DP3T {
 				new IntentFilter(BatteryOptimizationBroadcastReceiver.ACTION_POWER_SAVE_WHITELIST_CHANGED)
 		);
 		context.registerReceiver(
+				new SystemTimeBroadcastReceiver(),
+				new IntentFilter() {{
+					addAction(Intent.ACTION_TIME_CHANGED);
+					addAction(Intent.ACTION_DATE_CHANGED);
+				}}
+		);
+		context.registerReceiver(
 				new TracingErrorsBroadcastReceiver(),
 				new IntentFilter(DP3T.ACTION_UPDATE_ERRORS)
 		);

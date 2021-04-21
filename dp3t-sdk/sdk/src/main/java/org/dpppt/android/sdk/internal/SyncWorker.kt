@@ -11,7 +11,6 @@ package org.dpppt.android.sdk.internal
 
 import android.content.Context
 import androidx.work.*
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -139,7 +138,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 			val appConfig = appConfigManager.appConfig
 			val backendBucketRepository = BackendBucketRepository(context, appConfig.bucketBaseUrl, bucketSignaturePublicKey)
 			val googleExposureClient = getInstance(context)
-			if (appConfigManager.lastSynCallTime <= currentTime - syncInterval) {
+			if (appConfigManager.lastSyncCallTime <= currentTime - syncInterval) {
 				try {
 					Logger.d(TAG, "loading exposees")
 					val withFederationGateway = appConfigManager.withFederationGateway
