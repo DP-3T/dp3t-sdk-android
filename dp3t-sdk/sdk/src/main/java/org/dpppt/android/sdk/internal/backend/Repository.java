@@ -13,6 +13,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import java.net.Proxy;
+import java.util.concurrent.TimeUnit;
 
 import org.dpppt.android.sdk.DP3T;
 import org.dpppt.android.sdk.backend.UserAgentInterceptor;
@@ -40,6 +41,10 @@ public interface Repository {
 		if (DISABLE_SYSTEM_PROXY) {
 			okHttpBuilder.proxy(Proxy.NO_PROXY);
 		}
+
+		okHttpBuilder.connectTimeout(60, TimeUnit.SECONDS)
+				.readTimeout(60, TimeUnit.SECONDS)
+				.writeTimeout(60, TimeUnit.SECONDS);
 
 		return okHttpBuilder;
 	}

@@ -11,6 +11,7 @@ package org.dpppt.android.sdk.internal
 
 import android.content.Context
 import androidx.work.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -146,9 +147,11 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 						backendBucketRepository.getGaenExposees(appConfigManager.lastKeyBundleTag, withFederationGateway)
 					if (result.code() != 204) {
 						val file = File(context.cacheDir, KEYFILE_PREFIX + appConfigManager.lastKeyBundleTag + ".zip")
-						result.body()!!.byteStream().copyTo(file.outputStream())
-						val fileList = listOf(file)
+						file.outputStream().use { fos ->
+							result.body()!!.byteStream().copyTo(fos)
+						}
 						Logger.d(TAG, "provideDiagnosisKeys with size " + file.length())
+						val fileList = listOf(file)
 						appConfigManager.setLastSyncCallTime(currentTime)
 						googleExposureClient.provideDiagnosisKeys(fileList)
 					} else {

@@ -10,17 +10,10 @@
 package org.dpppt.android.sdk.internal.backend
 
 import android.content.Context
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
-import org.dpppt.android.sdk.backend.ResponseCallback
 import org.dpppt.android.sdk.backend.SignatureException
 import org.dpppt.android.sdk.backend.SignatureVerificationInterceptor
-import org.dpppt.android.sdk.internal.backend.models.GaenRequest
-import org.dpppt.android.sdk.models.ExposeeAuthMethod
 import retrofit2.Response
 import retrofit2.Retrofit
 import java.io.IOException
@@ -58,11 +51,11 @@ class BackendBucketRepository(context: Context, bucketBaseUrl: String, publicKey
 		lastKeyBundleTag: String?,
 		withFederationGateway: Boolean?
 	): Response<ResponseBody> {
-			val response = bucketService.getGaenExposees(lastKeyBundleTag, withFederationGateway)
-			if (response.isSuccessful) {
-				return response
-			} else {
-				throw StatusCodeException(response.raw(), response.errorBody())
-			}
+		val response = bucketService.getGaenExposees(lastKeyBundleTag, withFederationGateway)
+		if (response.isSuccessful) {
+			return response
+		} else {
+			throw StatusCodeException(response.raw(), response.errorBody())
+		}
 	}
 }

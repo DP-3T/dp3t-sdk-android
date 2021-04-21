@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import javax.net.ssl.SSLException;
 
 import com.google.android.gms.common.api.ApiException;
@@ -136,6 +137,9 @@ public class ErrorHelper {
 			}
 		} else if (e instanceof SSLException) {
 			syncError = ErrorState.SYNC_ERROR_SSLTLS;
+		} else if (e instanceof CancellationException) {
+			syncError = ErrorState.SYNC_ERROR_NETWORK;
+			if (setErrorCode) syncError.setErrorCode("CANCEL");
 		} else {
 			syncError = ErrorState.SYNC_ERROR_NETWORK;
 			if (setErrorCode) syncError.setErrorCode(null);
