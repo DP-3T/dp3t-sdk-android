@@ -32,7 +32,11 @@ class SystemTimeBroadcastReceiver : BroadcastReceiver() {
 			appConfigManager.lastSyncDate = -1
 
 			GlobalScope.launch(Dispatchers.IO) {
-				SyncImpl(context).doSync()
+				try {
+					SyncImpl(context).doSync()
+				} catch (ignored: Exception) {
+					// has been handled upstream
+				}
 			}
 		}
 	}
