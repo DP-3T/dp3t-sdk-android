@@ -113,6 +113,13 @@ public class DP3T {
 				new TracingErrorsBroadcastReceiver(),
 				new IntentFilter(DP3T.ACTION_UPDATE_ERRORS)
 		);
+		IntentFilter systemTimeIntentFilter = new IntentFilter();
+		systemTimeIntentFilter.addAction(Intent.ACTION_TIME_CHANGED);
+		systemTimeIntentFilter.addAction(Intent.ACTION_DATE_CHANGED);
+		context.registerReceiver(
+				new SystemTimeBroadcastReceiver(),
+				systemTimeIntentFilter
+		);
 
 		GaenStateHelper.invalidateGaenAvailability(context);
 		GaenStateHelper.invalidateGaenEnabled(context);
