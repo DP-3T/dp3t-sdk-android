@@ -138,7 +138,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 			val appConfig = appConfigManager.appConfig
 			val backendBucketRepository = BackendBucketRepository(context, appConfig.bucketBaseUrl, bucketSignaturePublicKey)
 			val googleExposureClient = getInstance(context)
-			if (appConfigManager.lastSyncCallTime <= currentTime - syncInterval) {
+			if (appConfigManager.lastSyncCallTime <= currentTime - syncInterval || appConfigManager.lastSyncCallTime > currentTime) {
 				try {
 					Logger.d(TAG, "loading exposees")
 					val withFederationGateway = appConfigManager.withFederationGateway
