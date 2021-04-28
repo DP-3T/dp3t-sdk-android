@@ -1,7 +1,9 @@
 # Changelog for DP3T-SDK Android
 
-## next version
+## version 2.2.0 (28.04.2021)
 - Expose oldest shared key DayDate when calling DP3T.sendIAmInfected(...)
+- Use Maven Central publishing instead of jcenter (Version 2.2.0 and up are available on Maven Central. Earlier versions are available on jcenter)
+- Sync error states are now persisted
 
 ## version 2.1.0 (11.03.2021)
 
