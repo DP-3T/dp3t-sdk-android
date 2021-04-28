@@ -68,10 +68,10 @@ $ ./gradlew assemble
 The library is generated under sdk/build/outputs/aar
 
 ## Integrating into a Project
-The SDK is available on JCenter and can be included directly as Gradle dependency:
+The SDK is available on Maven Central and can be included directly as Gradle dependency:
 ```groovy
 dependencies {
-implementation 'org.dpppt:dp3t-sdk-android:1.0.0'
+implementation 'org.dpppt:dp3t-sdk-android:2.2.0'
 }
 ```
 
