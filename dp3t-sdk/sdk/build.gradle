@@ -58,6 +58,7 @@ android {
 
 mavenPublish {
 	androidVariantToPublish = PUBLISH_VARIANT
+	sonatypeHost = "S01"
 }
 
 sonarqube {
