@@ -57,6 +57,7 @@ import org.dpppt.android.sdk.InfectionStatus;
 import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.backend.ResponseCallback;
 import org.dpppt.android.sdk.internal.export.FileUploadRepository;
+import org.dpppt.android.sdk.models.DayDate;
 import org.dpppt.android.sdk.models.ExposeeAuthMethodJson;
 
 import retrofit2.Call;
@@ -350,9 +351,9 @@ public class ControlsFragment extends Fragment {
 	private void sendInfectedUpdate(Date onsetDate, String codeInputBase64) {
 		setExposeLoadingViewVisible(true);
 
-		DP3T.sendIAmInfected(getActivity(), onsetDate, new ExposeeAuthMethodJson(codeInputBase64), new ResponseCallback<Void>() {
+		DP3T.sendIAmInfected(getActivity(), onsetDate, new ExposeeAuthMethodJson(codeInputBase64), new ResponseCallback<DayDate>() {
 			@Override
-			public void onSuccess(Void response) {
+			public void onSuccess(DayDate response) {
 				DialogUtil.showMessageDialog(getContext(), getString(R.string.dialog_title_success),
 						getString(R.string.dialog_message_request_success));
 				setExposeLoadingViewVisible(false);

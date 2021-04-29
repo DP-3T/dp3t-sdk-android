@@ -10,11 +10,13 @@ buildscript {
 			url 'https://maven.fabric.io/public'
 		}
 		jcenter()
+		mavenCentral()
 	}
 	dependencies {
 		classpath 'com.android.tools.build:gradle:4.0.1'
 		classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.5'
+		classpath 'com.vanniktech:gradle-maven-publish-plugin:0.13.0'
+		classpath 'org.jetbrains.dokka:dokka-gradle-plugin:1.4.10.2'
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.12'
 	}
 }
@@ -23,6 +25,7 @@ allprojects {
 	repositories {
 		google()
 		jcenter()
+		mavenCentral()
 	}
 }
 

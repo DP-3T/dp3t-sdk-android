@@ -9,7 +9,12 @@
  */
 package org.dpppt.android.sdk.internal.backend;
 
+import android.content.Context;
+
+import androidx.annotation.Nullable;
+
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
+import org.dpppt.android.sdk.internal.AppConfigManager;
 
 public class SyncErrorState {
 
@@ -28,11 +33,16 @@ public class SyncErrorState {
 		return instance;
 	}
 
-	public void setSyncError(ErrorState syncError) {
+	public void setSyncError(Context context, @Nullable ErrorState syncError) {
 		this.syncError = syncError;
+		AppConfigManager.getInstance(context).setLastSyncNetworkError(syncError);
 	}
 
-	public ErrorState getSyncError() {
+	@Nullable
+	public ErrorState getSyncError(Context context) {
+		if (syncError == null) {
+			syncError = AppConfigManager.getInstance(context).getLastSyncNetworkError();
+		}
 		return syncError;
 	}
 

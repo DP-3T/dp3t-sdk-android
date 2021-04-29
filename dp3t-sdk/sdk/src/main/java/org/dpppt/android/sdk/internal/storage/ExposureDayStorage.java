@@ -58,8 +58,8 @@ public class ExposureDayStorage {
 					context,
 					EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
 					EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
-		} catch (GeneralSecurityException | IOException ex) {
-			ex.printStackTrace();
+		} catch (GeneralSecurityException | IOException e) {
+			throw new RuntimeException(e);
 		}
 		appConfigManager = AppConfigManager.getInstance(context);
 	}

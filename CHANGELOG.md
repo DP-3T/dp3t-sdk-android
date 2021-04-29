@@ -1,5 +1,10 @@
 # Changelog for DP3T-SDK Android
 
+## version 2.2.0 (28.04.2021)
+- Expose oldest shared key DayDate when calling DP3T.sendIAmInfected(...)
+- Use Maven Central publishing instead of jcenter (Version 2.2.0 and up are available on Maven Central. Earlier versions are available on jcenter)
+- Sync error states are now persisted
+
 ## version 2.1.0 (11.03.2021)
 
 - Removed logic for next-day-upload for the TEK of the reporting day. With this change, you must **make sure that Google configured EN for your country/app to always release the last TEK directly with a shortened rolling period**.

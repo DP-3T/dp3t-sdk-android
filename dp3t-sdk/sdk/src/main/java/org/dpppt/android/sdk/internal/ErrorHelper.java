@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import javax.net.ssl.SSLException;
 
 import com.google.android.gms.common.api.ApiException;
@@ -33,7 +34,6 @@ import org.dpppt.android.sdk.backend.SignatureException;
 import org.dpppt.android.sdk.internal.backend.ServerTimeOffsetException;
 import org.dpppt.android.sdk.internal.backend.StatusCodeException;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
-import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.nearby.ApiExceptionUtil;
 import org.dpppt.android.sdk.internal.nearby.GaenStateCache;
 import org.dpppt.android.sdk.internal.util.LocationServiceUtil;
@@ -73,14 +73,8 @@ public class ErrorHelper {
 			errors.add(ErrorState.BATTERY_OPTIMIZER_ENABLED);
 		}
 
-		if (!AppConfigManager.getInstance(context).getLastSyncNetworkSuccess()) {
-			SyncErrorState syncErrorState = SyncErrorState.getInstance();
-			ErrorState syncError = syncErrorState.getSyncError();
-			if (syncError == null) {
-				Logger.w(TAG, "lost sync error state");
-				syncError = ErrorState.SYNC_ERROR_NETWORK;
-				syncError.setErrorCode("LOST");
-			}
+		ErrorState syncError = SyncErrorState.getInstance().getSyncError(context);
+		if (syncError != null) {
 			errors.add(syncError);
 		}
 
@@ -143,6 +137,9 @@ public class ErrorHelper {
 			}
 		} else if (e instanceof SSLException) {
 			syncError = ErrorState.SYNC_ERROR_SSLTLS;
+		} else if (e instanceof CancellationException) {
+			syncError = ErrorState.SYNC_ERROR_NETWORK;
+			if (setErrorCode) syncError.setErrorCode("CANCEL");
 		} else {
 			syncError = ErrorState.SYNC_ERROR_NETWORK;
 			if (setErrorCode) syncError.setErrorCode(null);

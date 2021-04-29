@@ -117,15 +117,13 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 							return
 						}
 						Logger.i(TAG, "synced")
-						AppConfigManager.getInstance(context).lastSyncNetworkSuccess = true
 					}
-					SyncErrorState.getInstance().syncError = null
+					SyncErrorState.getInstance().setSyncError(context, null)
 					BroadcastHelper.sendUpdateAndErrorBroadcast(context)
 				} catch (e: Exception) {
 					Logger.e(TAG, "sync", e)
-					AppConfigManager.getInstance(context).lastSyncNetworkSuccess = false
 					val syncError = ErrorHelper.getSyncErrorFromException(e, true)
-					SyncErrorState.getInstance().syncError = syncError
+					SyncErrorState.getInstance().setSyncError(context, syncError)
 					BroadcastHelper.sendUpdateAndErrorBroadcast(context)
 					throw e
 				}
@@ -140,7 +138,7 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 			val appConfig = appConfigManager.appConfig
 			val backendBucketRepository = BackendBucketRepository(context, appConfig.bucketBaseUrl, bucketSignaturePublicKey)
 			val googleExposureClient = getInstance(context)
-			if (appConfigManager.lastSynCallTime <= currentTime - syncInterval) {
+			if (appConfigManager.lastSyncCallTime <= currentTime - syncInterval || appConfigManager.lastSyncCallTime > currentTime) {
 				try {
 					Logger.d(TAG, "loading exposees")
 					val withFederationGateway = appConfigManager.withFederationGateway
@@ -148,9 +146,11 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 						backendBucketRepository.getGaenExposees(appConfigManager.lastKeyBundleTag, withFederationGateway)
 					if (result.code() != 204) {
 						val file = File(context.cacheDir, KEYFILE_PREFIX + appConfigManager.lastKeyBundleTag + ".zip")
-						result.body()!!.byteStream().copyTo(file.outputStream())
-						val fileList = listOf(file)
+						file.outputStream().use { fos ->
+							result.body()!!.byteStream().copyTo(fos)
+						}
 						Logger.d(TAG, "provideDiagnosisKeys with size " + file.length())
+						val fileList = listOf(file)
 						appConfigManager.setLastSyncCallTime(currentTime)
 						googleExposureClient.provideDiagnosisKeys(fileList)
 					} else {
