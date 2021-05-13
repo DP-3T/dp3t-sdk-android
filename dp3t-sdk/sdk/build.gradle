@@ -58,6 +58,7 @@ android {
 
 mavenPublish {
 	androidVariantToPublish = PUBLISH_VARIANT
+	releaseSigningEnabled = false // set this to false for local maven publishing
 }
 
 sonarqube {
