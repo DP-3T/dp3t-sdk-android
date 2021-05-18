@@ -67,7 +67,7 @@ public class DP3T {
 	private static UserAgentInterceptor.UserAgentGenerator userAgent = () -> "dp3t-sdk-android";
 
 	private static PendingStartCallbacks pendingStartCallbacks;
-	private static PendingShareTEKsPopup pendingShareTEKsPopup;
+	private static ResponseCallback<PendingUploadTask> pendingShareTEKsPopupCallback;
 
 	public static void init(Context context, ApplicationInfo applicationInfo, PublicKey signaturePublicKey) {
 		init(context, applicationInfo, signaturePublicKey, false);
@@ -248,11 +248,11 @@ public class DP3T {
 	public static void sendIAmInfected(Activity activity, Date onset, ExposeeAuthMethod exposeeAuthMethod,
 			ResponseCallback<DayDate> callback) {
 
-		showShareTEKsPopup(activity, new ResponseCallback<Void>() {
+		showShareTEKsPopup(activity, new ResponseCallback<PendingUploadTask>() {
 
 			@Override
-			public void onSuccess(Void response) {
-				uploadTEKs(activity, onset, exposeeAuthMethod, callback);
+			public void onSuccess(PendingUploadTask response) {
+				response.performUpload(activity, onset, exposeeAuthMethod, callback);
 			}
 
 			@Override
@@ -262,31 +262,29 @@ public class DP3T {
 		});
 	}
 
-	public static void showShareTEKsPopup(Activity activity, ResponseCallback<Void> callback) {
+	public static void showShareTEKsPopup(Activity activity, ResponseCallback<PendingUploadTask> callback) {
 		checkInit();
-		pendingShareTEKsPopup = new PendingShareTEKsPopup(callback);
+		pendingShareTEKsPopupCallback = callback;
 		showShareTEKsPopupInternal(activity);
 	}
 
-	public static void uploadTEKs(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod,
-			ResponseCallback<DayDate> callback) {
+	protected static void uploadTEKs(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod,
+			ResponseCallback<DayDate> callback, List<TemporaryExposureKey> temporaryExposureKeys) {
 		checkInit();
-		if (pendingShareTEKsPopup == null || pendingShareTEKsPopup.temporaryExposureKeys == null) {
-			throw new IllegalStateException("showShareTEKsPopup() must be successfully executed before calling uploadTEKs()");
-		}
-		uploadTEKsInternal(context, pendingShareTEKsPopup.temporaryExposureKeys, onset, exposeeAuthMethod, callback);
+		uploadTEKsInternal(context, temporaryExposureKeys, onset, exposeeAuthMethod, callback);
 	}
 
 	private static void showShareTEKsPopupInternal(Activity activity) {
-		if (pendingShareTEKsPopup == null) {
-			throw new IllegalStateException("pendingShareTEKsPopup must be set before calling showShareTEKsPopup()");
+		if (pendingShareTEKsPopupCallback == null) {
+			throw new IllegalStateException("pendingShareTEKsPopupCallback must be set before calling showShareTEKsPopup()");
 		}
 
 		GoogleExposureClient.getInstance(activity).getTemporaryExposureKeyHistory(activity, REQUEST_CODE_EXPORT_KEYS,
 				temporaryExposureKeys -> {
-					pendingShareTEKsPopup.temporaryExposureKeys = temporaryExposureKeys;
-					pendingShareTEKsPopup.callback.onSuccess(null);
-				}, DP3T::reportFailedShowShareTEKsPopup);
+					pendingShareTEKsPopupCallback.onSuccess(new PendingUploadTask(temporaryExposureKeys));
+					pendingShareTEKsPopupCallback = null;
+				},
+				DP3T::reportFailedShowShareTEKsPopup);
 	}
 
 	private static void uploadTEKsInternal(Context context, List<TemporaryExposureKey> temporaryExposureKeys, Date onset,
@@ -340,12 +338,13 @@ public class DP3T {
 	}
 
 	private static void reportFailedShowShareTEKsPopup(Throwable e) {
-		if (pendingShareTEKsPopup == null) {
-			throw new IllegalStateException("pendingShareTEKsPopup must be set before calling reportFailedShowShareTEKsPopup()");
+		if (pendingShareTEKsPopupCallback == null) {
+			throw new IllegalStateException(
+					"pendingShareTEKsPopupCallback must be set before calling reportFailedShowShareTEKsPopup()");
 		}
 		Logger.e(TAG, "reportFailedShowShareTEKsPopup", e);
-		pendingShareTEKsPopup.callback.onError(e);
-		pendingShareTEKsPopup = null;
+		pendingShareTEKsPopupCallback.onError(e);
+		pendingShareTEKsPopupCallback = null;
 	}
 
 	private static void reportFailedIAmInfected(Throwable e, ResponseCallback<DayDate> callback) {
@@ -522,17 +521,6 @@ public class DP3T {
 			this.successCallback = successCallback;
 			this.errorCallback = errorCallback;
 			this.cancelledCallback = cancelledCallback;
-		}
-
-	}
-
-
-	private static class PendingShareTEKsPopup {
-		private ResponseCallback<Void> callback;
-		private List<TemporaryExposureKey> temporaryExposureKeys;
-
-		private PendingShareTEKsPopup(ResponseCallback<Void> callback) {
-			this.callback = callback;
 		}
 
 	}
