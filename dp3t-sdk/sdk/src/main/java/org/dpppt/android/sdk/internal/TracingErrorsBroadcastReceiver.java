@@ -30,6 +30,9 @@ import org.dpppt.android.sdk.R;
 import org.dpppt.android.sdk.TracingStatus;
 import org.dpppt.android.sdk.TracingStatus.ErrorState;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
+import org.dpppt.android.sdk.internal.history.HistoryDatabase;
+import org.dpppt.android.sdk.internal.history.HistoryEntry;
+import org.dpppt.android.sdk.internal.history.HistoryEntryType;
 import org.dpppt.android.sdk.internal.logger.Logger;
 import org.dpppt.android.sdk.internal.storage.ErrorNotificationStorage;
 import org.dpppt.android.sdk.internal.storage.models.ActiveNotificationErrors;
@@ -57,6 +60,14 @@ public class TracingErrorsBroadcastReceiver extends BroadcastReceiver {
 			Logger.d(TAG, "show notification");
 			Notification notification = createStatusNotification(context, errorsForNotification);
 			notificationManager.notify(NOTIFICATION_ID, notification);
+			if (AppConfigManager.getInstance(context).getDevHistory()) {
+				HistoryDatabase.getInstance(context).addEntry(
+						new HistoryEntry(
+								HistoryEntryType.NOTIFICATION, "Error Notification: " + getNotificationErrorText(context, errorsForNotification), true,
+								System.currentTimeMillis()
+						)
+				);
+			}
 		} else {
 			Logger.d(TAG, "dismiss notification");
 			notificationManager.cancel(NOTIFICATION_ID);
