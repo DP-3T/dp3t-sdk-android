@@ -22,6 +22,10 @@ import androidx.annotation.StringRes;
 import androidx.core.app.NotificationCompat;
 
 import org.dpppt.android.calibration.R;
+import org.dpppt.android.sdk.internal.AppConfigManager;
+import org.dpppt.android.sdk.internal.history.HistoryDatabase;
+import org.dpppt.android.sdk.internal.history.HistoryEntry;
+import org.dpppt.android.sdk.internal.history.HistoryEntryType;
 
 public class NotificationUtil {
 
@@ -55,6 +59,15 @@ public class NotificationUtil {
 
 		NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 		notificationManager.notify(NOTIFICATION_ID, notification);
+
+		if (AppConfigManager.getInstance(context).getDevHistory()) {
+			HistoryDatabase.getInstance(context).addEntry(
+					new HistoryEntry(
+							HistoryEntryType.NOTIFICATION, title + " " + message, true,
+							System.currentTimeMillis()
+					)
+			);
+		}
 	}
 
 }

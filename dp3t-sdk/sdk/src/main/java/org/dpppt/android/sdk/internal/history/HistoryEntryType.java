@@ -7,7 +7,8 @@ public enum HistoryEntryType {
 	SYNC(1),
 	WORKER_STARTED(2),
 	FAKE_REQUEST(3),
-	NEXT_DAY_KEY_UPLOAD_REQUEST(4);
+	NEXT_DAY_KEY_UPLOAD_REQUEST(4),
+	NOTIFICATION(5);
 
 	private static final SparseArray<HistoryEntryType> ID_TYPE_MAP = new SparseArray<>(HistoryEntryType.values().length);
 
