@@ -313,7 +313,7 @@ public class DP3T {
 							appConfigManager.setIAmInfected(true);
 							appConfigManager.setIAmInfectedIsResettable(true);
 							DP3T.stop(context);
-							DayDate oldestKeyDate = getOldestKeyDate(gaenRequest.getGaenKeys());
+							DayDate oldestKeyDate = getOldestNonFakeKeyDate(gaenRequest.getGaenKeys());
 							callback.onSuccess(oldestKeyDate);
 						}
 
@@ -327,10 +327,10 @@ public class DP3T {
 		}
 	}
 
-	private static DayDate getOldestKeyDate(List<GaenKey> gaenKeys) {
+	private static DayDate getOldestNonFakeKeyDate(List<GaenKey> gaenKeys) {
 		int oldestRollingStartNumber = DateUtil.getCurrentRollingStartNumber();
 		for (GaenKey gaenKey : gaenKeys) {
-			if (gaenKey.getRollingStartNumber() < oldestRollingStartNumber) {
+			if (!gaenKey.isFake() && gaenKey.getRollingStartNumber() < oldestRollingStartNumber) {
 				oldestRollingStartNumber = gaenKey.getRollingStartNumber();
 			}
 		}
