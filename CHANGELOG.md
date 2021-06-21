@@ -1,5 +1,9 @@
 # Changelog for DP3T-SDK Android
 
+## version 2.3.0 (21.06.2021)
+- Added DP3T.showShareTEKsPopup(...) and DP3T.uploadTEKs(...). This splits the functionality of DP3T.sendIAmInfected(...) into two functions. The functionality of DP3T.sendIAmInfected(...) remains unchanged
+- Log all generated Notifications if devHistory is enabled
+
 ## version 2.2.0 (28.04.2021)
 - Expose oldest shared key DayDate when calling DP3T.sendIAmInfected(...)
 - Use Maven Central publishing instead of jcenter (Version 2.2.0 and up are available on Maven Central. Earlier versions are available on jcenter)
