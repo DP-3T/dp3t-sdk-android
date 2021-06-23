@@ -30,6 +30,7 @@ import org.dpppt.android.sdk.backend.UserAgentInterceptor;
 import org.dpppt.android.sdk.internal.*;
 import org.dpppt.android.sdk.internal.backend.CertificatePinning;
 import org.dpppt.android.sdk.internal.backend.SyncErrorState;
+import org.dpppt.android.sdk.internal.backend.models.GaenKey;
 import org.dpppt.android.sdk.internal.backend.models.GaenRequest;
 import org.dpppt.android.sdk.internal.history.HistoryDatabase;
 import org.dpppt.android.sdk.internal.history.HistoryEntry;
@@ -66,7 +67,7 @@ public class DP3T {
 	private static UserAgentInterceptor.UserAgentGenerator userAgent = () -> "dp3t-sdk-android";
 
 	private static PendingStartCallbacks pendingStartCallbacks;
-	private static PendingIAmInfectedRequest pendingIAmInfectedRequest;
+	private static ResponseCallback<PendingUploadTask> pendingShareTEKsPopupCallback;
 
 	public static void init(Context context, ApplicationInfo applicationInfo, PublicKey signaturePublicKey) {
 		init(context, applicationInfo, signaturePublicKey, false);
@@ -180,9 +181,9 @@ public class DP3T {
 			return true;
 		} else if (requestCode == REQUEST_CODE_EXPORT_KEYS) {
 			if (resultCode == Activity.RESULT_OK) {
-				executeIAmInfected(activity);
+				showShareTEKsPopupInternal(activity);
 			} else {
-				reportFailedIAmInfected(new CancellationException("user denied key export"));
+				reportFailedShowShareTEKsPopup(new CancellationException("user denied key export"));
 			}
 			return true;
 		}
@@ -246,71 +247,109 @@ public class DP3T {
 
 	public static void sendIAmInfected(Activity activity, Date onset, ExposeeAuthMethod exposeeAuthMethod,
 			ResponseCallback<DayDate> callback) {
+
+		showShareTEKsPopup(activity, new ResponseCallback<PendingUploadTask>() {
+
+			@Override
+			public void onSuccess(PendingUploadTask response) {
+				response.performUpload(activity, onset, exposeeAuthMethod, callback);
+			}
+
+			@Override
+			public void onError(Throwable throwable) {
+				reportFailedIAmInfected(throwable, callback);
+			}
+		});
+	}
+
+	public static void showShareTEKsPopup(Activity activity, ResponseCallback<PendingUploadTask> callback) {
 		checkInit();
-
-		pendingIAmInfectedRequest = new PendingIAmInfectedRequest(onset, exposeeAuthMethod, callback);
-
-		executeIAmInfected(activity);
+		pendingShareTEKsPopupCallback = callback;
+		showShareTEKsPopupInternal(activity);
 	}
 
-	private static void executeIAmInfected(Activity activity) {
-		if (pendingIAmInfectedRequest == null) {
-			throw new IllegalStateException("pendingIAmInfectedRequest must be set before calling executeIAmInfected()");
-		}
-		DayDate onsetDate = new DayDate(pendingIAmInfectedRequest.onset.getTime());
-
-		GoogleExposureClient.getInstance(activity)
-				.getTemporaryExposureKeyHistory(activity, REQUEST_CODE_EXPORT_KEYS,
-						temporaryExposureKeys -> {
-							int oldestRollingStartNumber = DateUtil.getCurrentRollingStartNumber();
-							List<TemporaryExposureKey> filteredKeys = new ArrayList<>();
-							int delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
-							for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
-								if (temporaryExposureKey.getRollingStartIntervalNumber() >=
-										DateUtil.getRollingStartNumberForDate(onsetDate)) {
-									filteredKeys.add(temporaryExposureKey);
-									if (temporaryExposureKey.getRollingStartIntervalNumber() < oldestRollingStartNumber) {
-										oldestRollingStartNumber = temporaryExposureKey.getRollingStartIntervalNumber();
-									}
-								}
-							}
-							final DayDate oldestKeyDate = DateUtil.getDayDateForRollingStartNumber(oldestRollingStartNumber);
-							AppConfigManager appConfigManager = AppConfigManager.getInstance(activity);
-							Boolean withFederationGateway = appConfigManager.getWithFederationGateway();
-
-							GaenRequest exposeeListRequest = new GaenRequest(filteredKeys, delayedKeyDate, withFederationGateway);
-
-							try {
-								appConfigManager.getBackendReportRepository(activity)
-										.addGaenExposeeAsync(exposeeListRequest, pendingIAmInfectedRequest.exposeeAuthMethod,
-												new ResponseCallback<String>() {
-													@Override
-													public void onSuccess(String authToken) {
-														appConfigManager.setIAmInfected(true);
-														appConfigManager.setIAmInfectedIsResettable(true);
-														DP3T.stop(activity);
-														pendingIAmInfectedRequest.callback.onSuccess(oldestKeyDate);
-														pendingIAmInfectedRequest = null;
-													}
-
-													@Override
-													public void onError(Throwable throwable) {
-														reportFailedIAmInfected(throwable);
-													}
-												});
-							} catch (IllegalStateException e) {
-								reportFailedIAmInfected(e);
-							}
-						}, DP3T::reportFailedIAmInfected);
+	protected static void uploadTEKs(Context context, Date onset, ExposeeAuthMethod exposeeAuthMethod,
+			ResponseCallback<DayDate> callback, List<TemporaryExposureKey> temporaryExposureKeys) {
+		checkInit();
+		uploadTEKsInternal(context, temporaryExposureKeys, onset, exposeeAuthMethod, callback);
 	}
 
-	private static void reportFailedIAmInfected(Throwable e) {
-		if (pendingIAmInfectedRequest == null) {
-			throw new IllegalStateException("pendingIAmInfectedRequest must be set before calling reportFailedIAmInfected()");
+	private static void showShareTEKsPopupInternal(Activity activity) {
+		if (pendingShareTEKsPopupCallback == null) {
+			throw new IllegalStateException("pendingShareTEKsPopupCallback must be set before calling showShareTEKsPopup()");
 		}
+
+		GoogleExposureClient.getInstance(activity).getTemporaryExposureKeyHistory(activity, REQUEST_CODE_EXPORT_KEYS,
+				temporaryExposureKeys -> {
+					pendingShareTEKsPopupCallback.onSuccess(new PendingUploadTask(temporaryExposureKeys));
+					pendingShareTEKsPopupCallback = null;
+				},
+				DP3T::reportFailedShowShareTEKsPopup);
+	}
+
+	private static void uploadTEKsInternal(Context context, List<TemporaryExposureKey> temporaryExposureKeys, Date onset,
+			ExposeeAuthMethod exposeeAuthMethod, ResponseCallback<DayDate> callback) {
+
+		DayDate onsetDate = new DayDate(onset.getTime());
+
+		List<TemporaryExposureKey> filteredKeys = new ArrayList<>();
+		int delayedKeyDate = DateUtil.getCurrentRollingStartNumber();
+		for (TemporaryExposureKey temporaryExposureKey : temporaryExposureKeys) {
+			if (temporaryExposureKey.getRollingStartIntervalNumber() >=
+					DateUtil.getRollingStartNumberForDate(onsetDate)) {
+				filteredKeys.add(temporaryExposureKey);
+			}
+		}
+		AppConfigManager appConfigManager = AppConfigManager.getInstance(context);
+		Boolean withFederationGateway = appConfigManager.getWithFederationGateway();
+
+		GaenRequest gaenRequest = new GaenRequest(filteredKeys, delayedKeyDate, withFederationGateway);
+
+		try {
+			appConfigManager.getBackendReportRepository(context)
+					.addGaenExposeeAsync(gaenRequest, exposeeAuthMethod, new ResponseCallback<String>() {
+						@Override
+						public void onSuccess(String authToken) {
+							appConfigManager.setIAmInfected(true);
+							appConfigManager.setIAmInfectedIsResettable(true);
+							DP3T.stop(context);
+							DayDate oldestKeyDate = getOldestNonFakeKeyDate(gaenRequest.getGaenKeys());
+							callback.onSuccess(oldestKeyDate);
+						}
+
+						@Override
+						public void onError(Throwable throwable) {
+							reportFailedIAmInfected(throwable, callback);
+						}
+					});
+		} catch (IllegalStateException e) {
+			reportFailedIAmInfected(e, callback);
+		}
+	}
+
+	private static DayDate getOldestNonFakeKeyDate(List<GaenKey> gaenKeys) {
+		int oldestRollingStartNumber = DateUtil.getCurrentRollingStartNumber();
+		for (GaenKey gaenKey : gaenKeys) {
+			if (!gaenKey.isFake() && gaenKey.getRollingStartNumber() < oldestRollingStartNumber) {
+				oldestRollingStartNumber = gaenKey.getRollingStartNumber();
+			}
+		}
+		return DateUtil.getDayDateForRollingStartNumber(oldestRollingStartNumber);
+	}
+
+	private static void reportFailedShowShareTEKsPopup(Throwable e) {
+		if (pendingShareTEKsPopupCallback == null) {
+			throw new IllegalStateException(
+					"pendingShareTEKsPopupCallback must be set before calling reportFailedShowShareTEKsPopup()");
+		}
+		Logger.e(TAG, "reportFailedShowShareTEKsPopup", e);
+		pendingShareTEKsPopupCallback.onError(e);
+		pendingShareTEKsPopupCallback = null;
+	}
+
+	private static void reportFailedIAmInfected(Throwable e, ResponseCallback<DayDate> callback) {
 		Logger.e(TAG, "reportFailedIAmInfected", e);
-		pendingIAmInfectedRequest.callback.onError(e);
-		pendingIAmInfectedRequest = null;
+		callback.onError(e);
 	}
 
 	public static void sendFakeInfectedRequest(Context context, ExposeeAuthMethod exposeeAuthMethod, Runnable successCallback,
@@ -473,7 +512,6 @@ public class DP3T {
 		return HistoryDatabase.getInstance(context).getEntries();
 	}
 
-
 	private static class PendingStartCallbacks {
 		private final Runnable successCallback;
 		private final Consumer<Exception> errorCallback;
@@ -483,20 +521,6 @@ public class DP3T {
 			this.successCallback = successCallback;
 			this.errorCallback = errorCallback;
 			this.cancelledCallback = cancelledCallback;
-		}
-
-	}
-
-
-	private static class PendingIAmInfectedRequest {
-		private Date onset;
-		private ExposeeAuthMethod exposeeAuthMethod;
-		private ResponseCallback<DayDate> callback;
-
-		private PendingIAmInfectedRequest(Date onset, ExposeeAuthMethod exposeeAuthMethod, ResponseCallback<DayDate> callback) {
-			this.onset = onset;
-			this.exposeeAuthMethod = exposeeAuthMethod;
-			this.callback = callback;
 		}
 
 	}

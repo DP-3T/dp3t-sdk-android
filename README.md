@@ -19,9 +19,9 @@ Our prestandard solution that is not using the Apple/Google framework can be fou
 ## Repositories
 * Android SDK & Calibration app: [dp3t-sdk-android](https://github.com/DP-3T/dp3t-sdk-android)
 * iOS SDK & Calibration app: [dp3t-sdk-ios](https://github.com/DP-3T/dp3t-sdk-ios)
-* Android Demo App: [dp3t-app-android](https://github.com/DP-3T/dp3t-app-android)
-* iOS Demo App: [dp3t-app-ios](https://github.com/DP-3T/dp3t-app-ios)
 * Backend SDK: [dp3t-sdk-backend](https://github.com/DP-3T/dp3t-sdk-backend)
+
+For an example project using the SDK look at the Swiss contact tracing app [SwissCovid](https://github.com/SwissCovid).
 
 ## Further Documentation
 The full set of documents for DP3T is at https://github.com/DP-3T/documents. Please refer to the technical documents and whitepapers for a description of the implementation.
@@ -163,7 +163,7 @@ Due to rate limits on the provideDiagnosisKeys() the sync can be execute only in
 ## Apps using the DP3T-SDK for Android
 Name | Country | Source code | Store | Release-Date
 ---- | ----------- | ------------- | ------------- | -------------
-SwissCovid | Switzerland | [Github](https://github.com/DP-3T/dp3t-app-android-ch) | [PlayStore](https://play.google.com/store/apps/details?id=ch.admin.bag.dp3t) | 25. Mai 2020
+SwissCovid | Switzerland | [Github](https://github.com/SwissCovid/swisscovid-app-android) | [PlayStore](https://play.google.com/store/apps/details?id=ch.admin.bag.dp3t) | 25. Mai 2020
 ASI | Ecuador | [minka.gob.ec](https://minka.gob.ec/asi-ecuador/android) | [PlayStore](https://play.google.com/store/apps/details?id=ec.gob.asi.android) | 2. August 2020
 Hoia | Estonia | [koodivaramu.eesti.ee](https://koodivaramu.eesti.ee/tehik/hoia/dp3t-app-android) | [PlayStore](https://play.google.com/store/apps/details?id=ee.tehik.hoia) | 18. August 2020
 STAYAWAY COVID | Portugal | [Github](https://github.com/stayawayinesctec/stayaway-app) | [PlayStore](https://play.google.com/store/apps/details?id=fct.inesctec.stayaway) | 28. August 2020
