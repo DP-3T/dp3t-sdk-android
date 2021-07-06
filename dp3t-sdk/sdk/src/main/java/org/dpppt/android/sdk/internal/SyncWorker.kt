@@ -28,6 +28,7 @@ import org.dpppt.android.sdk.internal.nearby.GoogleExposureClient.Companion.getI
 import java.io.File
 import java.security.PublicKey
 import java.util.*
+import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -121,11 +122,16 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 					SyncErrorState.getInstance().setSyncError(context, null)
 					BroadcastHelper.sendUpdateAndErrorBroadcast(context)
 				} catch (e: Exception) {
-					Logger.e(TAG, "sync", e)
-					val syncError = ErrorHelper.getSyncErrorFromException(e, true)
-					SyncErrorState.getInstance().setSyncError(context, syncError)
-					BroadcastHelper.sendUpdateAndErrorBroadcast(context)
-					throw e
+					if (e is DelayableCancellationException) {
+						//ignore delayable cancellation exception
+						Logger.e(TAG, "ignoring DelayableCancellationException", e)
+					} else {
+						Logger.e(TAG, "sync", e)
+						val syncError = ErrorHelper.getSyncErrorFromException(e, true)
+						SyncErrorState.getInstance().setSyncError(context, syncError)
+						BroadcastHelper.sendUpdateAndErrorBroadcast(context)
+						throw e
+					}
 				}
 			} finally {
 				isSyncInProgress.set(false)
@@ -170,6 +176,10 @@ class SyncWorker(context: Context, workerParams: WorkerParameters) : CoroutineWo
 						lastSuccessfulSyncTime > currentTime - SyncErrorState.getInstance().syncErrorGracePeriod
 					if (isDelayWithinGracePeriod && ErrorHelper.isDelayableSyncError(e)) {
 						addHistoryEntry(false, true)
+						if (e is CancellationException) {
+							Logger.e(TAG, "throwing DelayableCancellationException")
+							throw DelayableCancellationException()
+						}
 					} else {
 						addHistoryEntry(true, false)
 						throw e
