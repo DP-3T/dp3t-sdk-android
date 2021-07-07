@@ -1,5 +1,8 @@
 # Changelog for DP3T-SDK Android
 
+## version 2.3.1 (07.07.2021)
+- fixed CANCEL notifications that appeared directly when SyncWorker was cancelled. These notifications will now only show, if the SyncWorker keeps failing for more than syncErrorGracePeriod
+
 ## version 2.3.0 (21.06.2021)
 - Added DP3T.showShareTEKsPopup(...) and DP3T.uploadTEKs(...). This splits the functionality of DP3T.sendIAmInfected(...) into two functions. The functionality of DP3T.sendIAmInfected(...) remains unchanged
 - Log all generated Notifications if devHistory is enabled
