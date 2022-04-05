@@ -28,7 +28,7 @@ public class BootCompletedBroadcastReceiver extends BroadcastReceiver {
 
 		Logger.i(TAG, intent.getAction());
 
-		if (DP3T.isTracingEnabled(context)) {
+		if (DP3T.isInitialized() && DP3T.isTracingEnabled(context)) {
 			SyncWorker.startSyncWorker(context);
 			BroadcastHelper.sendUpdateAndErrorBroadcast(context);
 		}
