@@ -1,5 +1,8 @@
 # Changelog for DP3T-SDK Android
 
+## version 2.3.2 (05.04.2022)
+- fix exception when device is rebooted and sdk is not initialized
+
 ## version 2.3.1 (07.07.2021)
 - fixed CANCEL notifications that appeared directly when SyncWorker was cancelled. These notifications will now only show, if the SyncWorker keeps failing for more than syncErrorGracePeriod
 
